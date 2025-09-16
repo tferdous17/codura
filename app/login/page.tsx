@@ -1,5 +1,5 @@
 import { GalleryVerticalEnd } from "lucide-react"
-
+import { ModeToggle } from "@/components/ui/mode-toggle"
 import { LoginForm } from "@/components/login-form"
 
 export default function LoginPage() {
@@ -15,6 +15,9 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <LoginForm />
+
+        {/* Temporary Mode Toggle */}
+        <ModeToggle />
       </div>
     </div>
   )
