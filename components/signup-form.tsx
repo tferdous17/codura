@@ -30,7 +30,7 @@ export function SignUpForm({
 
 
         <CardContent>
-          <form>
+          <form action={signup}>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
 
@@ -102,7 +102,7 @@ export function SignUpForm({
                 </div>
 
                 {/* Sign Up Button */}
-                <Button type="submit" formAction={signup} className="w-full">
+                <Button type="submit" className="w-full">
                   Create Account
                 </Button>
               </div>

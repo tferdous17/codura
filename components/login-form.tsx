@@ -30,7 +30,7 @@ export function LoginForm({
 
 
         <CardContent>
-          <form>
+          <form action={login}>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
 
@@ -93,7 +93,7 @@ export function LoginForm({
 
 
                 {/* Login Button */}
-                <Button formAction={login} type="submit" className="w-full">
+                <Button type="submit" className="w-full">
                   Login
                 </Button>
               </div>
