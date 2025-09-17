@@ -1,9 +1,26 @@
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  // update user's auth session
-  return await updateSession(request)
+  const { response, user } = await updateSession(request)
+
+  // You can now use the `user` object to check if the user is authenticated
+  // and perform any additional logic based on the user's authentication status.
+  // For example, you might want to redirect unauthenticated users to a login page.
+
+  // protecting routes from unauthenticated access
+  if(request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+    return NextResponse.redirect(new URL('/', request.url))
+  } 
+
+
+  // redirecting authenticated users away from auth pages
+  if((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') && user) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  return response
+
 }
 
 export const config = {
