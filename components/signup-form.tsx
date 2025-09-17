@@ -10,6 +10,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+import { signup } from "@/app/login/actions"
+
 export function SignUpForm({
   className,
   ...props
@@ -67,9 +69,9 @@ export function SignUpForm({
               <div className="grid gap-6">
                 {/* Full Name Field */}
                 <div className="grid gap-3">
-                  <Label htmlFor="fullname">Full Name</Label>
+                  <Label htmlFor="name">Full Name</Label>
                   <Input
-                    id="fullname"
+                    name="full_name"
                     type="text"
                     placeholder="John Doe"
                     required
@@ -80,7 +82,7 @@ export function SignUpForm({
                 <div className="grid gap-3">
                   <Label htmlFor="email">Email</Label>
                   <Input
-                    id="email"
+                    name="email"
                     type="email"
                     placeholder="m@example.com"
                     required
@@ -90,17 +92,17 @@ export function SignUpForm({
                 {/* Password Field */}
                 <div className="grid gap-3">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" required />
+                  <Input name="password" type="password" required />
                 </div>
 
                 {/* Confirm Password Field */}
                 <div className="grid gap-3">
                   <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input id="confirm-password" type="password" required />
+                  <Input name="confirm-password" type="password" required />
                 </div>
 
                 {/* Sign Up Button */}
-                <Button type="submit" className="w-full">
+                <Button type="submit" formAction={signup} className="w-full">
                   Create Account
                 </Button>
               </div>

@@ -10,6 +10,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+import { login } from "@/app/login/actions"
+
 export function LoginForm({
   className,
   ...props
@@ -68,7 +70,7 @@ export function LoginForm({
                 <div className="grid gap-3">
                   <Label htmlFor="email">Email</Label>
                   <Input
-                    id="email"
+                    name="email"
                     type="email"
                     placeholder="m@example.com"
                     required
@@ -86,12 +88,12 @@ export function LoginForm({
                       Forgot your password?
                     </a>
                   </div>
-                  <Input id="password" type="password" required />
+                  <Input name="password" type="password" required />
                 </div>
 
 
                 {/* Login Button */}
-                <Button type="submit" className="w-full">
+                <Button formAction={login} type="submit" className="w-full">
                   Login
                 </Button>
               </div>
