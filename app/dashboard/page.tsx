@@ -8,7 +8,7 @@ export default async function DashboardPage() {
   // Get the currently authenticated user
   const { data: { user } } = await supabase.auth.getUser()
 
-  
+
   // Getting user's email and id, if they're not authenticated, middleware should handle redirect
   const email = user!.email
   const userId = user!.id
@@ -32,7 +32,7 @@ export default async function DashboardPage() {
     <div className='flex flex-col items-center justify-center min-h-screen  gap-5'>
       <h1 className='text-white text-4xl font-bold'>Dashboard</h1>
     
-      <p className='text-violet-500'>Your are logged in as: {email}</p>
+      <p className='text-violet-500'>You are logged in as: {email}</p>
 
       {/* Display user data */}
       {userData && (

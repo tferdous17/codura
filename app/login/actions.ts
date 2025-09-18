@@ -5,6 +5,11 @@ import { redirect } from 'next/navigation'
 
 import { createClient } from '@/utils/supabase/server'
 
+
+/**
+ * Function to handle user login
+ * @param formData - FormData from login form
+ */
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
@@ -25,6 +30,12 @@ export async function login(formData: FormData) {
   redirect('/dashboard')
 }
 
+
+
+/**
+ * Function to handle user signup
+ * @param formData - FormData from signup form
+ */
 export async function signup(formData: FormData) {
   const supabase = await createClient()
 
@@ -41,7 +52,6 @@ export async function signup(formData: FormData) {
     }
   }
 
-  console.log(data.email)
 
   const { error } = await supabase.auth.signUp(data)
 
@@ -52,4 +62,35 @@ export async function signup(formData: FormData) {
 
   revalidatePath('/', 'layout')
   redirect('/dashboard')
+}
+
+
+
+
+/**
+ * Function to handle GitHub OAuth login
+ */
+export async function signInWithGithub() {
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: {
+      redirectTo: 'http://localhost:3000/auth/callback?next=/dashboard'
+    }
+  })
+
+  if (error) {
+    console.log(error)
+    redirect('/error')
+  }
+
+  
+  /**
+   * Redirect to GitHub for authentication
+   * After GitHub auth, user will be redirected back to /auth/callback
+   * which will then redirect to /dashboard
+   */
+  if (data.url) {
+    redirect(data.url)
+  }
 }
