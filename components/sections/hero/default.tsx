@@ -53,13 +53,6 @@ export default function Hero({
       </a>
     </Badge>
   ),
-  buttons = [
-    {
-      href: "https://www.launchuicomponents.com/",
-      text: "Get Started",
-      variant: "default",
-    },
-  ],
   className,
 }: HeroProps) {
 
@@ -128,7 +121,7 @@ export default function Hero({
             <p className="text-md animate-appear text-muted-foreground relative z-10 max-w-[740px] font-medium text-balance opacity-0 delay-100 sm:text-xl">
               {description}
             </p>
-            <button className="px-8 py-2 rounded-full bg-gradient-to-b from-blue-500 to-blue-600 text-white focus:ring-2 focus:ring-blue-400 hover:shadow-xl transition duration-200">
+            <button className="cursor-pointer px-8 py-2 z-10 rounded-full bg-gradient-to-b from-orange-200 to-orange-300 text-black font-medium focus:ring-1 transition duration-200">
               Get started
             </button>
             {mockup !== false && (

@@ -109,8 +109,8 @@
 
 :root {
  /* Accent colors */
-  --brand: #3771c9;
-  --brand-foreground: #3b8aca;
+  --brand: #ffe0c2;
+  --brand-foreground: #ffe0c2;
 
   /* Customized shadcn/ui colors */
   --background: oklch(0.141 0.005 285.823);

@@ -7,7 +7,7 @@ import {
   AnimatePresence,
   useMotionValue,
   useSpring,
-} from "motion/react";
+} from  "motion/react";
 
 export const AnimatedTooltip = ({
   items,
