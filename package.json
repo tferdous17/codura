@@ -7,11 +7,13 @@
     "build": "next build",
     "start": "next start"
   },
-  "dependencies": { 
+  "dependencies": {
     "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/react-slot": "^1.2.3",
+    "@tabler/icons-react": "^3.35.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cobe": "^0.6.5",
     "framer-motion": "^12.23.14",
     "lucide-react": "^0.544.0",
     "motion": "^12.23.15",
