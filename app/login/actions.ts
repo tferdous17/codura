@@ -94,3 +94,34 @@ export async function signInWithGithub() {
     redirect(data.url)
   }
 }
+
+
+
+export async function signInWithGoogle() {
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: 'http://localhost:3000/auth/callback?next=/dashboard',
+
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      }
+    }
+  })
+
+  if (error) {
+    console.log(error)
+    redirect('/error')
+  }
+
+  /**
+   * Redirect to Google for authentication
+   * After Google auth, user will be redirected back to /auth/callback
+   * which will then redirect to /dashboard
+   */
+  if (data.url) {
+    redirect(data.url)
+  }
+}
