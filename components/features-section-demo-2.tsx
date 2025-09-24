@@ -17,51 +17,51 @@ export default function FeaturesSectionDemo() {
     {
       title: "Built for students",
       description:
-        "Built for students, developers, dreamers, thinkers and doers.",
+        "Designed specifically for university students with school-based channels and peer networking.",
       icon: <IconTerminal2 />,
     },
     {
       title: "Ease of use",
       description:
-        "Your job is to just practice, and we handle the rest.",
+        "Clean, intuitive interface that lets you focus on what matters - practicing and improving.",
       icon: <IconEaseInOut />,
     },
     {
       title: "No paywall",
       description:
-        "All our services are completely free. No paywall for the cool features.",
+        "Core features are completely free. Premium features available at student-friendly rates.",
       icon: <IconCurrencyDollar />,
     },
     {
       title: "Live Code Judge",
-      description: "Your code gets automatically evaluated upon submission.",
+      description: "Real-time code evaluation with comprehensive test cases and detailed feedback.",
       icon: <IconCode />,
     },
     {
       title: "Mock Interviews",
-      description: "Practice with others in a simulated interview setting.",
+      description: "Bidirectional practice - interview others and get interviewed by peers.",
       icon: <IconLayersIntersect />,
     },
     {
       title: "Live Collaboration",
       description:
-        "Work on problems in real-time with others.",
+        "Real-time pair programming with integrated chat and whiteboarding tools.",
       icon: <IconUsers />,
     },
     {
-      title: "Community",
+      title: "University Communities",
       description:
-        "We foster communities and offer special features to schools and study groups.",
+        "School-specific channels with leaderboards, competitions, and peer mentorship programs.",
       icon: <IconUsersGroup />,
     },
     {
-      title: "Integrated Whiteboarding & Notes",
-      description: "Draw or document your thought process during any problem.",
+      title: "Integrated Whiteboarding",
+      description: "Visual problem-solving tools with persistent notes and diagrams.",
       icon: <IconNotes />,
     },
   ];
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4  relative z-10 py-10 max-w-7xl mx-auto">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 relative z-10 py-16 max-w-7xl mx-auto gap-px bg-border/20 rounded-xl overflow-hidden">
       {features.map((feature, index) => (
         <Feature key={feature.title} {...feature} index={index} />
       ))}
@@ -81,31 +81,29 @@ const Feature = ({
   index: number;
 }) => {
   return (
-    <div
-      className={cn(
-        "flex flex-col lg:border-r  py-10 relative group/feature dark:border-neutral-800",
-        (index === 0 || index === 4) && "lg:border-l dark:border-neutral-800",
-        index < 4 && "lg:border-b dark:border-neutral-800"
-      )}
-    >
-      {index < 4 && (
-        <div className="opacity-0 group-hover/feature:opacity-100 transition duration-200 absolute inset-0 h-full w-full bg-gradient-to-t from-neutral-100 dark:from-neutral-800 to-transparent pointer-events-none" />
-      )}
-      {index >= 4 && (
-        <div className="opacity-0 group-hover/feature:opacity-100 transition duration-200 absolute inset-0 h-full w-full bg-gradient-to-b from-neutral-100 dark:from-neutral-800 to-transparent pointer-events-none" />
-      )}
-      <div className="mb-4 relative z-10 px-10 text-neutral-600 dark:text-neutral-400">
-        {icon}
+    <div className="bg-background p-8 relative group/feature hover:bg-muted/10 transition-all duration-300">
+      {/* Hover overlay */}
+      <div className="opacity-0 group-hover/feature:opacity-100 transition duration-300 absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent pointer-events-none" />
+
+      {/* Icon */}
+      <div className="mb-6 relative z-10">
+        <div className="w-12 h-12 rounded-lg bg-muted/30 group-hover/feature:bg-brand/10 border border-border/30 group-hover/feature:border-brand/20 flex items-center justify-center text-muted-foreground group-hover/feature:text-brand transition-all duration-300">
+          {icon}
+        </div>
       </div>
-      <div className="text-lg font-bold mb-2 relative z-10 px-10">
-        <div className="absolute left-0 inset-y-0 h-6 group-hover/feature:h-8 w-1 rounded-tr-full rounded-br-full bg-neutral-300 dark:bg-neutral-700 group-hover/feature:bg-blue-500 transition-all duration-200 origin-center" />
-        <span className="group-hover/feature:translate-x-2 transition duration-200 inline-block text-neutral-800 dark:text-neutral-100">
+
+      {/* Content */}
+      <div className="relative z-10 space-y-3">
+        <h3 className="text-lg font-semibold text-foreground group-hover/feature:text-foreground transition-colors duration-200">
           {title}
-        </span>
+        </h3>
+        <p className="text-sm text-muted-foreground leading-relaxed group-hover/feature:text-muted-foreground/90 transition-colors duration-200">
+          {description}
+        </p>
       </div>
-      <p className="text-sm text-neutral-600 dark:text-neutral-300 max-w-xs relative z-10 px-10">
-        {description}
-      </p>
+
+      {/* Subtle border indicator */}
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-brand/30 to-transparent scale-x-0 group-hover/feature:scale-x-100 transition-transform duration-300 origin-center" />
     </div>
   );
 };

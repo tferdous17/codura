@@ -63,6 +63,10 @@
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-appear: appear 0.6s forwards ease-out;
   --animate-appear-zoom: appear-zoom 0.6s forwards ease-out;
+  --animate-float: float 20s ease-in-out infinite;
+  --animate-beam: beam 3s ease-in-out infinite;
+  --animate-glow: glow 2s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
 
   @keyframes accordion-down {
     from {
@@ -103,6 +107,51 @@
     100% {
       opacity: 1;
       transform: scale(1);
+    }
+  }
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px) rotate(0deg);
+    }
+    33% {
+      transform: translateY(-20px) translateX(10px) rotate(1deg);
+    }
+    66% {
+      transform: translateY(10px) translateX(-5px) rotate(-1deg);
+    }
+  }
+
+  @keyframes beam {
+    0% {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes glow {
+    0%, 100% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
     }
   }
 }
