@@ -116,20 +116,20 @@ export default function FeaturesModern({ className }: { className?: string }) {
         </div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <Badge variant="outline" className="mb-6 border-foreground/20">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            Core Features
-          </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-tight">
-            Everything you need to succeed
-          </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            From mock interviews to real-time collaboration, we have everything you need to prepare for technical interviews.
-          </p>
-        </div>
+      <div className="flex flex-col items-center text-center mb-16">
+        <Badge className="mb-6 bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-colors">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Core Features
+        </Badge>
+        <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent leading-tight">
+          Everything you need to succeed
+        </h2>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          From mock interviews to real-time collaboration, we have everything you need to prepare for technical interviews.
+        </p>
+      </div>
 
         <div
           id="features-modern"

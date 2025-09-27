@@ -77,32 +77,32 @@ export default function PlatformShowcase({ className }: { className?: string }) 
       // REMOVED background gradient. Standardized padding.
       className={cn("py-20 relative overflow-hidden", className)}
     >
-        {/* Background Effect: Subtle animated blur orbs */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <div 
-                className="absolute top-1/4 left-3/4 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl animate-float-slow" 
-                style={{ animationDelay: '1s' }}
-            />
-        </div>
+      {/* Background Effect: Subtle animated blur orbs */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div
+          className="absolute top-1/4 left-3/4 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl animate-float-slow"
+          style={{ animationDelay: "1s" }}
+        />
+      </div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <Badge variant="outline" className="mb-6 border-foreground/20">
+          <Badge className="mb-6 bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-colors">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
               Platform Insights
             </div>
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent leading-tight">
             Built for your success
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Join thousands of students preparing for technical interviews with our comprehensive,
-            community-driven platform designed specifically for university students.
+            Join thousands of students preparing for technical interviews with
+            our comprehensive, community-driven platform designed specifically
+            for university students.
           </p>
         </div>
-
         {/* Feature Grid - Side by side like Nightwatch */}
         <div className="grid lg:grid-cols-2 gap-8 mb-16">
           {platformFeatures.map((feature, index) => (
@@ -121,8 +121,12 @@ export default function PlatformShowcase({ className }: { className?: string }) 
                       {feature.icon}
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold mb-1">{feature.title}</h3>
-                      <p className="text-muted-foreground text-sm">{feature.description}</p>
+                      <h3 className="text-xl font-semibold mb-1">
+                        {feature.title}
+                      </h3>
+                      <p className="text-muted-foreground text-sm">
+                        {feature.description}
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -140,8 +144,8 @@ export default function PlatformShowcase({ className }: { className?: string }) 
                   <div
                     className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000 ease-out"
                     style={{
-                      width: isVisible ? '85%' : '0%',
-                      transitionDelay: `${(index * 150) + 500}ms`
+                      width: isVisible ? "85%" : "0%",
+                      transitionDelay: `${index * 150 + 500}ms`,
                     }}
                   />
                 </div>
@@ -158,19 +162,36 @@ export default function PlatformShowcase({ className }: { className?: string }) 
               <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-xl" />
               <div className="relative">
                 <div className="w-10 h-10 rounded-lg bg-blue-500/20 text-blue-600 flex items-center justify-center mb-4">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">University Communities</h3>
+                <h3 className="text-xl font-semibold mb-3">
+                  University Communities
+                </h3>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  Connect with peers from your university, participate in school-specific competitions,
-                  and build your professional network within your academic community.
+                  Connect with peers from your university, participate in
+                  school-specific competitions, and build your professional
+                  network within your academic community.
                 </p>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-blue-600">50+ Universities</span>
+                  <span className="text-sm font-medium text-blue-600">
+                    50+ Universities
+                  </span>
                   <span className="text-sm text-muted-foreground">•</span>
-                  <span className="text-sm text-muted-foreground">Active leaderboards</span>
+                  <span className="text-sm text-muted-foreground">
+                    Active leaderboards
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -182,19 +203,36 @@ export default function PlatformShowcase({ className }: { className?: string }) 
               <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-full blur-xl" />
               <div className="relative">
                 <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-600 flex items-center justify-center mb-4">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Interview Excellence</h3>
+                <h3 className="text-xl font-semibold mb-3">
+                  Interview Excellence
+                </h3>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  Master both technical and behavioral interviews with our comprehensive preparation tools,
-                  real-time feedback, and industry-standard assessment criteria.
+                  Master both technical and behavioral interviews with our
+                  comprehensive preparation tools, real-time feedback, and
+                  industry-standard assessment criteria.
                 </p>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-emerald-600">95% Success Rate</span>
+                  <span className="text-sm font-medium text-emerald-600">
+                    95% Success Rate
+                  </span>
                   <span className="text-sm text-muted-foreground">•</span>
-                  <span className="text-sm text-muted-foreground">AI-powered feedback</span>
+                  <span className="text-sm text-muted-foreground">
+                    AI-powered feedback
+                  </span>
                 </div>
               </div>
             </CardContent>
