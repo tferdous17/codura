@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Section } from "@/components/ui/section";
 import { IconTrophy, IconUsers, IconCode, IconArrowRight } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 const universities = [
   {
@@ -90,25 +91,27 @@ export default function UniversityShowcase() {
   };
 
   return (
-    // FIX: Removed local background gradient for seamless integration
-    <Section className="py-20 relative overflow-hidden"> 
-      
-      {/* Background Effect: Subtle diagonal gradient line animation (from previous step) */}
+    <Section className="py-20 relative overflow-hidden">
+      {/* Background Effect */}
       <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-gradient-to-br from-brand/5 to-transparent rounded-full blur-3xl opacity-30 animate-spin-slow" />
+        <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-gradient-to-br from-brand/5 to-transparent rounded-full blur-3xl opacity-30 animate-spin-slow" />
       </div>
-      
+
       <div className="max-w-7xl mx-auto px-4 relative z-10">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-              University
-            </span>{" "}
-            <span className="bg-gradient-to-r from-brand to-orange-300 bg-clip-text text-transparent">
-              Leaderboards
-            </span>
+        {/* Updated Title Section */}
+        <div className="flex flex-col items-center text-center mb-16">
+          <Badge className="mb-6 bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-colors">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
+              University Leaderboards
+            </div>
+          </Badge>
+
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
+            University Leaderboards
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Compete with students from your university and beyond. See how your school ranks in our global community.
           </p>
         </div>
@@ -121,13 +124,12 @@ export default function UniversityShowcase() {
               <h3 className="text-2xl font-semibold">Top Universities</h3>
             </div>
 
-            {universities.map((university, index) => (
+            {universities.map((university) => (
               <div
                 key={university.id}
                 className={cn(
                   "group p-6 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-[1.02]",
                   selectedUniversity.id === university.id
-                    // Ensured the selected state uses semi-transparent background and blur
                     ? "border-brand/50 bg-card/40 backdrop-blur-sm shadow-lg shadow-brand/10"
                     : "border-border/30 bg-card/20 backdrop-blur-sm hover:border-border/50 hover:bg-card/40"
                 )}

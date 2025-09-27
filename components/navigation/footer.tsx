@@ -1,3 +1,5 @@
+// tferdous17/codura/codura-landing-page-testing/components/navigation/footer.tsx
+
 "use client";
 
 import React from "react";
@@ -70,7 +72,8 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-[#111111] text-white pt-20 pb-8 border-t border-white/5">
+    // FIX: Changed hardcoded bg-[#111111] to bg-neutral-950 for seamless dark transition.
+    <footer className="pt-20 pb-8 border-t border-white/5 bg-neutral-950 text-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8">
           {/* Column 1: Branding, Subscription, and Status */}

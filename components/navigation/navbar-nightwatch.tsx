@@ -32,13 +32,10 @@ export default function NavbarNightwatch() {
           : ""
       )}
     >
-      {/* 1. Changed to 'justify-start' to allow elements to flow.
-        2. Container acts as the full-width wrapper.
-      */}
+
       <div className="flex items-center justify-start py-4 container"> 
         
-        {/* NEW WRAPPER for Logo and Nav Links - This is the central element */}
-        {/* The 'mx-auto' class centers this block within the parent container */}
+  
         <div className="flex items-center mx-auto"> 
 
           {/* LOGO */}
@@ -53,7 +50,6 @@ export default function NavbarNightwatch() {
             />
           </a>
           
-          {/* NAVIGATION LINKS (Next to logo) */}
           <nav className="hidden items-center gap-6 text-lg leading-7 font-light -tracking-[0.32px] text-neutral-400 lg:flex ml-12">
             <a className="hover:text-neutral-200" href="/pricing">
               Pricing
@@ -66,24 +62,18 @@ export default function NavbarNightwatch() {
             </a>
           </nav>
         </div>
-        {/* END NEW WRAPPER */}
         
-        {/* SIGN IN / SIGN UP BUTTONS 
-          The 'absolute inset-y-0 right-0' combined with 'pr-4' (or 'ml-auto' on 'lg' screens) 
-          is a reliable way to keep the buttons on the right edge, even when the 
-          main logo/nav group is centered.
-        */}
         <div className="flex items-center gap-4 absolute inset-y-0 right-0 pr-4 lg:relative lg:ml-auto lg:pr-0">
           <div className="hidden space-x-2 md:block">
             <a
               href="/sign-in"
-              className="ring-offset-background focus-visible:ring-ring inline-flex cursor-pointer items-center justify-center rounded-md border whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 border border-white/5 bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200 h-8 gap-2 px-3 text-sm leading-tight nav-links"
+              className="ring-offset-background focus-visible:ring-ring inline-flex cursor-pointer items-center justify-center rounded-[5px] border whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 border border-white/5 bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200 h-8 gap-2 px-3 text-sm leading-tight nav-links"
             >
               Sign in
             </a>
             <a
               href="/sign-up"
-              className="ring-offset-background focus-visible:ring-ring inline-flex cursor-pointer items-center justify-center rounded-md border whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 border-blue-500 bg-blue-600 text-blue-100 hover:bg-blue-600/90 active:bg-blue-700 h-8 gap-2 px-3 text-sm leading-tight nav-links"
+              className="ring-offset-background focus-visible:ring-ring inline-flex cursor-pointer items-center justify-center rounded-[5px] border whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 border-blue-500 bg-blue-600 text-blue-100 hover:bg-blue-600/90 active:bg-blue-700 h-8 gap-2 px-3 text-sm leading-tight nav-links"
             >
               Start for free
             </a>
@@ -91,7 +81,7 @@ export default function NavbarNightwatch() {
 
           <button
             onClick={() => setNavOpen(!navOpen)}
-            className="focus-visible:shadow-xs-selected relative size-8 rounded-md text-white focus:outline-hidden lg:hidden"
+            className="focus-visible:shadow-xs-selected relative size-8 rounded-lg text-white focus:outline-hidden lg:hidden"
           >
             <div className="relative flex h-6 w-6 items-center justify-center">
               <span

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Section } from "@/components/ui/section";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 const faqs = [
   {
@@ -59,23 +60,32 @@ export default function FAQProfessional() {
   };
 
   return (
-    // REMOVED background gradient and added local background blur/glow
     <Section className="py-20 relative overflow-hidden">
-        {/* Background Effect: Subtle glow at the top-center */}
-        <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-1/2 w-96 h-96 -translate-x-1/2 bg-brand/5 rounded-full blur-3xl opacity-50 animate-pulse" />
-        </div>
-        
+      {/* Background Glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 w-96 h-96 -translate-x-1/2 bg-brand/5 rounded-full blur-3xl opacity-50 animate-pulse" />
+      </div>
+
       <div className="max-w-4xl mx-auto px-6 relative z-10">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">
+        {/* Updated Section Header */}
+        <div className="flex flex-col items-center text-center mb-16">
+          <Badge className="mb-6 bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-colors">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
+              FAQs
+            </div>
+          </Badge>
+
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
             Frequently Asked Questions
           </h2>
-          <p className="text-xl text-muted-foreground">
+
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Everything you need to know about Codura and technical interview preparation.
           </p>
         </div>
 
+        {/* FAQ Accordion */}
         <div className="space-y-4">
           {faqs.map((faq) => (
             <div

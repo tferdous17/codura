@@ -31,15 +31,18 @@ function Glow({
     >
       <div
         className={cn(
-          "from-brand-foreground/50 to-brand-foreground/0 absolute left-1/2 h-[256px] w-[60%] -translate-x-1/2 scale-[2.5] rounded-[50%] bg-radial from-10% to-60% opacity-20 sm:h-[512px] dark:opacity-100",
+          // ADDED: animate-spin-slow for dynamic, subtle rotation
+          "from-brand-foreground/50 to-brand-foreground/0 absolute left-1/2 h-[256px] w-[60%] -translate-x-1/2 scale-[2.5] rounded-[50%] bg-radial from-10% to-60% opacity-20 sm:h-[512px] dark:opacity-100 animate-spin-slow",
           variant === "center" && "-translate-y-1/2",
         )}
       />
       <div
         className={cn(
-          "from-brand/30 to-brand-foreground/0 absolute left-1/2 h-[128px] w-[40%] -translate-x-1/2 scale-200 rounded-[50%] bg-radial from-10% to-60% opacity-20 sm:h-[256px] dark:opacity-100",
+          // ADDED: animate-spin-slow with a custom timing to rotate in the opposite direction for contrast
+          "from-brand/30 to-brand-foreground/0 absolute left-1/2 h-[128px] w-[40%] -translate-x-1/2 scale-200 rounded-[50%] bg-radial from-10% to-60% opacity-20 sm:h-[256px] dark:opacity-100 animate-spin-slow",
           variant === "center" && "-translate-y-1/2",
         )}
+        style={{ animationDirection: 'reverse', animationDuration: '30s' }}
       />
     </div>
   );

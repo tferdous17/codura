@@ -97,30 +97,28 @@ export default function AlgorithmComplexity({ className }: { className?: string 
     >
       {/* Background Effect: Subtle, floating blur orb */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
-        <div 
-            className="absolute top-1/2 left-1/4 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-blob" 
-            style={{ animationDelay: '2s' }}
+        <div
+          className="absolute top-1/2 left-1/4 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-blob"
+          style={{ animationDelay: "2s" }}
         />
-        <div 
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-blob-reverse"
-        />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-blob-reverse" />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <Badge variant="outline" className="mb-6 border-foreground/20">
+          <Badge className="mb-6 bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-colors">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-foreground rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
               Algorithm Analysis
             </div>
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
             Master Time Complexity
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Learn to analyze and optimize your algorithms with interactive complexity insights
-            that prepare you for technical interviews.
+            Learn to analyze and optimize your algorithms with interactive
+            complexity insights that prepare you for technical interviews.
           </p>
         </div>
 
@@ -140,9 +138,11 @@ export default function AlgorithmComplexity({ className }: { className?: string 
                   isVisible && `animate-in slide-in-from-bottom-4 duration-500`,
                   isVisible && `delay-${index * 100}`
                 )}
-                onClick={() => setSelectedComplexity(
-                  selectedComplexity === complexity.id ? null : complexity.id
-                )}
+                onClick={() =>
+                  setSelectedComplexity(
+                    selectedComplexity === complexity.id ? null : complexity.id
+                  )
+                }
               >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
@@ -178,7 +178,10 @@ export default function AlgorithmComplexity({ className }: { className?: string 
                         </h4>
                         <div className="space-y-1">
                           {complexity.examples.map((example, idx) => (
-                            <div key={idx} className="text-xs text-muted-foreground flex items-center gap-2">
+                            <div
+                              key={idx}
+                              className="text-xs text-muted-foreground flex items-center gap-2"
+                            >
                               <div className="w-1 h-1 bg-muted-foreground/60 rounded-full" />
                               {example}
                             </div>
@@ -199,18 +202,33 @@ export default function AlgorithmComplexity({ className }: { className?: string 
               <CardContent className="p-8">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-muted transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold">Interactive Analysis</h3>
-                    <p className="text-sm text-muted-foreground">Real-time complexity insights</p>
+                    <h3 className="text-xl font-semibold">
+                      Interactive Analysis
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Real-time complexity insights
+                    </p>
                   </div>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
-                  Get instant feedback on your algorithm performance with detailed complexity breakdowns,
-                  optimization suggestions, and best practice recommendations.
+                  Get instant feedback on your algorithm performance with
+                  detailed complexity breakdowns, optimization suggestions, and
+                  best practice recommendations.
                 </p>
               </CardContent>
             </Card>
@@ -220,18 +238,31 @@ export default function AlgorithmComplexity({ className }: { className?: string 
               <CardContent className="p-8">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-muted transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold">Interview Ready</h3>
-                    <p className="text-sm text-muted-foreground">Master technical discussions</p>
+                    <p className="text-sm text-muted-foreground">
+                      Master technical discussions
+                    </p>
                   </div>
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
-                  Build confidence explaining time and space complexity in technical interviews
-                  with practical examples and clear mental models.
+                  Build confidence explaining time and space complexity in
+                  technical interviews with practical examples and clear mental
+                  models.
                 </p>
               </CardContent>
             </Card>

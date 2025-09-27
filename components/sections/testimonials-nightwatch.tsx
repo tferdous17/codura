@@ -10,7 +10,7 @@ const testimonials = [
     role: "Software Engineer",
     company: "Google",
     university: "MIT",
-    image: "https://images.unsplash.com/photo-1494790108755-2616b612b2d3?w=400&h=400&fit=crop&crop=face",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
     quote: "Codura's mock interviews and AI feedback helped me land my dream job at Google. The university community aspect kept me motivated throughout my preparation.",
     metric: "8 weeks",
     metricLabel: "to job offer"
@@ -21,7 +21,7 @@ const testimonials = [
     role: "Senior Developer",
     company: "Microsoft",
     university: "Stanford",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
+    image: "https://images.pexels.com/photos/6999225/pexels-photo-6999225.jpeg",
     quote: "The real-time collaboration features are incredible. Being able to code with peers and get instant feedback made all the difference in my interview prep.",
     metric: "95%",
     metricLabel: "success rate"

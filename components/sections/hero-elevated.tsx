@@ -1,3 +1,5 @@
+// tferdous17/codura/codura-landing-page-testing/components/sections/hero-elevated.tsx
+
 import { ArrowRightIcon } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -147,11 +149,11 @@ export default function HeroElevated({
     <>
       <Section
         className={cn(
-          "fade-bottom overflow-hidden pb-0 sm:pb-0 md:pb-0 bg-gradient-to-b from-background via-background to-background/90 relative",
+          // FIX: Removed local conflicting gradient background
+          "fade-bottom overflow-hidden pb-0 sm:pb-0 md:pb-0 relative", 
           className,
         )}
       >
-        {/* Nightwatch-inspired background effects */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Animated beam lines */}
           <div className="absolute inset-0 opacity-10">
@@ -185,11 +187,6 @@ export default function HeroElevated({
             ))}
           </div>
 
-          {/* Grid pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px]" />
-
-          {/* Radial gradient overlay */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_top,rgba(255,224,194,0.05)_0%,transparent_70%)]" />
         </div>
 
         <div className="max-w-container mx-auto flex flex-col gap-6 text-center pt-16 sm:gap-12 relative z-10">
@@ -199,11 +196,6 @@ export default function HeroElevated({
             </div>
             {badge !== false && badge}
             
-            {/* KEY CHANGE: Applying Nightwatch Hero Text Styles 
-              - text-5xl md:text-8xl for size
-              - font-medium tracking-tight for weight and spacing
-              - Hardcoded text structure with a span for the second line
-            */}
             <h1 className="animate-appear text-white relative z-10 inline-block text-5xl leading-tight font-medium tracking-tight text-balance sm:text-6xl sm:leading-tight md:text-8xl md:leading-tight">
               Master your coding <br className="hidden md:block" />
               <span className="text-neutral-400">interviews with AI</span>
@@ -215,10 +207,10 @@ export default function HeroElevated({
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 animate-appear opacity-0 delay-200">
-              <button className="cursor-pointer px-8 py-3 z-10 rounded-lg bg-gradient-to-r from-foreground to-foreground/90 hover:from-foreground/90 hover:to-foreground text-background font-semibold focus:ring-1 transition-all duration-200 hover:scale-[1.02] shadow-lg">
+              <button className="cursor-pointer px-8 py-3 z-10 rounded-[8px] bg-gradient-to-r from-foreground to-foreground/90 hover:from-foreground/90 hover:to-foreground text-background font-semibold focus:ring-1 transition-all duration-200 hover:scale-[1.02] shadow-lg">
                 Start practicing
               </button>
-              <button className="cursor-pointer px-8 py-3 z-10 rounded-lg border border-border/40 bg-background/50 backdrop-blur-sm hover:bg-background/80 text-foreground font-semibold transition-all duration-200 hover:scale-[1.02]">
+              <button className="cursor-pointer px-8 py-3 z-10 rounded-[8px] border border-border/40 bg-background/50 backdrop-blur-sm hover:bg-background/80 text-foreground font-semibold transition-all duration-200 hover:scale-[1.02]">
                 Watch demo
               </button>
             </div>

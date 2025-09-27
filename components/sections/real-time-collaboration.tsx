@@ -1,3 +1,5 @@
+// src/components/sections/real-time-collaboration.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -32,72 +34,277 @@ const mockUsers = [
   }
 ];
 
-const collaborativeCode = `def two_sum(nums, target):
-    # Sarah is working on this optimization
-    seen = {}
+// Define the collaborative editing sequence
+const editingSequence = [
+  {
+    type: "type",
+    user: 1,
+    delay: 1000,
+    text: `def two_sum(nums, target):
+    # TODO: Implement this function
+    pass`,
+    cursorPos: { x: 15, y: 15 }
+  },
+  {
+    type: "chat",
+    user: 1,
+    delay: 1500,
+    message: "Let's start with the basic function structure"
+  },
+  {
+    type: "delete",
+    user: 1,
+    delay: 2000,
+    deleteText: "# TODO: Implement this function",
+    cursorPos: { x: 15, y: 25 }
+  },
+  {
+    type: "type",
+    user: 1,
+    delay: 500,
+    text: "# Sarah: Let's start with a brute force approach",
+    cursorPos: { x: 15, y: 25 }
+  },
+  {
+    type: "delete",
+    user: 1,
+    delay: 1000,
+    deleteText: "pass",
+    cursorPos: { x: 15, y: 35 }
+  },
+  {
+    type: "type",
+    user: 1,
+    delay: 500,
+    text: `for i in range(len(nums)):
+        for j in range(i + 1, len(nums)):
+            if nums[i] + nums[j] == target:
+                return [i, j]
+    return []`,
+    cursorPos: { x: 15, y: 35 }
+  },
+  {
+    type: "chat",
+    user: 2,
+    delay: 2000,
+    message: "That works but it's O(n²). Can we optimize it?"
+  },
+  {
+    type: "type",
+    user: 2,
+    delay: 1000,
+    text: `
+    # Alex: This is O(n²) - we can do better with a hash map`,
+    cursorPos: { x: 15, y: 30 }
+  },
+  {
+    type: "chat",
+    user: 1,
+    delay: 1500,
+    message: "Good point! Let me refactor this"
+  },
+  {
+    type: "delete",
+    user: 1,
+    delay: 2000,
+    deleteText: `for i in range(len(nums)):
+        for j in range(i + 1, len(nums)):
+            if nums[i] + nums[j] == target:
+                return [i, j]`,
+    cursorPos: { x: 15, y: 45 }
+  },
+  {
+    type: "type",
+    user: 1,
+    delay: 500,
+    text: `seen = {}
     for i, num in enumerate(nums):
         complement = target - num
         if complement in seen:
             return [seen[complement], i]
-        seen[num] = i  # Alex added this comment: Store the index
-    return []
+        seen[num] = i`,
+    cursorPos: { x: 15, y: 45 }
+  },
+  {
+    type: "type",
+    user: 2,
+    delay: 1000,
+    text: "  # Alex: Store the value and its index",
+    cursorPos: { x: 25, y: 75 }
+  },
+  {
+    type: "chat",
+    user: 3,
+    delay: 1500,
+    message: "Nice! Should we add some test cases?"
+  },
+  {
+    type: "type",
+    user: 3,
+    delay: 2000,
+    text: `
 
-# Jordan is suggesting: Let's test edge cases
-# Test cases:
-# two_sum([2, 7, 11, 15], 9) -> [0, 1]
-# two_sum([3, 2, 4], 6) -> [1, 2]`;
+# Jordan: Let's add test cases to verify our solution
+def test_two_sum():
+    assert two_sum([2, 7, 11, 15], 9) == [0, 1]
+    assert two_sum([3, 2, 4], 6) == [1, 2]
+    assert two_sum([3, 3], 6) == [0, 1]
+    print("All tests passed!")`,
+    cursorPos: { x: 30, y: 85 }
+  },
+  {
+    type: "chat",
+    user: 1,
+    delay: 1000,
+    message: "Perfect! Now we have O(n) time complexity"
+  },
+  {
+    type: "chat",
+    user: 2,
+    delay: 800,
+    message: "Great collaboration team! 🎉"
+  }
+];
 
-const chatMessages = [
-  { id: 1, user: "Sarah Chen", message: "Let me optimize this for O(n) time complexity", time: "2:34 PM", type: "message" },
-  { id: 2, user: "Alex Rivera", message: "Good idea! Using a hash map?", time: "2:34 PM", type: "message" },
-  { id: 3, user: "Sarah Chen", message: "Exactly! Store complements as we iterate", time: "2:35 PM", type: "message" },
-  { id: 4, user: "Jordan Kim", message: "Should we add some test cases too?", time: "2:35 PM", type: "message" },
-  { id: 5, user: "System", message: "Code execution completed successfully ✅", time: "2:36 PM", type: "system" }
+const initialChatMessages = [
+  { id: 1, user: "System", message: "Collaborative session started", time: "2:30 PM", type: "system" }
 ];
 
 export default function RealTimeCollaboration({ className }: { className?: string }) {
   const [activeUsers, setActiveUsers] = useState(mockUsers);
-  const [messages, setMessages] = useState(chatMessages);
-  const [cursorPositions, setCursorPositions] = useState<{[key: number]: {x: number, y: number}}>({});
+  const [messages, setMessages] = useState(initialChatMessages);
+  const [currentCode, setCurrentCode] = useState("");
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
   const [typingUser, setTypingUser] = useState<number | null>(null);
+  const [cursorPosition, setCursorPosition] = useState<{x: number, y: number} | null>(null);
+  const [currentlyTypingText, setCurrentlyTypingText] = useState("");
 
+  // Progressive character-by-character typing
+  const typeTextProgressively = async (text: string, speed = 80) => {
+    const baseCode = currentCode;
+    setCurrentlyTypingText("");
+    
+    for (let i = 0; i <= text.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, speed + Math.random() * 40));
+      const typedSoFar = text.slice(0, i);
+      setCurrentlyTypingText(typedSoFar);
+      
+      // Show the final result only at the end
+      if (i === text.length) {
+        setCurrentCode(baseCode + text);
+        setCurrentlyTypingText("");
+      }
+    }
+  };
+
+  // Progressive character-by-character deletion
+  const deleteTextProgressively = async (textToDelete: string, speed = 30) => {
+    const codeBeforeDeletion = currentCode;
+    const deleteStartIndex = codeBeforeDeletion.lastIndexOf(textToDelete);
+    
+    if (deleteStartIndex === -1) return;
+    
+    const beforeDeleteText = codeBeforeDeletion.slice(0, deleteStartIndex);
+    const afterDeleteText = codeBeforeDeletion.slice(deleteStartIndex + textToDelete.length);
+    
+    // Delete character by character from the end
+    for (let i = textToDelete.length; i >= 0; i--) {
+      await new Promise(resolve => setTimeout(resolve, speed + Math.random() * 20));
+      const remainingText = textToDelete.slice(0, i);
+      setCurrentCode(beforeDeleteText + remainingText + afterDeleteText);
+    }
+  };
+
+  // Execute the editing sequence
   useEffect(() => {
-    // Simulate cursor movement
-    const interval = setInterval(() => {
-      const newPositions: {[key: number]: {x: number, y: number}} = {};
-      activeUsers.forEach(user => {
-        newPositions[user.id] = {
-          x: Math.random() * 80 + 10,
-          y: Math.random() * 60 + 20
+    let timeoutId: NodeJS.Timeout;
+
+    const executeStep = async () => {
+      if (currentStep >= editingSequence.length) {
+        // Reset the sequence after completion
+        setTimeout(() => {
+          setCurrentStep(0);
+          setCurrentCode("");
+          setMessages(initialChatMessages);
+          setTypingUser(null);
+          setCursorPosition(null);
+          setCurrentlyTypingText("");
+        }, 5000);
+        return;
+      }
+
+      const step = editingSequence[currentStep];
+      
+      await new Promise(resolve => setTimeout(resolve, step.delay));
+
+      if (step.type === "type") {
+        setTypingUser(step.user);
+        setCursorPosition(step.cursorPos);
+        setIsTyping(true);
+
+        // Update user status
+        setActiveUsers(prev => prev.map(user => 
+          user.id === step.user 
+            ? { ...user, status: "typing" }
+            : { ...user, status: "online" }
+        ));
+
+        await typeTextProgressively(step.text, 60);
+
+        setIsTyping(false);
+        setTypingUser(null);
+        
+        // Reset user status
+        setActiveUsers(prev => prev.map(user => 
+          ({ ...user, status: "online" })
+        ));
+      }
+      else if (step.type === "delete") {
+        setTypingUser(step.user);
+        setCursorPosition(step.cursorPos);
+        setIsTyping(true);
+
+        // Update user status
+        setActiveUsers(prev => prev.map(user => 
+          user.id === step.user 
+            ? { ...user, status: "typing" }
+            : { ...user, status: "online" }
+        ));
+
+        await deleteTextProgressively(step.deleteText, 25);
+
+        setIsTyping(false);
+        setTypingUser(null);
+        
+        // Reset user status
+        setActiveUsers(prev => prev.map(user => 
+          ({ ...user, status: "online" })
+        ));
+      }
+      else if (step.type === "chat") {
+        const newMessage = {
+          id: messages.length + Math.random(),
+          user: mockUsers.find(u => u.id === step.user)?.name || "Unknown",
+          message: step.message,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          type: "message" as const
         };
-      });
-      setCursorPositions(newPositions);
-    }, 2000);
+        setMessages(prev => [...prev, newMessage]);
+      }
 
-    return () => clearInterval(interval);
-  }, [activeUsers]);
+      setCurrentStep(prev => prev + 1);
+    };
 
-  useEffect(() => {
-    // Simulate typing indicator
-    const interval = setInterval(() => {
-      setTypingUser(prev => {
-        if (prev === null) {
-          return mockUsers[Math.floor(Math.random() * mockUsers.length)].id;
-        }
-        return null;
-      });
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
+    timeoutId = setTimeout(executeStep, 100);
+    return () => clearTimeout(timeoutId);
+  }, [currentStep, currentCode, messages.length]);
 
   return (
-    // REMOVED background gradient. Standardized padding.
     <section className={cn("py-20 relative overflow-hidden", className)}>
-      {/* Background elements inspired by Nightwatch */}
+      {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-          {/* Animated Beams */}
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
@@ -111,7 +318,6 @@ export default function RealTimeCollaboration({ className }: { className?: strin
             />
           ))}
         </div>
-        {/* Floating connection lines */}
         <div className="absolute inset-0">
           <svg className="w-full h-full opacity-5" viewBox="0 0 800 600">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -130,20 +336,19 @@ export default function RealTimeCollaboration({ className }: { className?: strin
             ))}
           </svg>
         </div>
-        {/* Added radial glow for depth */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.05)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(119,106,93,0.05)_0%,transparent_70%)]" />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-16">
-          <Badge className="mb-6 bg-blue-500/10 border-blue-500/20 text-blue-600 hover:bg-blue-500/20 transition-colors">
+          <Badge className="mb-6 bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-colors">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
               Live Collaboration
             </div>
           </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent leading-tight">
             Code Together in Real-Time
           </h2>
           <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl">
@@ -158,59 +363,56 @@ export default function RealTimeCollaboration({ className }: { className?: strin
             <CardHeader>
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                Online ({activeUsers.filter(u => u.status === 'online' || u.status === 'typing').length})
+                Online ({activeUsers.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {activeUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
-                >
-                  <div className="relative">
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div
-                      className={cn(
-                        "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background",
-                        user.status === 'online' && "bg-green-500",
-                        user.status === 'typing' && "bg-orange-500 animate-pulse"
-                      )}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm">{user.name}</div>
-                    <div className="text-xs text-muted-foreground">{user.university}</div>
-                  </div>
+              {activeUsers.map((user) => {
+                const isCurrentlyTyping = typingUser === user.id;
+                return (
                   <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: user.cursorColor }}
-                    title="Cursor color"
-                  />
-                </div>
-              ))}
-
-              <div className="pt-3 border-t border-border/30">
-                <div className="text-xs text-muted-foreground text-center">
-                  {typingUser && (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="flex gap-1">
-                        <div className="w-1 h-1 bg-brand rounded-full animate-bounce" />
-                        <div className="w-1 h-1 bg-brand rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                        <div className="w-1 h-1 bg-brand rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                      </div>
-                      {mockUsers.find(u => u.id === typingUser)?.name} is typing...
+                    key={user.id}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="relative">
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div
+                        className={cn(
+                          "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background",
+                          isCurrentlyTyping ? "bg-orange-500 animate-pulse" : "bg-green-500"
+                        )}
+                      />
                     </div>
-                  )}
-                </div>
-              </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm">{user.name}</div>
+                      <div className="text-xs text-muted-foreground">{user.university}</div>
+                      {isCurrentlyTyping && (
+                        <div className="text-xs text-orange-500 mt-1 flex items-center gap-1">
+                          <div className="flex gap-0.5">
+                            <div className="w-1 h-1 bg-orange-500 rounded-full animate-bounce" />
+                            <div className="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                            <div className="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                          </div>
+                          typing...
+                        </div>
+                      )}
+                    </div>
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: user.cursorColor }}
+                      title="Cursor color"
+                    />
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
 
-          {/* Code Editor */}
+          {/* Live Code Editor */}
           <Card className="lg:col-span-2 border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -219,48 +421,56 @@ export default function RealTimeCollaboration({ className }: { className?: strin
                     <path d="M8 3a1 1 0 0 0-1 1v3H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-3V4a1 1 0 0 0-1-1H8zM9 5h6v2H9V5zm-4 4h14v6H5V9z"/>
                   </svg>
                   two_sum.py
+                  {isTyping && (
+                    <div className="flex items-center gap-1 ml-2">
+                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                      <span className="text-xs text-orange-600">Live editing</span>
+                    </div>
+                  )}
                 </CardTitle>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full" />
-                  <span className="text-xs text-green-600">Synced</span>
+                  <span className="text-xs text-green-600">Auto-sync</span>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="relative">
-                {/* Code editor */}
-                <div className="bg-muted/20 rounded-lg p-4 border border-border/30 overflow-x-auto relative">
-                  <pre className="text-sm font-mono leading-relaxed whitespace-pre-wrap">
-                    <code className="text-foreground">{collaborativeCode}</code>
+                {/* Live Code Editor */}
+                <div className="bg-muted/20 rounded-lg p-4 border border-border/30 overflow-x-auto relative min-h-[400px] font-mono">
+                  <pre className="text-sm leading-relaxed whitespace-pre-wrap">
+                    <code className="text-foreground">
+                      {currentCode}
+                      {currentlyTypingText && (
+                        <span className="text-foreground">{currentlyTypingText}</span>
+                      )}
+                      {isTyping && (
+                        <span className="animate-pulse text-foreground">|</span>
+                      )}
+                    </code>
                   </pre>
 
-                  {/* Animated cursors */}
-                  {Object.entries(cursorPositions).map(([userId, pos]) => {
-                    const user = activeUsers.find(u => u.id === parseInt(userId));
-                    if (!user) return null;
-
-                    return (
+                  {/* Live cursor */}
+                  {typingUser && cursorPosition && (
+                    <div
+                      className="absolute pointer-events-none z-10 transition-all duration-300"
+                      style={{
+                        left: `${cursorPosition.x}%`,
+                        top: `${cursorPosition.y}%`,
+                      }}
+                    >
                       <div
-                        key={userId}
-                        className="absolute pointer-events-none transition-all duration-500 ease-in-out"
-                        style={{
-                          left: `${pos.x}%`,
-                          top: `${pos.y}%`,
-                        }}
+                        className="w-0.5 h-4 animate-pulse"
+                        style={{ backgroundColor: mockUsers.find(u => u.id === typingUser)?.cursorColor }}
+                      />
+                      <div
+                        className="text-xs text-white px-2 py-1 rounded mt-1 whitespace-nowrap shadow-lg"
+                        style={{ backgroundColor: mockUsers.find(u => u.id === typingUser)?.cursorColor }}
                       >
-                        <div
-                          className="w-0.5 h-4 animate-pulse"
-                          style={{ backgroundColor: user.cursorColor }}
-                        />
-                        <div
-                          className="text-xs text-white px-1 py-0.5 rounded mt-1 whitespace-nowrap"
-                          style={{ backgroundColor: user.cursorColor }}
-                        >
-                          {user.name}
-                        </div>
+                        {mockUsers.find(u => u.id === typingUser)?.name}
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Action buttons */}
@@ -274,7 +484,10 @@ export default function RealTimeCollaboration({ className }: { className?: strin
                     </button>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Auto-saved 2s ago
+                    <div className="flex items-center gap-1">
+                      <div className="w-1 h-1 bg-green-500 rounded-full" />
+                      {isTyping ? "Saving changes..." : "All changes saved"}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -282,7 +495,7 @@ export default function RealTimeCollaboration({ className }: { className?: strin
           </Card>
         </div>
 
-        {/* Chat Section */}
+        {/* Live Chat Section */}
         <Card className="mt-6 max-w-6xl mx-auto border-border/40 bg-card/50 backdrop-blur-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -298,7 +511,7 @@ export default function RealTimeCollaboration({ className }: { className?: strin
                 <div
                   key={msg.id}
                   className={cn(
-                    "flex items-start gap-3 p-3 rounded-lg",
+                    "flex items-start gap-3 p-3 rounded-lg transition-all duration-300 animate-in slide-in-from-bottom-2",
                     msg.type === 'system' ? "bg-blue-500/5 border border-blue-500/20" : "hover:bg-muted/20"
                   )}
                 >

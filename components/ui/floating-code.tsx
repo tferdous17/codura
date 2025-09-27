@@ -3,18 +3,47 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
+// Combined and reorganized snippets with guaranteed non-overlapping positions (4 rows x 5 columns)
 const codeSnippets = [
-  { code: "def binary_search(arr, target):", language: "python", size: "lg" },
-  { code: "class TreeNode:", language: "python", size: "md" },
-  { code: "function quickSort(arr) {", language: "javascript", size: "lg" },
-  { code: "public int maxProfit()", language: "java", size: "md" },
-  { code: "vector<int> twoSum(", language: "cpp", size: "sm" },
-  { code: "while left < right:", language: "python", size: "sm" },
-  { code: "return nums[left] + nums[right]", language: "python", size: "md" },
-  { code: "if (root == null) return;", language: "java", size: "md" },
-  { code: "const result = []", language: "javascript", size: "sm" },
-  { code: "dp[i] = Math.max(", language: "javascript", size: "lg" }
+  // Row 1 (Top)
+  { code: "def binary_search(arr, target):", language: "python", size: "lg", left: "5%", top: "10%" },
+  { code: "function quickSort(arr) {", language: "javascript", size: "lg", left: "25%", top: "10%" },
+  { code: "int max_flow = 0;", language: "cpp", size: "md", left: "45%", top: "10%" },
+  { code: "graph.add_node('S')", language: "python", size: "lg", left: "65%", top: "10%" },
+  { code: "const seen = new Set()", language: "javascript", size: "lg", left: "85%", top: "10%" },
+
+  // Row 2
+  { code: "class TreeNode:", language: "python", size: "md", left: "5%", top: "30%" },
+  { code: "public int maxProfit()", language: "java", size: "md", left: "25%", top: "30%" },
+  { code: "for i in range(n):", language: "python", size: "sm", left: "45%", top: "30%" },
+  { code: "new HashMap()", language: "java", size: "md", left: "65%", top: "30%" },
+  { code: "Two Pointers Method:", language: "python", size: "lg", left: "85%", top: "30%" },
+
+  // Row 3
+  { code: "vector<int> twoSum(", language: "cpp", size: "sm", left: "5%", top: "50%" },
+  { code: "while left < right:", language: "python", size: "sm", left: "25%", top: "50%" },
+  { code: "let j = n - 1;", language: "javascript", size: "md", left: "45%", top: "50%" },
+  { code: "return max_val", language: "python", size: "sm", left: "65%", top: "50%" },
+  { code: "def dfs(node):", language: "python", size: "md", left: "85%", top: "50%" },
+
+  // Row 4
+  { code: "return nums[left] + nums[right]", language: "python", size: "md", left: "5%", top: "70%" },
+  { code: "if (root == null) return;", language: "java", size: "md", left: "25%", top: "70%" },
+  { code: "const result = []", language: "javascript", size: "sm", left: "45%", top: "70%" },
+  { code: "dp[i] = Math.max(", language: "javascript", size: "lg", left: "65%", top: "70%" },
+  { code: "long long count = 0;", language: "cpp", size: "sm", left: "85%", top: "70%" }
 ];
+
+// Symbols are intentionally sparse and large to cover open areas without cluttering
+const abstractSymbols = [
+    { symbol: "O(n log n)", left: "15%", top: "5%", animation: 'animate-blob', size: 'text-3xl' },
+    { symbol: "Dynamic Programming", left: "70%", top: "5%", animation: 'animate-blob-reverse', size: 'text-4xl' },
+    { symbol: "BFS", left: "5%", top: "85%", animation: 'animate-float-slow', size: 'text-2xl' },
+    { symbol: "O(1)", left: "85%", top: "90%", animation: 'animate-float', size: 'text-3xl' },
+    { symbol: "DFS", left: "45%", top: "95%", animation: 'animate-blob', size: 'text-xl' },
+    { symbol: "Two Pointers", left: "80%", top: "35%", animation: 'animate-float', size: 'text-3xl' },
+];
+
 
 interface FloatingCodeProps {
   className?: string;
@@ -35,23 +64,27 @@ export default function FloatingCode({ className }: FloatingCodeProps) {
         <div
           key={index}
           className={cn(
-            "absolute animate-float opacity-20 hover:opacity-30 transition-opacity duration-500",
-            snippet.size === "sm" && "text-sm px-3 py-1",
-            snippet.size === "md" && "text-base px-4 py-2",
-            snippet.size === "lg" && "text-lg px-5 py-2"
+            "absolute text-sm font-mono opacity-50 hover:opacity-60 transition-opacity duration-1000", 
+            "select-none animate-float-slow",
+            snippet.size === "sm" && "text-xs",
+            snippet.size === "md" && "text-sm",
+            snippet.size === "lg" && "text-base"
           )}
           style={{
-            left: `${Math.random() * 85}%`,
-            top: `${Math.random() * 85}%`,
-            animationDelay: `${index * 0.8}s`,
-            animationDuration: `${15 + Math.random() * 10}s`
+            // FIX: Removed randomized duration and delay for synchronous motion
+            left: snippet.left, 
+            top: snippet.top,
+            animationDuration: '30s', // Fixed duration for synchronized loop
+            animationDelay: '0s',    // Start immediately
           }}
         >
-          <div className="font-mono bg-background/80 backdrop-blur-sm border border-border/30 rounded-lg shadow-sm">
-            <div className="flex items-center gap-2 px-3 py-1 border-b border-border/20 bg-muted/20">
-              <div className="w-2 h-2 rounded-full bg-red-400" />
-              <div className="w-2 h-2 rounded-full bg-yellow-400" />
-              <div className="w-2 h-2 rounded-full bg-green-400" />
+          {/* Box background and border restored */}
+          <div className="bg-background/10 backdrop-blur-sm border border-border/20 rounded-lg shadow-xl">
+            <div className="flex items-center gap-2 px-3 py-1 border-b border-border/10 bg-muted/10">
+              {/* Subtle traffic lights */}
+              <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+              <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+              <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
               <span className="text-xs text-muted-foreground ml-auto">
                 {snippet.language}
               </span>
@@ -63,22 +96,22 @@ export default function FloatingCode({ className }: FloatingCodeProps) {
         </div>
       ))}
 
-      {/* Add some mathematical symbols and algorithm names */}
-      {[
-        { symbol: "O(n log n)", position: { left: "10%", top: "20%" } },
-        { symbol: "BFS", position: { left: "80%", top: "15%" } },
-        { symbol: "Dynamic Programming", position: { left: "15%", top: "75%" } },
-        { symbol: "O(1)", position: { left: "85%", top: "60%" } },
-        { symbol: "DFS", position: { left: "25%", top: "40%" } },
-        { symbol: "Two Pointers", position: { left: "70%", top: "80%" } }
-      ].map((item, index) => (
+      {/* Mathematical Symbols and Algorithm Names (The dynamic 'spazzaz' elements) */}
+      {abstractSymbols.map((item, index) => (
         <div
           key={`math-${index}`}
-          className="absolute animate-bounce opacity-10 text-brand font-semibold"
+          className={cn(
+            "absolute opacity-20 text-brand font-semibold",
+            item.animation, 
+            item.size,
+            "select-none"
+          )}
           style={{
-            ...item.position,
-            animationDelay: `${index * 1.2 + 5}s`,
-            animationDuration: "4s"
+            // FIX: Removed randomized duration and delay for more synchronous blob motion
+            left: item.left,
+            top: item.top,
+            animationDelay: '0s',
+            animationDuration: '10s',
           }}
         >
           {item.symbol}
