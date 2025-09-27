@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const features = [
   {
@@ -89,39 +90,75 @@ export default function FeaturesModern({ className }: { className?: string }) {
       { threshold: 0.1 }
     );
 
-    const element = document.getElementById('features-modern');
+    const element = document.getElementById("features-modern");
     if (element) observer.observe(element);
 
     return () => observer.disconnect();
   }, []);
 
   return (
-    <div id="features-modern" className={cn("grid sm:grid-cols-2 lg:grid-cols-4 gap-4", className)}>
-      {features.map((feature, index) => (
-        <Card
-          key={feature.title}
-          className={cn(
-            "group border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg",
-            isVisible && `animate-in slide-in-from-bottom-4 duration-500`,
-            isVisible && `delay-${index * 75}`
-          )}
-        >
-          <CardContent className="p-6">
-            {/* Icon */}
-            <div className="w-10 h-10 rounded-lg bg-muted/50 group-hover:bg-muted transition-colors flex items-center justify-center mb-4">
-              {feature.icon}
-            </div>
+    // REMOVED background. Standardized padding.
+    <section id="features" className="py-20 relative overflow-hidden">
+        {/* Background Effect: Subtle animated dots for movement */}
+        <div className="absolute inset-0 pointer-events-none opacity-10">
+            {Array.from({ length: 15 }).map((_, i) => (
+                <div
+                    key={`dot-${i}`}
+                    className="absolute w-1.5 h-1.5 bg-brand/50 rounded-full animate-float"
+                    style={{
+                        left: `${Math.random() * 100}%`,
+                        top: `${Math.random() * 100}%`,
+                        animationDelay: `${Math.random() * 5}s`,
+                        animationDuration: `${10 + Math.random() * 10}s`
+                    }}
+                />
+            ))}
+        </div>
 
-            {/* Content */}
-            <h3 className="font-semibold mb-2 group-hover:text-foreground transition-colors">
-              {feature.title}
-            </h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {feature.description}
-            </p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="max-w-3xl mx-auto text-center mb-16">
+          <Badge variant="outline" className="mb-6 border-foreground/20">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Core Features
+          </Badge>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 tracking-tight">
+            Everything you need to succeed
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            From mock interviews to real-time collaboration, we have everything you need to prepare for technical interviews.
+          </p>
+        </div>
+
+        <div
+          id="features-modern"
+          className={cn("grid sm:grid-cols-2 lg:grid-cols-4 gap-4", className)}
+        >
+          {features.map((feature, index) => (
+            <Card
+              key={feature.title}
+              className={cn(
+                "group border-border/50 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg",
+                isVisible && `animate-in slide-in-from-bottom-4 duration-500`,
+                isVisible && `delay-${index * 75}`
+              )}
+            >
+              <CardContent className="p-6">
+                <div className="w-10 h-10 rounded-lg bg-muted/50 group-hover:bg-muted transition-colors flex items-center justify-center mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="font-semibold mb-2 group-hover:text-foreground transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

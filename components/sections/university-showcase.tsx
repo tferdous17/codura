@@ -1,3 +1,5 @@
+// src/components/sections/university-showcase.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -88,8 +90,15 @@ export default function UniversityShowcase() {
   };
 
   return (
-    <Section className="py-20 bg-gradient-to-b from-background/50 to-background">
-      <div className="max-w-7xl mx-auto px-4">
+    // FIX: Removed local background gradient for seamless integration
+    <Section className="py-20 relative overflow-hidden"> 
+      
+      {/* Background Effect: Subtle diagonal gradient line animation (from previous step) */}
+      <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-gradient-to-br from-brand/5 to-transparent rounded-full blur-3xl opacity-30 animate-spin-slow" />
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">
             <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
@@ -118,8 +127,9 @@ export default function UniversityShowcase() {
                 className={cn(
                   "group p-6 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-[1.02]",
                   selectedUniversity.id === university.id
-                    ? "border-brand/50 bg-gradient-to-r shadow-lg shadow-brand/10"
-                    : "border-border/30 bg-card/20 hover:border-border/50 hover:bg-card/40"
+                    // Ensured the selected state uses semi-transparent background and blur
+                    ? "border-brand/50 bg-card/40 backdrop-blur-sm shadow-lg shadow-brand/10"
+                    : "border-border/30 bg-card/20 backdrop-blur-sm hover:border-border/50 hover:bg-card/40"
                 )}
                 onClick={() => handleUniversityClick(university)}
               >

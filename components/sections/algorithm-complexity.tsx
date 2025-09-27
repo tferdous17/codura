@@ -91,9 +91,22 @@ export default function AlgorithmComplexity({ className }: { className?: string 
   return (
     <section
       id="complexity-section"
-      className={cn("py-24 bg-gradient-to-b from-background via-muted/20 to-background", className)}
+      // REMOVED background gradient to let the page.tsx fixed background show through
+      // Standardized padding to align with other sections
+      className={cn("py-20 relative overflow-hidden", className)}
     >
-      <div className="max-w-7xl mx-auto px-6">
+      {/* Background Effect: Subtle, floating blur orb */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div 
+            className="absolute top-1/2 left-1/4 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-blob" 
+            style={{ animationDelay: '2s' }}
+        />
+        <div 
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-blob-reverse"
+        />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
           <Badge variant="outline" className="mb-6 border-foreground/20">
@@ -119,7 +132,8 @@ export default function AlgorithmComplexity({ className }: { className?: string 
               <Card
                 key={complexity.id}
                 className={cn(
-                  "group cursor-pointer transition-all duration-300 hover:shadow-lg border-border/50",
+                  // Set background of card slightly translucent to hint at global background
+                  "group cursor-pointer transition-all duration-300 hover:shadow-lg border-border/50 bg-card/50 backdrop-blur-sm",
                   selectedComplexity === complexity.id
                     ? "ring-2 ring-foreground/20 shadow-lg"
                     : "hover:border-border",
@@ -181,7 +195,7 @@ export default function AlgorithmComplexity({ className }: { className?: string 
           {/* Side-by-side Feature Cards */}
           <div className="grid lg:grid-cols-2 gap-8 mt-12">
             {/* Interactive Learning */}
-            <Card className="group border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
+            <Card className="group border-border/50 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg">
               <CardContent className="p-8">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-muted transition-colors">
@@ -202,7 +216,7 @@ export default function AlgorithmComplexity({ className }: { className?: string 
             </Card>
 
             {/* Interview Preparation */}
-            <Card className="group border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg">
+            <Card className="group border-border/50 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg">
               <CardContent className="p-8">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-muted transition-colors">

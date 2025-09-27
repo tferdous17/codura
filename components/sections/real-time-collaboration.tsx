@@ -92,10 +92,12 @@ export default function RealTimeCollaboration({ className }: { className?: strin
   }, []);
 
   return (
-    <section className={cn("py-20 bg-gradient-to-b from-muted/10 to-background relative overflow-hidden", className)}>
+    // REMOVED background gradient. Standardized padding.
+    <section className={cn("py-20 relative overflow-hidden", className)}>
       {/* Background elements inspired by Nightwatch */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
+          {/* Animated Beams */}
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
@@ -128,6 +130,8 @@ export default function RealTimeCollaboration({ className }: { className?: strin
             ))}
           </svg>
         </div>
+        {/* Added radial glow for depth */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.05)_0%,transparent_70%)]" />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">

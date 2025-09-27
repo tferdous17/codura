@@ -59,8 +59,14 @@ export default function FAQProfessional() {
   };
 
   return (
-    <Section className="py-20 bg-gradient-to-b from-background to-muted/10">
-      <div className="max-w-4xl mx-auto px-6">
+    // REMOVED background gradient and added local background blur/glow
+    <Section className="py-20 relative overflow-hidden">
+        {/* Background Effect: Subtle glow at the top-center */}
+        <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 left-1/2 w-96 h-96 -translate-x-1/2 bg-brand/5 rounded-full blur-3xl opacity-50 animate-pulse" />
+        </div>
+        
+      <div className="max-w-4xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">
             Frequently Asked Questions
@@ -101,23 +107,6 @@ export default function FAQProfessional() {
               </div>
             </div>
           ))}
-        </div>
-
-        <div className="mt-16 text-center">
-          <div className="p-8 bg-card border border-border/40 rounded-xl">
-            <h3 className="text-xl font-semibold mb-4">Still have questions?</h3>
-            <p className="text-muted-foreground mb-6">
-              Our team is here to help you succeed in your technical interview preparation.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-6 py-3 bg-foreground text-background hover:bg-foreground/90 rounded-lg font-semibold transition-colors duration-200">
-                Contact Support
-              </button>
-              <button className="px-6 py-3 border border-border hover:bg-muted/50 rounded-lg font-semibold transition-colors duration-200">
-                Join Discord
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </Section>

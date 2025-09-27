@@ -20,7 +20,7 @@ interface HeroButtonProps {
 }
 
 interface HeroProps {
-  title?: string;
+  title?: string; // Kept for interface, but using hardcoded title below
   description?: string;
   mockup?: ReactNode | false;
   badge?: ReactNode | false;
@@ -192,20 +192,28 @@ export default function HeroElevated({
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_top,rgba(255,224,194,0.05)_0%,transparent_70%)]" />
         </div>
 
-        <div className="max-w-container mx-auto flex flex-col gap-12 pt-16 sm:gap-24 relative z-10">
-          <div className="flex flex-col items-center gap-6 text-center sm:gap-12">
+        <div className="max-w-container mx-auto flex flex-col gap-6 text-center pt-16 sm:gap-12 relative z-10">
+          <div className="flex flex-col items-center gap-6 text-center">
             <div className="flex flex-row items-center justify-center mb-[-25px] w-full">
               <AnimatedTooltip items={people} />
             </div>
             {badge !== false && badge}
-            <h1 className="animate-appear from-foreground to-foreground dark:to-muted-foreground relative z-10 inline-block bg-linear-to-r bg-clip-text text-4xl leading-tight font-bold text-balance text-transparent drop-shadow-2xl sm:text-6xl sm:leading-tight md:text-7xl md:leading-tight">
-              <span className="bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
-                {title}
-              </span>
+            
+            {/* KEY CHANGE: Applying Nightwatch Hero Text Styles 
+              - text-5xl md:text-8xl for size
+              - font-medium tracking-tight for weight and spacing
+              - Hardcoded text structure with a span for the second line
+            */}
+            <h1 className="animate-appear text-white relative z-10 inline-block text-5xl leading-tight font-medium tracking-tight text-balance sm:text-6xl sm:leading-tight md:text-8xl md:leading-tight">
+              Master your coding <br className="hidden md:block" />
+              <span className="text-neutral-400">interviews with AI</span>
             </h1>
-            <p className="text-md animate-appear text-muted-foreground relative z-10 max-w-[740px] font-medium text-balance opacity-0 delay-100 sm:text-xl leading-relaxed">
-              {description}
+            
+            {/* Updated description text size and spacing */}
+            <p className="text-lg animate-appear text-muted-foreground relative z-10 max-w-[740px] font-light text-balance opacity-0 delay-100 sm:text-xl leading-relaxed">
+              Prepare smarter for technical interviews with our community-driven and AI-powered platform, complete with mock interviews and problem solving.
             </p>
+            
             <div className="flex flex-col sm:flex-row gap-4 animate-appear opacity-0 delay-200">
               <button className="cursor-pointer px-8 py-3 z-10 rounded-lg bg-gradient-to-r from-foreground to-foreground/90 hover:from-foreground/90 hover:to-foreground text-background font-semibold focus:ring-1 transition-all duration-200 hover:scale-[1.02] shadow-lg">
                 Start practicing

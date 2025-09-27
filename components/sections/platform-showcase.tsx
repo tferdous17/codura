@@ -74,9 +74,18 @@ export default function PlatformShowcase({ className }: { className?: string }) 
   return (
     <section
       id="platform-showcase"
-      className={cn("py-24 bg-gradient-to-b from-background to-muted/30", className)}
+      // REMOVED background gradient. Standardized padding.
+      className={cn("py-20 relative overflow-hidden", className)}
     >
-      <div className="max-w-7xl mx-auto px-6">
+        {/* Background Effect: Subtle animated blur orbs */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div 
+                className="absolute top-1/4 left-3/4 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl animate-float-slow" 
+                style={{ animationDelay: '1s' }}
+            />
+        </div>
+
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
           <Badge variant="outline" className="mb-6 border-foreground/20">
@@ -100,7 +109,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
             <Card
               key={feature.id}
               className={cn(
-                "group border-border/50 hover:border-border transition-all duration-500 hover:shadow-lg",
+                "group border-border/50 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-500 hover:shadow-lg",
                 isVisible && `animate-in slide-in-from-bottom-4 duration-700`,
                 isVisible && `delay-${index * 150}`
               )}
@@ -144,7 +153,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
         {/* Side-by-side call out sections */}
         <div className="grid lg:grid-cols-2 gap-8">
           {/* University Focus */}
-          <Card className="border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden">
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden">
             <CardContent className="p-8 relative">
               <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-xl" />
               <div className="relative">
@@ -168,7 +177,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
           </Card>
 
           {/* Interview Ready */}
-          <Card className="border-border/50 hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden">
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden">
             <CardContent className="p-8 relative">
               <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-full blur-xl" />
               <div className="relative">

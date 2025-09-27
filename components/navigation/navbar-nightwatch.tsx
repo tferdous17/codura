@@ -2,152 +2,114 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import CoduraLogo from "../logos/codura-logo.svg";
 
-const navItems = [
-  { name: "Features", href: "#features" },
-  { name: "Analytics", href: "#analytics" },
-  { name: "Universities", href: "#universities" },
-  { name: "Success Stories", href: "#success-stories" },
-  { name: "Pricing", href: "#pricing" }
-];
 
 export default function NavbarNightwatch() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("");
+  const [showBorder, setShowBorder] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-
-      // Track active section for smooth navigation highlighting
-      const sections = navItems.map(item => item.href.substring(1));
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top <= 100 && rect.bottom >= 100) {
-            setActiveSection(section);
-            break;
-          }
-        }
-      }
+    const evaluateScrollPosition = () => {
+      setShowBorder(window.pageYOffset >= 24);
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", evaluateScrollPosition);
+    evaluateScrollPosition();
+
+    return () => window.removeEventListener("scroll", evaluateScrollPosition);
   }, []);
 
-  const smoothScrollTo = (href: string) => {
-    const element = document.getElementById(href.substring(1));
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-    setIsMobileMenuOpen(false);
-  };
-
   return (
-    <>
-      <nav className={cn(
-        "fixed top-0 w-full z-50 transition-all duration-500",
-        isScrolled
-          ? "bg-background/95 backdrop-blur-xl border-b border-border/60 shadow-lg shadow-background/20"
-          : "bg-transparent border-b border-transparent"
-      )}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo with glow effect */}
-            <div className="flex items-center group">
-              <div className="text-2xl font-bold tracking-tight relative">
-                <span className="text-foreground">cod</span>
-                <span className="text-brand relative">
-                  ura
-                  <div className="absolute -inset-1 bg-gradient-to-r from-brand/20 to-orange-300/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm -z-10" />
-                </span>
-              </div>
-            </div>
+    <header
+      className={cn(
+        "fixed inset-x-0 top-0 z-[60] border-b border-b-transparent bg-gradient-to-b shadow-none backdrop-blur-none transition-all duration-1000",
+        showBorder && !navOpen
+          ? "border-b-white/10 shadow-[0_4px_60px_0_rgba(0,0,0,0.90)] backdrop-blur-md from-neutral-950/80 to-neutral-950/50"
+          : navOpen
+          ? "backdrop-blur-md opacity-100"
+          : ""
+      )}
+    >
+      {/* 1. Changed to 'justify-start' to allow elements to flow.
+        2. Container acts as the full-width wrapper.
+      */}
+      <div className="flex items-center justify-start py-4 container"> 
+        
+        {/* NEW WRAPPER for Logo and Nav Links - This is the central element */}
+        {/* The 'mx-auto' class centers this block within the parent container */}
+        <div className="flex items-center mx-auto"> 
 
-            {/* Navigation Links - Center with active indicators */}
-            <div className="hidden md:flex items-center space-x-1 bg-muted/10 backdrop-blur-sm rounded-full px-2 py-1 border border-border/20">
-              {navItems.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => smoothScrollTo(item.href)}
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 relative",
-                    activeSection === item.href.substring(1)
-                      ? "text-foreground bg-background/80 shadow-sm border border-border/30"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-                  )}
-                >
-                  {item.name}
-                  {activeSection === item.href.substring(1) && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-brand/5 to-orange-300/5 rounded-full" />
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* CTA Buttons with enhanced styling */}
-            <div className="flex items-center space-x-3">
-              <button className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 px-3 py-2 rounded-lg hover:bg-muted/20">
-                Sign in
-              </button>
-              <button className="px-6 py-2.5 text-sm font-semibold bg-gradient-to-r from-foreground to-foreground/90 hover:from-foreground/90 hover:to-foreground text-background rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-foreground/25 relative overflow-hidden group">
-                <span className="relative z-10">Get started</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-brand/20 to-orange-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/30 transition-all duration-200"
-              >
-                <svg
-                  className={cn("w-5 h-5 transition-transform duration-200", isMobileMenuOpen && "rotate-180")}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                </svg>
-              </button>
-            </div>
-          </div>
+          {/* LOGO */}
+          <a href="/" aria-label="Codura homepage" className="flex items-center group">
+            <Image
+              src={CoduraLogo}
+              alt="Codura logo"
+              width={90}
+              height={40}
+              priority
+              className="transition-all duration-200 group-hover:opacity-80"
+            />
+          </a>
+          
+          {/* NAVIGATION LINKS (Next to logo) */}
+          <nav className="hidden items-center gap-6 text-lg leading-7 font-light -tracking-[0.32px] text-neutral-400 lg:flex ml-12">
+            <a className="hover:text-neutral-200" href="/pricing">
+              Pricing
+            </a>
+            <a className="hover:text-neutral-200" href="/docs">
+              Documentation
+            </a>
+            <a className="hover:text-neutral-200" href="/contact">
+              Enterprise
+            </a>
+          </nav>
         </div>
-      </nav>
-
-      {/* Mobile Menu */}
-      <div className={cn(
-        "fixed inset-x-0 top-16 z-40 md:hidden transition-all duration-300 ease-in-out",
-        isMobileMenuOpen
-          ? "opacity-100 translate-y-0 visible"
-          : "opacity-0 -translate-y-4 invisible"
-      )}>
-        <div className="bg-background/95 backdrop-blur-xl border border-border/40 mx-4 rounded-xl shadow-xl p-6">
-          <div className="space-y-3">
-            {navItems.map((item) => (
-              <button
-                key={item.name}
-                onClick={() => smoothScrollTo(item.href)}
-                className="w-full text-left px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted/20 rounded-lg transition-all duration-200 font-medium"
-              >
-                {item.name}
-              </button>
-            ))}
-            <div className="border-t border-border/30 pt-4 mt-4">
-              <button className="w-full text-left px-4 py-3 text-muted-foreground hover:text-foreground rounded-lg transition-colors duration-200 font-medium">
-                Sign in
-              </button>
-              <button className="w-full mt-2 px-4 py-3 bg-foreground text-background rounded-lg font-semibold hover:bg-foreground/90 transition-colors duration-200">
-                Get started
-              </button>
-            </div>
+        {/* END NEW WRAPPER */}
+        
+        {/* SIGN IN / SIGN UP BUTTONS 
+          The 'absolute inset-y-0 right-0' combined with 'pr-4' (or 'ml-auto' on 'lg' screens) 
+          is a reliable way to keep the buttons on the right edge, even when the 
+          main logo/nav group is centered.
+        */}
+        <div className="flex items-center gap-4 absolute inset-y-0 right-0 pr-4 lg:relative lg:ml-auto lg:pr-0">
+          <div className="hidden space-x-2 md:block">
+            <a
+              href="/sign-in"
+              className="ring-offset-background focus-visible:ring-ring inline-flex cursor-pointer items-center justify-center rounded-md border whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 border border-white/5 bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200 h-8 gap-2 px-3 text-sm leading-tight nav-links"
+            >
+              Sign in
+            </a>
+            <a
+              href="/sign-up"
+              className="ring-offset-background focus-visible:ring-ring inline-flex cursor-pointer items-center justify-center rounded-md border whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 border-blue-500 bg-blue-600 text-blue-100 hover:bg-blue-600/90 active:bg-blue-700 h-8 gap-2 px-3 text-sm leading-tight nav-links"
+            >
+              Start for free
+            </a>
           </div>
+
+          <button
+            onClick={() => setNavOpen(!navOpen)}
+            className="focus-visible:shadow-xs-selected relative size-8 rounded-md text-white focus:outline-hidden lg:hidden"
+          >
+            <div className="relative flex h-6 w-6 items-center justify-center">
+              <span
+                className={cn(
+                  "absolute top-[11px] left-1.5 block h-0.5 w-5 rounded-full bg-white transition-transform duration-300",
+                  navOpen && "rotate-45 translate-y-1"
+                )}
+              ></span>
+              <span
+                className={cn(
+                  "absolute top-[19px] left-1.5 block h-0.5 w-5 rounded-full bg-white transition-transform duration-300",
+                  navOpen && "-rotate-45 -translate-y-1"
+                )}
+              ></span>
+            </div>
+          </button>
         </div>
       </div>
-    </>
+    </header>
   );
 }

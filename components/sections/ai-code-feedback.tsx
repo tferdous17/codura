@@ -102,8 +102,9 @@ export default function AICodeFeedback({ className }: { className?: string }) {
   };
 
   return (
-    <section className={cn("py-20 bg-gradient-to-b from-background to-muted/10 relative overflow-hidden", className)}>
-      {/* Background elements inspired by Nightwatch */}
+    // REMOVED background gradient to let the page.tsx fixed background show through
+    <section className={cn("py-20 relative overflow-hidden", className)}>
+      {/* Background elements inspired by Nightwatch - Subtle vertical beams */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 opacity-5">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -119,10 +120,12 @@ export default function AICodeFeedback({ className }: { className?: string }) {
             />
           ))}
         </div>
+        {/* Subtle radial glow focused on the section content */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,224,194,0.03)_0%,transparent_70%)]" />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
+        {/* ... (rest of content) ... */}
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-16">
           <Badge className="mb-6 bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-colors">

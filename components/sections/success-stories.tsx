@@ -1,3 +1,5 @@
+// src/components/sections/success-stories.tsx
+
 "use client";
 
 import { Section } from "@/components/ui/section";
@@ -54,13 +56,14 @@ const companyLogos = [
 
 export default function SuccessStories() {
   return (
-    <Section className="py-20 bg-gradient-to-b from-background to-background/50 relative overflow-hidden">
-      {/* Floating background elements */}
+    // Background is transparent to show the global page background
+    <Section className="py-20 relative overflow-hidden">
+      {/* Floating background elements - Made dots slightly more muted for better blending */}
       <div className="absolute inset-0 opacity-5">
         {Array.from({ length: 20 }).map((_, i) => (
           <div
             key={i}
-            className="absolute w-2 h-2 bg-brand rounded-full animate-float"
+            className="absolute w-2 h-2 bg-brand/70 rounded-full animate-float"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -69,6 +72,8 @@ export default function SuccessStories() {
             }}
           />
         ))}
+        {/* Added radial glow for depth */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,165,0,0.05)_0%,transparent_70%)]" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 relative z-10">
@@ -172,24 +177,6 @@ export default function SuccessStories() {
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-brand/20 via-brand/50 to-brand/20 rounded-b-2xl transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
             </div>
           ))}
-        </div>
-
-        {/* CTA Section */}
-        <div className="mt-16 text-center">
-          <div className="max-w-2xl mx-auto p-8 rounded-2xl bg-gradient-to-br from-brand/10 to-orange-300/10 border border-brand/20 backdrop-blur-sm">
-            <h3 className="text-2xl font-bold mb-4">Ready to Write Your Success Story?</h3>
-            <p className="text-muted-foreground mb-6">
-              Join thousands of students who transformed their technical interview skills with Codura
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-3 bg-gradient-to-r from-brand to-orange-300 hover:from-brand/90 hover:to-orange-300/90 text-black font-semibold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-brand/20">
-                Start Your Journey
-              </button>
-              <button className="px-8 py-3 border border-brand/30 hover:border-brand/50 text-foreground hover:bg-brand/10 font-semibold rounded-xl transition-all duration-300">
-                View More Stories
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </Section>
