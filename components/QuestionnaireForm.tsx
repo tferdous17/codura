@@ -1,155 +1,112 @@
+// app/questionnaire/QuestionnaireForm.tsx
 "use client";
 
-import * as React from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { saveAnswersAndComplete } from "@/app/questionnaire/submit/actions";
 
-type Question = {
-  question_id: string;   // UUID
-  prompt: string;
-  allows_multiple: boolean;
-  position: number;      // 1 = ranks, 2 = age
-};
-
-type Option = {
-  option_id: string;     // UUID
-  question_id: string;   // UUID
-  label: string;
-  value: string;         // e.g. "python"
-  position: number;
-};
+type Question = { question_id: number; prompt: string; allows_multiple: boolean };
+type Option = { label: string; value: string; position: number };
 
 export default function QuestionnaireForm({
-  questions = [],
-  options = [],
-  action, // <-- server action passed from page
+  question,
+  options,
+  maxChoices = 3,
 }: {
-  questions?: Question[];
-  options?: Option[];
-  action: (fd: FormData) => Promise<any>;
+  question: Question;
+  options: Option[];
+  maxChoices?: number;
 }) {
-  const q1 = questions.find((q) => q.position === 1);
-  const q2 = questions.find((q) => q.position === 2);
-  const q1Options = options
-    .filter((o) => o.question_id === q1?.question_id)
-    .slice()
-    .sort((a, b) => a.position - b.position);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [errMsg, setErrMsg] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
-  const [rank1, setRank1] = React.useState("");
-  const [rank2, setRank2] = React.useState("");
-  const [rank3, setRank3] = React.useState("");
-  const [age, setAge] = React.useState<number | "">("");
-
-  const taken = new Set([rank1, rank2, rank3].filter(Boolean));
-  const available = (current: string) =>
-    q1Options.filter((o) => !taken.has(o.option_id) || o.option_id === current);
-
-  if (!q1 || !q2) return <p className="text-red-600">No questions found in DB.</p>;
-
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // Build a normalized payload the server action expects.
-    // - For Q1 (ranked choices): send rows with option_id and answer_text = rank ("1|2|3")
-    // - For Q2 (age): send a text answer with answer_text
-    const payload = {
-      q1Id: q1.question_id,
-      q2Id: q2.question_id,
-      ranks: [
-        rank1 ? { option_id: rank1, rank: 1 } : null,
-        rank2 ? { option_id: rank2, rank: 2 } : null,
-        rank3 ? { option_id: rank3, rank: 3 } : null,
-      ].filter(Boolean),
-      age: age === "" ? null : Number(age),
-    };
-
-    const fd = new FormData();
-    fd.set("payload", JSON.stringify(payload));
-    const res = await action(fd);
-
-    // Optional: the action can return {ok:true, redirect:"/dashboard"}
-    if (res?.redirect) window.location.href = res.redirect;
+  const toggle = (val: string) => {
+    setSelected((prev) => {
+      if (prev.includes(val)) return prev.filter((v) => v !== val);
+      if (!question.allows_multiple || maxChoices <= 1) return [val];
+      if (prev.length < maxChoices) return [...prev, val];
+      return prev;
+    });
   };
 
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("saving");
+    setErrMsg("");
+
+    startTransition(async () => {
+      const res = await saveAnswersAndComplete({
+        questionId: question.question_id,
+        values: selected,
+      });
+      if (!res?.ok) {
+        setStatus("error");
+        setErrMsg(res?.message || "Save failed");
+        return;
+      }
+      router.push("/dashboard");
+    });
+  };
+
+  const disabled =
+    isPending || status === "saving" || (question.allows_multiple && selected.length === 0);
+
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      {/* Q1: Languages ranked 1–3 (use option_id as value to avoid server-side lookups) */}
-      <fieldset className="space-y-3">
-        <legend className="font-semibold">{q1.prompt}</legend>
-        <p className="text-sm text-gray-600">
-          Pick up to three in order (1 = top preference). You can also pick just one.
-        </p>
+    <div className="flex min-h-screen items-center justify-center bg-gray-900 p-6">
+      <div className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-800 shadow-lg p-6 text-white">
+        <form onSubmit={onSubmit} className="space-y-6">
+          <h2 className="text-xl font-semibold text-center">{question.prompt}</h2>
 
-        <div className="grid grid-cols-1 gap-3">
-          <label className="flex items-center gap-3">
-            <span className="w-16 shrink-0">Rank 1</span>
-            <select
-              name="rank1"
-              className="border rounded p-2 w-full"
-              value={rank1}
-              onChange={(e) => setRank1(e.target.value)}
-            >
-              <option value="">— none —</option>
-              {available(rank1).map((o) => (
-                <option key={o.option_id} value={o.option_id}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="grid gap-3">
+            {options.map((opt) => {
+              const checked = selected.includes(opt.value);
+              const capReached =
+                question.allows_multiple && selected.length >= maxChoices && !checked;
 
-          <label className="flex items-center gap-3">
-            <span className="w-16 shrink-0">Rank 2</span>
-            <select
-              name="rank2"
-              className="border rounded p-2 w-full"
-              value={rank2}
-              onChange={(e) => setRank2(e.target.value)}
-            >
-              <option value="">— none —</option>
-              {available(rank2).map((o) => (
-                <option key={o.option_id} value={o.option_id}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
+              return (
+                <label
+                  key={opt.value}
+                  className={`flex items-center gap-3 rounded-md border p-3 cursor-pointer ${
+                    checked ? "bg-gray-700" : "bg-gray-900"
+                  } ${capReached ? "opacity-60" : ""}`}
+                >
+                  <input
+                    type={question.allows_multiple ? "checkbox" : "radio"}
+                    value={opt.value}
+                    checked={checked}
+                    onChange={() => toggle(opt.value)}
+                    disabled={capReached}
+                    className="accent-primary"
+                  />
+                  <span>{opt.label}</span>
+                </label>
+              );
+            })}
+          </div>
 
-          <label className="flex items-center gap-3">
-            <span className="w-16 shrink-0">Rank 3</span>
-            <select
-              name="rank3"
-              className="border rounded p-2 w-full"
-              value={rank3}
-              onChange={(e) => setRank3(e.target.value)}
-            >
-              <option value="">— none —</option>
-              {available(rank3).map((o) => (
-                <option key={o.option_id} value={o.option_id}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </fieldset>
+          {question.allows_multiple && (
+            <p className="text-sm text-gray-300 text-center">
+              {selected.length}/{maxChoices} selected
+            </p>
+          )}
 
-      {/* Q2: Age (typed) */}
-      <fieldset className="space-y-3">
-        <legend className="font-semibold">{q2.prompt}</legend>
-        <input
-          type="number"
-          name="age"
-          min={0}
-          className="border rounded p-2 w-full"
-          placeholder="Enter your age"
-          value={age}
-          onChange={(e) => setAge(e.target.value === "" ? "" : Number(e.target.value))}
-          required
-        />
-      </fieldset>
+          <button
+            type="submit"
+            className="w-full rounded-md bg-primary px-4 py-2 text-white font-semibold hover:bg-primary/90 disabled:opacity-50"
+            disabled={disabled}
+          >
+            {isPending || status === "saving" ? "Submitting..." : "Submit & Go to Dashboard"}
+          </button>
 
-      <button type="submit" className="rounded bg-black text-white px-4 py-2 hover:opacity-90">
-        Submit
-      </button>
-    </form>
+          {status === "error" && (
+            <p className="text-red-400 text-sm text-center">Error: {errMsg}</p>
+          )}
+        </form>
+      </div>
+    </div>
   );
+
 }

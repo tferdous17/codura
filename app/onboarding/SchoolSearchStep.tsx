@@ -70,6 +70,8 @@ export default function SchoolSearchStep() {
   const [selectedMajor, setSelectedMajor] = useState("");
   const [customMajor, setCustomMajor] = useState("");
   const [showCustomMajor, setShowCustomMajor] = useState(false);
+  const [age, setAge] = useState<number | "">("");
+  const [academicYear, setAcademicYear] = useState("");
   const abortRef = useRef<AbortController | null>(null);
 
   // Search using our secure API route
@@ -168,9 +170,25 @@ export default function SchoolSearchStep() {
       alert("Please select your major/field of study.");
       return;
     }
+
+    if (!age || age < 13 || age > 100) {
+      alert("Please enter a valid age (13-100).");
+      return;
+    }
+
+    if (!academicYear) {
+      alert("Please select your academic year/status.");
+      return;
+    }
     
     try {
-      await saveEducationChoice({ kind: "college", code, major });
+      await saveEducationChoice({ 
+        kind: "college", 
+        code, 
+        major, 
+        age: Number(age), 
+        academicYear 
+      });
       // Redirect will happen automatically via middleware
     } catch (error) {
       console.error("Error saving school choice:", error);
@@ -179,11 +197,26 @@ export default function SchoolSearchStep() {
 
   const handleNoSchoolSubmit = async () => {
     const major = getFinalMajor();
+
+    if (!age || age < 13 || age > 100) {
+      alert("Please enter a valid age (13-100).");
+      return;
+    }
+
+    if (!academicYear) {
+      alert("Please select your status/level.");
+      return;
+    }
     
     // For "no school" option, major is optional
     // Users can proceed to questionnaire without specifying major
     try {
-      await saveEducationChoice({ kind: "no_school", major: major || null });
+      await saveEducationChoice({ 
+        kind: "no_school", 
+        major: major || null, 
+        age: Number(age), 
+        academicYear 
+      });
       // Redirect will happen automatically via middleware
     } catch (error) {
       console.error("Error saving no school choice:", error);
@@ -191,7 +224,11 @@ export default function SchoolSearchStep() {
   };
 
   const isSchoolFormValid = () => {
-    return selected && getFinalMajor().length > 0;
+    return selected && getFinalMajor().length > 0 && age && age >= 13 && age <= 100 && academicYear;
+  };
+
+  const isNoSchoolFormValid = () => {
+    return age && age >= 13 && age <= 100 && academicYear;
   };
 
   return (
@@ -226,11 +263,6 @@ export default function SchoolSearchStep() {
               aria-controls="school-results"
             />
             {loading && <div className="text-xs opacity-70 mt-1">Searching…</div>}
-            
-            {/* Debug info */}
-            <div className="text-xs text-gray-500 mt-1">
-              Debug: query="{query}" (len: {query.length}), results={results.length}, open={open.toString()}
-            </div>
           </div>
 
           {/* Results Dropdown */}
@@ -348,6 +380,51 @@ export default function SchoolSearchStep() {
             </div>
           )}
 
+          {/* Age Input */}
+          <div className="grid gap-3">
+            <label className="text-sm font-medium">Age *</label>
+            <input
+              type="number"
+              min="13"
+              max="100"
+              value={age}
+              onChange={(e) => setAge(e.target.value === "" ? "" : Number(e.target.value))}
+              placeholder="Enter your age"
+              className="w-full border rounded px-3 py-2"
+              required
+            />
+          </div>
+
+          {/* Academic Year Selection */}
+          <div className="grid gap-3">
+            <label className="text-sm font-medium">Academic Year / Status *</label>
+            <select
+              value={academicYear}
+              onChange={(e) => setAcademicYear(e.target.value)}
+              className="w-full border rounded px-3 py-2"
+              required
+            >
+              <option value="">Select your current status</option>
+              <optgroup label="Current Students">
+                <option value="freshman">Freshman (1st year)</option>
+                <option value="sophomore">Sophomore (2nd year)</option>
+                <option value="junior">Junior (3rd year)</option>
+                <option value="senior">Senior (4th year)</option>
+                <option value="graduate">Graduate Student</option>
+              </optgroup>
+              <optgroup label="Non-Students">
+                <option value="recent_graduate">Recent Graduate (0-2 years)</option>
+                <option value="working_professional">Working Professional</option>
+                <option value="career_changer">Career Changer</option>
+                <option value="self_taught">Self-Taught Learner</option>
+                <option value="bootcamp_student">Bootcamp Student</option>
+                <option value="bootcamp_graduate">Bootcamp Graduate</option>
+                <option value="high_school">High School Student</option>
+                <option value="other">Other</option>
+              </optgroup>
+            </select>
+          </div>
+
           {/* Action Buttons */}
           <div className="grid gap-3">
             {/* Submit selected school via server action */}
@@ -366,7 +443,8 @@ export default function SchoolSearchStep() {
             <form action={handleNoSchoolSubmit}>
               <button
                 type="submit"
-                className="w-full rounded border border-gray-300 px-4 py-2 hover:bg-gray-50"
+                disabled={!isNoSchoolFormValid()}
+                className="w-full rounded border border-gray-300 px-4 py-2 hover:bg-gray-50 disabled:opacity-50"
               >
                 Continue without school
               </button>

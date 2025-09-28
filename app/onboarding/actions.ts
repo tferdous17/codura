@@ -32,7 +32,9 @@ import { createClient } from "@/utils/supabase/server";
 export async function saveEducationChoice(choice: { 
   kind: string; 
   code?: string; 
-  major?: string | null; 
+  major?: string | null;
+  age?: number;
+  academicYear?: string;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -40,6 +42,33 @@ export async function saveEducationChoice(choice: {
 
   let federalSchoolCode: string | null = null;
   let major: string | null = null;
+  let age: number | null = null;
+  let academicYear: string | null = null;
+
+  // Validate age (required)
+  if (choice.age && choice.age >= 13 && choice.age <= 100) {
+    age = choice.age;
+  } else {
+    throw new Error("Valid age (13-100) is required.");
+  }
+
+  // Validate academic year (required)
+  if (choice.academicYear && choice.academicYear.trim()) {
+    const validYears = [
+      'freshman', 'sophomore', 'junior', 'senior', 'graduate',
+      'recent_graduate', 'working_professional', 'career_changer',
+      'self_taught', 'bootcamp_student', 'bootcamp_graduate', 
+      'high_school', 'other'
+    ];
+    
+    if (validYears.includes(choice.academicYear)) {
+      academicYear = choice.academicYear;
+    } else {
+      throw new Error("Please select a valid academic year/status.");
+    }
+  } else {
+    throw new Error("Academic year/status is required.");
+  }
 
   // Validate major if provided
   if (choice.major && choice.major.trim()) {
@@ -73,7 +102,9 @@ export async function saveEducationChoice(choice: {
       .from("users")
       .update({ 
         federal_school_code: federalSchoolCode,
-        major: major 
+        major: major,
+        age: age,
+        academic_year: academicYear
       })
       .eq("user_id", user.id);
       
