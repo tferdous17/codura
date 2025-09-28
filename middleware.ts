@@ -1,37 +1,76 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { updateSession } from '@/utils/supabase/middleware'
+// middleware.ts
+import { NextResponse, type NextRequest } from "next/server";
+import { updateSession } from "./utils/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
-  const { response, user } = await updateSession(request)
+const PUBLIC_PATHS = new Set<string>([
+  "/",
+  "/login",
+  "/auth/callback",
+  "/auth/auth-code-error",
+  "/error",
+  "/api/health",
+  "/questionnaire", // allow visiting the questionnaire itself
+]);
 
-  // You can now use the `user` object to check if the user is authenticated
-  // and perform any additional logic based on the user's authentication status.
-  // For example, you might want to redirect unauthenticated users to a login page.
+// Paths that should never trigger redirect logic (static, images, etc.)
+function isAssetPath(pathname: string) {
+  return (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/assets") ||
+    pathname.startsWith("/images") ||
+    pathname.startsWith("/favicon.") ||
+    /\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map|txt|xml|woff2?)$/i.test(pathname)
+  );
+}
 
-  // protecting routes from unauthenticated access
-  if(request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-    return NextResponse.redirect(new URL('/', request.url))
-  } 
+export async function middleware(req: NextRequest) {
+  const { pathname, origin } = req.nextUrl;
 
-
-  // redirecting authenticated users away from auth pages
-  if((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  if (isAssetPath(pathname)) {
+    return NextResponse.next();
   }
 
-  return response
+  // Call your Supabase helper (keeps cookies fresh + gives you user)
+  const { response, user, supabase } = await updateSession(req);
 
+  // If not logged in and trying to hit protected areas, send to /login
+  const isPublic = PUBLIC_PATHS.has(pathname);
+  const isAuthRoute = pathname.startsWith("/auth");
+
+  if (!user && !isPublic && !isAuthRoute) {
+    return NextResponse.redirect(new URL("/login", origin));
+  }
+
+  // If logged in, check questionnaire flag
+  if (user) {
+    const { data: profile, error } = await supabase
+      .from("users")
+      .select("questionnaire_completed")
+      .eq("user_id", user.id)
+      .single();
+
+    // If we can read the row and it’s NOT completed, force them to questionnaire
+    if (!error && profile && !profile.questionnaire_completed) {
+      const onQuestionnairePage = pathname === "/questionnaire";
+      const onAuth = isAuthRoute || pathname === "/logout";
+      if (!onQuestionnairePage && !onAuth) {
+        return NextResponse.redirect(new URL("/questionnaire", origin));
+      }
+    }
+
+    // Optional: if already completed and they go to /questionnaire, kick to /dashboard
+    if (!error && profile?.questionnaire_completed && pathname === "/questionnaire") {
+      return NextResponse.redirect(new URL("/dashboard", origin));
+    }
+  }
+
+  // Default: continue the request (with any set cookies from updateSession)
+  return response;
 }
 
+// ✅ Matcher: run middleware for everything except static assets (extra safety)
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map|txt|xml|woff2?|ttf)$).*)",
   ],
-}
+};

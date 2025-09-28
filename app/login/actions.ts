@@ -27,7 +27,30 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+
+  // Decide destination based on onboarding flags
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('federal_school_code, questionnaire_completed')
+    .eq('user_id', user.id)
+    .single()
+
+  const fafsaCode = (profile?.federal_school_code ?? '').trim()
+  const hasValidCode = /^[0-9A-Za-z]{6}$/.test(fafsaCode)
+  const isCompleted = !!profile?.questionnaire_completed
+
+  if (isCompleted) {
+    redirect('/dashboard')
+  } else if (hasValidCode) {
+    redirect('/questionnaire')
+  } else {
+    redirect('/onboarding')
+  }
 }
 
 
@@ -61,7 +84,7 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  redirect('/onboarding')
 }
 
 
@@ -75,7 +98,7 @@ export async function signInWithGithub() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: 'http://localhost:3000/auth/callback?next=/dashboard'
+      redirectTo: 'http://localhost:3000/auth/callback'
     }
   })
 
@@ -88,7 +111,7 @@ export async function signInWithGithub() {
   /**
    * Redirect to GitHub for authentication
    * After GitHub auth, user will be redirected back to /auth/callback
-   * which will then redirect to /dashboard
+   * which will then decide onboarding → questionnaire → dashboard.
    */
   if (data.url) {
     redirect(data.url)
@@ -102,8 +125,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'http://localhost:3000/auth/callback?next=/dashboard',
-
+      redirectTo: 'http://localhost:3000/auth/callback',
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
@@ -119,7 +141,7 @@ export async function signInWithGoogle() {
   /**
    * Redirect to Google for authentication
    * After Google auth, user will be redirected back to /auth/callback
-   * which will then redirect to /dashboard
+   * which will then decide onboarding → questionnaire → dashboard.
    */
   if (data.url) {
     redirect(data.url)
