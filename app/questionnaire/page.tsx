@@ -1,62 +1,62 @@
-// app/questionnaire/page.tsx (server component)
-
+// app/questionnaire/page.tsx
 import { createClient } from "@/utils/supabase/server";
 import QuestionnaireForm from "@/components/QuestionnaireForm";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function Page() {
   const supabase = await createClient();
 
-  // 1) Load the single active question at position 1
-  const { data: question, error: qErr } = await supabase
+  // Load the first two active questions
+  const { data: questions, error: qErr } = await supabase
     .from("questions")
-    .select("question_id, prompt, allows_multiple")
-    .eq("position", 1)
+    .select("question_id, prompt, allows_multiple, position")
     .eq("is_active", true)
-    .single();
+    .in("position", [1, 2])
+    .order("position", { ascending: true });
 
-  if (qErr || !question) {
-    return (
-      <div className="text-red-500">
-        Couldn’t load question{qErr?.message ? `: ${qErr.message}` : ""}.
-      </div>
-    );
+  if (qErr || !questions?.length) {
+    return <div className="text-red-500 p-6">Couldn’t load questions.</div>;
   }
 
-  // 2) Load options ordered by position
+  const ids = questions.map((q) => q.question_id);
+
+  // Load all options for those questions
   const { data: options, error: oErr } = await supabase
     .from("question_options")
-    .select("label, value, position")
-    .eq("question_id", question.question_id)
+    .select("question_id, label, value, position")
+    .in("question_id", ids)
     .order("position", { ascending: true });
 
   if (oErr) {
-    return (
-      <div className="text-red-500">
-        Couldn’t load options{oErr?.message ? `: ${oErr.message}` : ""}.
-      </div>
-    );
+    return <div className="text-red-500 p-6">Couldn’t load options.</div>;
   }
 
-  // If somehow no options, show a helpful nudge
-  if (!options?.length) {
-    return (
-      <div className="text-yellow-600">
-        No options found for this question. Check the <code>question_options</code> rows for
-        question_id {String(question.question_id)}.
-      </div>
-    );
+  // Group options by question
+  const grouped = new Map<number, { label: string; value: string; position: number }[]>();
+  for (const opt of options ?? []) {
+    const list = grouped.get(opt.question_id) ?? [];
+    list.push(opt);
+    grouped.set(opt.question_id, list);
   }
 
-  // 3) Render client form (it handles saving via server action, no redirects)
+  // Shape props for the client component
+  const items = questions.map((q) => ({
+    question_id: q.question_id,
+    prompt: q.prompt,
+    allows_multiple: q.allows_multiple,
+    position: q.position,
+    options: grouped.get(q.question_id) ?? [],
+    // Set per-question caps (adjust as you like)
+    maxChoices: q.position === 1 ? 3 : 6,
+  }));
+
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <QuestionnaireForm
-        question={question}
-        options={options}
-        maxChoices={3} // adjust or remove cap as you like
-      />
+    <div className="bg-gray-900 min-h-screen">
+      <div className="max-w-6xl mx-auto p-6">
+        <QuestionnaireForm items={items} />
+      </div>
     </div>
   );
 }
