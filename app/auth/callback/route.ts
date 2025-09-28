@@ -55,15 +55,21 @@ export async function GET(request: Request) {
   // Decide destination with proper null checking
   let dest = "/onboarding";
   
-  if (profile) {
-    if (profile.questionnaire_completed) {
-      dest = "/dashboard";
-    } else if (profile.federal_school_code && profile.federal_school_code.trim() !== "") {
+ // With this safer version:
+if (profile) {
+  if (profile.questionnaire_completed) {
+    dest = "/dashboard";
+  } else {
+    const code = profile.federal_school_code;
+    const hasCode = code !== null && code !== undefined && String(code).trim() !== "";
+    
+    if (hasCode) {
       dest = "/questionnaire";
     } else {
       dest = "/onboarding";
     }
   }
+}
 
   console.log("AUTH CALLBACK destination:", dest);
 

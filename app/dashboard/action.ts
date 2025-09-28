@@ -15,7 +15,7 @@ export async function resetQuestionnaire(_formData: FormData): Promise<void> {
 
   const { error } = await supabase
     .from("users")
-    .update({ questionnaire_completed: false })
+    .update({ questionnaire_completed: false, federal_school_code: null })
     .eq("user_id", user.id);
 
   if (error) {

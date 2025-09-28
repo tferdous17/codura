@@ -9,6 +9,7 @@ const PUBLIC_PATHS = new Set<string>([
   "/auth/auth-code-error",
   "/error",
   "/api/health",
+  "/onboarding", // allow visiting onboarding
   "/questionnaire", // allow visiting the questionnaire itself
 ]);
 
@@ -41,26 +42,49 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", origin));
   }
 
-  // If logged in, check questionnaire flag
+  // If logged in, handle the onboarding flow
   if (user) {
     const { data: profile, error } = await supabase
       .from("users")
-      .select("questionnaire_completed")
+      .select("questionnaire_completed, federal_school_code")
       .eq("user_id", user.id)
       .single();
 
-    // If we can read the row and it’s NOT completed, force them to questionnaire
-    if (!error && profile && !profile.questionnaire_completed) {
+    if (!error && profile) {
       const onQuestionnairePage = pathname === "/questionnaire";
+      const onOnboardingPage = pathname === "/onboarding";
+      const onDashboardPage = pathname === "/dashboard";
       const onAuth = isAuthRoute || pathname === "/logout";
-      if (!onQuestionnairePage && !onAuth) {
-        return NextResponse.redirect(new URL("/questionnaire", origin));
-      }
-    }
 
-    // Optional: if already completed and they go to /questionnaire, kick to /dashboard
-    if (!error && profile?.questionnaire_completed && pathname === "/questionnaire") {
-      return NextResponse.redirect(new URL("/dashboard", origin));
+      // Determine school code presence
+      const code = profile.federal_school_code;
+      const hasCode = code !== null && code !== undefined && String(code).trim() !== "";
+      const completed = profile.questionnaire_completed;
+
+      // Case 1: Questionnaire already completed → dashboard
+      if (completed) {
+        if (!onDashboardPage && !onAuth) {
+          return NextResponse.redirect(new URL("/dashboard", origin));
+        }
+        return response;
+      }
+
+      // Case 2: Questionnaire not completed
+      if (!completed) {
+        if (!hasCode) {
+          // No code:
+          // - Default to onboarding
+          // - But if already on questionnaire (after "No school" server redirect), allow it
+          if (!onOnboardingPage && !onQuestionnairePage && !onAuth) {
+            return NextResponse.redirect(new URL("/onboarding", origin));
+          }
+        } else {
+          // Has code but questionnaire not completed → questionnaire
+          if (!onQuestionnairePage && !onAuth) {
+            return NextResponse.redirect(new URL("/questionnaire", origin));
+          }
+        }
+      }
     }
   }
 
