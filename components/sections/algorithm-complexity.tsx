@@ -113,7 +113,7 @@ export default function AlgorithmComplexity({ className }: { className?: string 
               Algorithm Analysis
             </div>
           </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent leading-tight">
             Master Time Complexity
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">

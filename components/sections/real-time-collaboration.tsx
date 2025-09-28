@@ -348,7 +348,7 @@ export default function RealTimeCollaboration({ className }: { className?: strin
               Live Collaboration
             </div>
           </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent leading-tight">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent leading-tight ">
             Code Together in Real-Time
           </h2>
           <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl">

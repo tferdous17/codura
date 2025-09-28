@@ -38,7 +38,7 @@ export default function EnhancedCTA() {
           <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,224,194,0.1),transparent)] translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
 
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent leading-tight">
               Ready to transform your interview skills?
             </h2>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">

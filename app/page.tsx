@@ -1,5 +1,3 @@
-// tferdous17/codura/codura-landing-page-testing/app/page.tsx
-
 "use client";
 
 import React from "react";
@@ -17,7 +15,6 @@ import AlgorithmComplexity from "@/components/sections/algorithm-complexity";
 import UniversityShowcase from "@/components/sections/university-showcase";
 import EnhancedCTA from "@/components/sections/enhanced-cta";
 import Footer from "@/components/navigation/footer";
-import TestimonialsNightwatch from "@/components/sections/testimonials-nightwatch";
 
 export default function LandingPage() {
   return (
