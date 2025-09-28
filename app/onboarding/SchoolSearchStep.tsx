@@ -1,7 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { saveEducationChoice } from "./actions";
-import { createClient } from "@/utils/supabase/client";
+import { cn } from "@/lib/utils"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 type School = {
   code: string;   // FAFSA/Title-IV code, 6 chars
@@ -11,8 +18,6 @@ type School = {
 };
 
 export default function SchoolSearchStep() {
-  const supabase = createClient();
-
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<School[]>([]);
   const [open, setOpen] = useState(false);
@@ -20,7 +25,7 @@ export default function SchoolSearchStep() {
   const [selected, setSelected] = useState<School | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Search using College Scorecard API
+  // Search using our secure API route
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);
@@ -36,38 +41,35 @@ export default function SchoolSearchStep() {
         const ctrl = new AbortController();
         abortRef.current = ctrl;
 
-        // Use your College Scorecard API key
-        const apiKey = process.env.NEXT_PUBLIC_COLLEGE_SCORECARD_API_KEY || "Q3vFYKsHWLdcmu0Z8tWWH6Rd2DuTMRoYkJfWv2lX";
-        const baseUrl = process.env.NEXT_PUBLIC_COLLEGE_SCORECARD_BASE_URL || "https://api.data.gov/ed/collegescorecard/v1/schools";
-        
-        console.log("Environment check:", {
-          hasApiKey: !!apiKey,
-          hasBaseUrl: !!baseUrl,
-          apiKeyLength: apiKey?.length,
-          baseUrl: baseUrl
-        });
+        console.log("Searching for:", query);
 
+        // Use our secure internal API route
         const response = await fetch(
-          `${baseUrl}.json?api_key=${apiKey}&school.name=${encodeURIComponent(query)}&_fields=id,school.name,school.city,school.state&_per_page=12&school.operating=1`,
+          `/api/schools?q=${encodeURIComponent(query)}`,
           { signal: ctrl.signal }
         );
+
+        console.log("Response status:", response.status);
+        console.log("Response ok:", response.ok);
 
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log("Raw API response:", data);
+        console.log("Data type:", typeof data);
+        console.log("Is array:", Array.isArray(data));
         
-        // Transform the API response to match our School type
-        const schools: School[] = (data.results || []).map((school: any) => ({
-          code: String(school.id || '').padStart(6, '0'), // Federal school code
-          name: school["school.name"] || "Unknown School",
-          city: school["school.city"] || null,
-          state: school["school.state"] || null,
-        })).filter((school: { name: string; }) => school.name !== "Unknown School");
+        // Handle the response - it should be an array of schools
+        const schools: School[] = Array.isArray(data) ? data : [];
+        console.log("Processed schools:", schools);
+        console.log("Schools length:", schools.length);
 
+        console.log("About to set results and open state");
         setResults(schools);
         setOpen(schools.length > 0);
+        console.log("State should be updated now");
       } catch (error: any) {
         if (error.name !== 'AbortError') {
           console.error("School search error:", error);
@@ -116,80 +118,96 @@ export default function SchoolSearchStep() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <label className="block text-sm font-medium mb-1">Find your school</label>
-        <input
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setSelected(null);
-          }}
-          placeholder="Start typing (e.g., 'Farm' → SUNY Farmingdale)"
-          className="w-full border rounded px-3 py-2"
-          autoComplete="off"
-          aria-autocomplete="list"
-          aria-expanded={open}
-          aria-controls="school-results"
-        />
-        {loading && <div className="text-xs opacity-70 mt-1">Searching…</div>}
-      </div>
+    <Card>
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl">Find your school</CardTitle>
+        <CardDescription>
+          Enter your school name or choose "No school" if you're self-taught
+        </CardDescription>
+      </CardHeader>
 
-      {open && results.length > 0 && (
-        <div
-          id="school-results"
-          role="listbox"
-          className="border rounded max-h-64 overflow-auto"
-        >
-          {results.map((s) => (
-            <button
-              key={s.code}
-              type="button"
-              role="option"
-              aria-selected={selected?.code === s.code}
-              onClick={() => {
-                setSelected(s);
-                setQuery(`${s.name}${s.city ? ` — ${s.city}, ${s.state ?? ""}` : ""}`);
-                setOpen(false);
+      <CardContent>
+        <div className="grid gap-6">
+          {/* Search Input Section */}
+          <div className="grid gap-3">
+            <label className="text-sm font-medium">School name</label>
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSelected(null);
               }}
-              className={`
-                w-full text-left px-3 py-2 transition-colors
-                ${selected?.code === s.code 
-                  ? "bg-blue-50 text-blue-900 hover:bg-blue-100 hover:text-blue-900" 
-                  : "bg-white text-gray-900 hover:bg-gray-100 hover:text-gray-900"
-                }
-              `}
+              placeholder="Start typing (e.g., 'Farm' → SUNY Farmingdale)"
+              className="w-full border rounded px-3 py-2"
+              autoComplete="off"
+              aria-autocomplete="list"
+              aria-expanded={open}
+              aria-controls="school-results"
+            />
+            {loading && <div className="text-xs opacity-70 mt-1">Searching…</div>}
+          </div>
+
+          {/* Results Dropdown */}
+          {open && results.length > 0 && (
+            <div
+              id="school-results"
+              role="listbox"
+              className="border rounded max-h-64 overflow-auto bg-white shadow-lg z-10"
             >
-              <div className="font-medium">{s.name}</div>
-              <div className="text-xs opacity-80">
-                {s.city ?? ""}{s.city && s.state ? ", " : ""}{s.state ?? ""} • Code {s.code}
-              </div>
-            </button>
-          ))}
+              {results.map((s) => (
+                <button
+                  key={s.code}
+                  type="button"
+                  role="option"
+                  aria-selected={selected?.code === s.code}
+                  onClick={() => {
+                    setSelected(s);
+                    setQuery(`${s.name}${s.city ? ` — ${s.city}, ${s.state ?? ""}` : ""}`);
+                    setOpen(false);
+                  }}
+                  className={`
+                    w-full text-left px-3 py-2 transition-colors border-b border-gray-100 last:border-b-0
+                    ${selected?.code === s.code 
+                      ? "bg-blue-50 text-blue-900 hover:bg-blue-100 hover:text-blue-900" 
+                      : "bg-white text-gray-900 hover:bg-gray-100 hover:text-gray-900"
+                    }
+                  `}
+                >
+                  <div className="font-medium">{s.name}</div>
+                  <div className="text-xs opacity-80">
+                    {s.city ?? ""}{s.city && s.state ? ", " : ""}{s.state ?? ""} • Code {s.code}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="grid gap-3">
+            {/* Submit selected school via server action */}
+            <form action={handleSchoolSubmit}>
+              <input type="hidden" name="school_code" value={selected?.code ?? ""} />
+              <button
+                type="submit"
+                disabled={!selected}
+                className="w-full rounded bg-black text-white px-4 py-2 hover:opacity-90 disabled:opacity-50"
+              >
+                Continue with {selected ? selected.name : "selected school"}
+              </button>
+            </form>
+
+            {/* Fallback: user doesn't have / doesn't want to choose a school */}
+            <form action={handleNoSchoolSubmit}>
+              <button
+                type="submit"
+                className="w-full rounded border border-gray-300 px-4 py-2 hover:bg-gray-50"
+              >
+                I don't have a school
+              </button>
+            </form>
+          </div>
         </div>
-      )}
-
-      {/* Submit selected school via server action */}
-      <form action={handleSchoolSubmit}>
-        <input type="hidden" name="school_code" value={selected?.code ?? ""} />
-        <button
-          type="submit"
-          disabled={!selected}
-          className="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium border hover:opacity-90 disabled:opacity-50 border-gray-300 bg-black text-white"
-        >
-          Continue with {selected ? selected.name : "selected school"}
-        </button>
-      </form>
-
-      {/* Fallback: user doesn't have / doesn't want to choose a school */}
-      <form action={handleNoSchoolSubmit}>
-        <button
-          type="submit"
-          className="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium border hover:opacity-90 disabled:opacity-50 border-gray-300"
-        >
-          I don't have a school
-        </button>
-      </form>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
