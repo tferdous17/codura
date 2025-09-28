@@ -1,14 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { saveEducationChoice } from "./actions";
-import { cn } from "@/lib/utils"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 
 type School = {
   code: string;   // FAFSA/Title-IV code, 6 chars
@@ -17,17 +9,72 @@ type School = {
   state?: string | null;
 };
 
+const POPULAR_MAJORS = [
+  // Technology
+  'Computer Science',
+  'Software Engineering',
+  'Data Science',
+  'Information Technology',
+  'Web Development',
+  'Cybersecurity',
+  
+  // Engineering
+  'Mechanical Engineering',
+  'Electrical Engineering',
+  'Civil Engineering',
+  'Chemical Engineering',
+  
+  // Business
+  'Business Administration',
+  'Marketing',
+  'Finance',
+  'Accounting',
+  'Economics',
+  
+  // Sciences
+  'Biology',
+  'Chemistry',
+  'Physics',
+  'Mathematics',
+  'Psychology',
+  
+  // Liberal Arts
+  'English',
+  'History',
+  'Political Science',
+  'Communications',
+  
+  // Health
+  'Nursing',
+  'Pre-Med',
+  'Public Health',
+  
+  // Creative
+  'Graphic Design',
+  'UX/UI Design',
+  'Fine Arts',
+  
+  // Other
+  'Undecided',
+  'Self-Taught',
+  'Bootcamp Graduate',
+  'Other'
+];
+
 export default function SchoolSearchStep() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<School[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<School | null>(null);
+  const [selectedMajor, setSelectedMajor] = useState("");
+  const [customMajor, setCustomMajor] = useState("");
+  const [showCustomMajor, setShowCustomMajor] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   // Search using our secure API route
   useEffect(() => {
-    if (!query.trim()) {
+    if (!query.trim() || query.trim().length < 2) {
       setResults([]);
       setOpen(false);
       setSelected(null);
@@ -49,27 +96,22 @@ export default function SchoolSearchStep() {
           { signal: ctrl.signal }
         );
 
-        console.log("Response status:", response.status);
-        console.log("Response ok:", response.ok);
-
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log("Raw API response:", data);
-        console.log("Data type:", typeof data);
+        console.log("API Response:", data);
         console.log("Is array:", Array.isArray(data));
         
         // Handle the response - it should be an array of schools
         const schools: School[] = Array.isArray(data) ? data : [];
         console.log("Processed schools:", schools);
-        console.log("Schools length:", schools.length);
+        console.log("School count:", schools.length);
 
-        console.log("About to set results and open state");
         setResults(schools);
         setOpen(schools.length > 0);
-        console.log("State should be updated now");
+        console.log("Set open to:", schools.length > 0);
       } catch (error: any) {
         if (error.name !== 'AbortError') {
           console.error("School search error:", error);
@@ -96,12 +138,39 @@ export default function SchoolSearchStep() {
     return () => clearTimeout(t);
   }, [query]);
 
+  const handleMajorChange = (value: string) => {
+    setSelectedMajor(value);
+    if (value === 'Other') {
+      setShowCustomMajor(true);
+    } else {
+      setShowCustomMajor(false);
+      setCustomMajor("");
+    }
+  };
+
+  const getFinalMajor = () => {
+    if (selectedMajor === 'Other' && customMajor.trim()) {
+      return customMajor.trim();
+    }
+    return selectedMajor;
+  };
+
   const handleSchoolSubmit = async (formData: FormData) => {
     const code = formData.get("school_code") as string;
-    if (!code) return;
+    const major = getFinalMajor();
+    
+    if (!code) {
+      alert("Please select a school first.");
+      return;
+    }
+    
+    if (!major) {
+      alert("Please select your major/field of study.");
+      return;
+    }
     
     try {
-      await saveEducationChoice({ kind: "college", code });
+      await saveEducationChoice({ kind: "college", code, major });
       // Redirect will happen automatically via middleware
     } catch (error) {
       console.error("Error saving school choice:", error);
@@ -109,32 +178,44 @@ export default function SchoolSearchStep() {
   };
 
   const handleNoSchoolSubmit = async () => {
+    const major = getFinalMajor();
+    
+    // For "no school" option, major is optional
+    // Users can proceed to questionnaire without specifying major
     try {
-      await saveEducationChoice({ kind: "no_school" });
+      await saveEducationChoice({ kind: "no_school", major: major || null });
       // Redirect will happen automatically via middleware
     } catch (error) {
       console.error("Error saving no school choice:", error);
     }
   };
 
-  return (
-    <Card>
-      <CardHeader className="text-center">
-        <CardTitle className="text-xl">Find your school</CardTitle>
-        <CardDescription>
-          Enter your school name or choose "No school" if you're self-taught
-        </CardDescription>
-      </CardHeader>
+  const isSchoolFormValid = () => {
+    return selected && getFinalMajor().length > 0;
+  };
 
-      <CardContent>
+  return (
+    <div className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
+      {/* Header */}
+      <div className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 text-center">
+        <div className="leading-none font-semibold text-xl">Tell us about your education</div>
+        <div className="text-muted-foreground text-sm">
+          Enter your school and field of study, or choose "No school" if you're self-taught
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-6">
         <div className="grid gap-6">
-          {/* Search Input Section */}
+          {/* School Search Section */}
           <div className="grid gap-3">
-            <label className="text-sm font-medium">School name</label>
+            <label className="text-sm font-medium">School name (optional)</label>
             <input
               value={query}
               onChange={(e) => {
-                setQuery(e.target.value);
+                const newQuery = e.target.value;
+                console.log("Query changed to:", newQuery);
+                setQuery(newQuery);
                 setSelected(null);
               }}
               placeholder="Start typing (e.g., 'Farm' → SUNY Farmingdale)"
@@ -145,6 +226,11 @@ export default function SchoolSearchStep() {
               aria-controls="school-results"
             />
             {loading && <div className="text-xs opacity-70 mt-1">Searching…</div>}
+            
+            {/* Debug info */}
+            <div className="text-xs text-gray-500 mt-1">
+              Debug: query="{query}" (len: {query.length}), results={results.length}, open={open.toString()}
+            </div>
           </div>
 
           {/* Results Dropdown */}
@@ -182,6 +268,86 @@ export default function SchoolSearchStep() {
             </div>
           )}
 
+          {/* Major Selection Section */}
+          <div className="grid gap-3">
+            <label className="text-sm font-medium">
+              Major / Field of Study 
+              <span className="text-gray-500">(required for school selection)</span>
+            </label>
+            <select
+              value={selectedMajor}
+              onChange={(e) => handleMajorChange(e.target.value)}
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="">Select your major or field of study</option>
+              <optgroup label="Technology">
+                <option value="Computer Science">Computer Science</option>
+                <option value="Software Engineering">Software Engineering</option>
+                <option value="Data Science">Data Science</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Web Development">Web Development</option>
+                <option value="Cybersecurity">Cybersecurity</option>
+              </optgroup>
+              <optgroup label="Engineering">
+                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                <option value="Electrical Engineering">Electrical Engineering</option>
+                <option value="Civil Engineering">Civil Engineering</option>
+                <option value="Chemical Engineering">Chemical Engineering</option>
+              </optgroup>
+              <optgroup label="Business">
+                <option value="Business Administration">Business Administration</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Finance">Finance</option>
+                <option value="Accounting">Accounting</option>
+                <option value="Economics">Economics</option>
+              </optgroup>
+              <optgroup label="Sciences">
+                <option value="Biology">Biology</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Physics">Physics</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Psychology">Psychology</option>
+              </optgroup>
+              <optgroup label="Liberal Arts">
+                <option value="English">English</option>
+                <option value="History">History</option>
+                <option value="Political Science">Political Science</option>
+                <option value="Communications">Communications</option>
+              </optgroup>
+              <optgroup label="Health">
+                <option value="Nursing">Nursing</option>
+                <option value="Pre-Med">Pre-Med</option>
+                <option value="Public Health">Public Health</option>
+              </optgroup>
+              <optgroup label="Creative">
+                <option value="Graphic Design">Graphic Design</option>
+                <option value="UX/UI Design">UX/UI Design</option>
+                <option value="Fine Arts">Fine Arts</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="Undecided">Undecided</option>
+                <option value="Self-Taught">Self-Taught</option>
+                <option value="Bootcamp Graduate">Bootcamp Graduate</option>
+                <option value="Other">Other (specify below)</option>
+              </optgroup>
+            </select>
+          </div>
+
+          {/* Custom Major Input */}
+          {showCustomMajor && (
+            <div className="grid gap-3">
+              <label className="text-sm font-medium">Please specify your major/field</label>
+              <input
+                type="text"
+                value={customMajor}
+                onChange={(e) => setCustomMajor(e.target.value)}
+                placeholder="Enter your specific major or field of study"
+                className="w-full border rounded px-3 py-2"
+                required
+              />
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="grid gap-3">
             {/* Submit selected school via server action */}
@@ -189,7 +355,7 @@ export default function SchoolSearchStep() {
               <input type="hidden" name="school_code" value={selected?.code ?? ""} />
               <button
                 type="submit"
-                disabled={!selected}
+                disabled={!isSchoolFormValid()}
                 className="w-full rounded bg-black text-white px-4 py-2 hover:opacity-90 disabled:opacity-50"
               >
                 Continue with {selected ? selected.name : "selected school"}
@@ -202,12 +368,12 @@ export default function SchoolSearchStep() {
                 type="submit"
                 className="w-full rounded border border-gray-300 px-4 py-2 hover:bg-gray-50"
               >
-                I don't have a school
+                Continue without school
               </button>
             </form>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
