@@ -39,11 +39,7 @@ export default async function Page() {
 	console.log("ONBOARDING rendering SchoolSearchStep");
   
 	return (
-	  <div className="max-w-lg mx-auto p-6">
-		<h1 className="text-2xl font-bold mb-2">Tell us about your education</h1>
-		<p className="text-sm text-muted-foreground mb-4">
-		  Enter your FAFSA code or choose "No" if you're in a bootcamp or self-taught.
-		</p>
+	  <div className="max-w-lg mx-auto p-6">		
 		<SchoolSearchStep />
 	  </div>
 	);

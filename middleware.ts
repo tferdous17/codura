@@ -5,6 +5,7 @@ import { updateSession } from "./utils/supabase/middleware";
 const PUBLIC_PATHS = new Set<string>([
   "/",
   "/login",
+  "/signup",  // ← ADD THIS LINE
   "/auth/callback",
   "/auth/auth-code-error",
   "/error",
@@ -58,11 +59,24 @@ export async function middleware(req: NextRequest) {
       const onQuestionnairePage = pathname === "/questionnaire";
       const onOnboardingPage   = pathname === "/onboarding";
       const onDashboardPage    = pathname === "/dashboard";
+      const onSignupPage       = pathname === "/signup"; // ← ADD THIS
+      const onLoginPage        = pathname === "/login";  // ← ADD THIS
       const onAuth             = isAuthRoute || pathname === "/logout";
 
       const code      = profile.federal_school_code;
       const hasCode   = !!(code && String(code).trim() !== "");
       const completed = profile.questionnaire_completed;
+
+      // ✅ If already logged in, don't allow signup/login pages
+      if (onSignupPage || onLoginPage) {
+        if (completed) {
+          return NextResponse.redirect(new URL("/dashboard", origin));
+        } else if (hasCode) {
+          return NextResponse.redirect(new URL("/questionnaire", origin));
+        } else {
+          return NextResponse.redirect(new URL("/onboarding", origin));
+        }
+      }
 
       if (completed) {
         if (!onDashboardPage && !onAuth) {

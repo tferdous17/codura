@@ -7,77 +7,113 @@ export async function GET(request: Request) {
   const origin = url.origin;
   const code = url.searchParams.get("code");
 
+  console.log("=== AUTH CALLBACK START ===");
+  console.log("Code present:", !!code);
+
   if (!code) {
+    console.error("No code in callback");
     return NextResponse.redirect(`${origin}/auth/auth-code-error`);
   }
 
   const supabase = await createClient();
 
-  // Finish login
+  // Exchange code for session
   const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
   if (exchangeErr) {
     console.error("Exchange error:", exchangeErr);
     return NextResponse.redirect(`${origin}/auth/auth-code-error`);
   }
 
-  // Who just logged in?
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.redirect(`${origin}/login`);
-
-  // Ensure a row exists (safe if you already insert elsewhere)
-  const { error: upsertError } = await supabase
-    .from("users")
-    .upsert(
-      {
-        user_id: user.id,
-        full_name:
-          (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) ||
-          user.email ||
-          "User",
-      },
-      { onConflict: "user_id", ignoreDuplicates: true }
-    );
-
-  if (upsertError) {
-    console.error("Upsert error:", upsertError);
+  // Get the authenticated user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !user) {
+    console.error("User error:", userError);
+    return NextResponse.redirect(`${origin}/login`);
   }
 
-  // Read flags
-  const { data: profile, error: selectError } = await supabase
+  console.log("User authenticated:", user.id, user.email);
+
+  // First, check if user row already exists
+  const { data: existingUser, error: checkError } = await supabase
     .from("users")
-    .select("federal_school_code, questionnaire_completed")
+    .select("user_id, federal_school_code, questionnaire_completed")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle(); // Use maybeSingle() instead of single() to avoid error if not found
 
-  console.log("AUTH CALLBACK profile:", profile);
-  console.log("AUTH CALLBACK select error:", selectError);
+  console.log("Existing user:", existingUser);
+  console.log("Check error:", checkError);
 
-  // Decide destination with proper null checking
-  let dest = "/onboarding";
-  
- // With this safer version:
-if (profile) {
-  if (profile.questionnaire_completed) {
-    dest = "/dashboard";
-  } else {
-    const code = profile.federal_school_code;
-    const hasCode = code !== null && code !== undefined && String(code).trim() !== "";
+  let profile = existingUser;
+
+  // If user doesn't exist, create them
+  if (!existingUser) {
+    console.log("Creating new user row...");
     
-    if (hasCode) {
-      dest = "/questionnaire";
+    const fullName = 
+      user.user_metadata?.full_name || 
+      user.user_metadata?.name || 
+      user.user_metadata?.user_name ||
+      user.email?.split('@')[0] || 
+      "User";
+
+    const { data: newUser, error: insertError } = await supabase
+      .from("users")
+      .insert({
+        user_id: user.id,
+        full_name: fullName,
+        federal_school_code: null,
+        questionnaire_completed: false,
+      })
+      .select("user_id, federal_school_code, questionnaire_completed")
+      .single();
+
+    if (insertError) {
+      console.error("Insert error:", insertError);
+      // Continue anyway - they'll get redirected properly
     } else {
-      dest = "/onboarding";
+      console.log("New user created:", newUser);
+      profile = newUser;
     }
   }
-}
 
-  console.log("AUTH CALLBACK destination:", dest);
+  // Decide destination based on profile
+  let dest = "/onboarding";
+  
+  if (profile) {
+    console.log("Profile data:", {
+      questionnaire_completed: profile.questionnaire_completed,
+      federal_school_code: profile.federal_school_code,
+    });
 
-  // Handle load balancer host if present
+    if (profile.questionnaire_completed) {
+      dest = "/dashboard";
+    } else {
+      const code = profile.federal_school_code;
+      const hasCode = code !== null && code !== undefined && String(code).trim() !== "";
+      
+      if (hasCode) {
+        dest = "/questionnaire";
+      } else {
+        dest = "/onboarding";
+      }
+    }
+  }
+
+  console.log("Redirecting to:", dest);
+  console.log("=== AUTH CALLBACK END ===");
+
+  // Handle different environments
   const forwardedHost = request.headers.get("x-forwarded-host");
   const isLocal = process.env.NODE_ENV === "development";
 
-  if (isLocal) return NextResponse.redirect(`${origin}${dest}`);
-  if (forwardedHost) return NextResponse.redirect(`https://${forwardedHost}${dest}`);
+  if (isLocal) {
+    return NextResponse.redirect(`${origin}${dest}`);
+  }
+  
+  if (forwardedHost) {
+    return NextResponse.redirect(`https://${forwardedHost}${dest}`);
+  }
+  
   return NextResponse.redirect(`${origin}${dest}`);
 }
