@@ -64,11 +64,16 @@ const complexities = [
 
 const getPerformanceColor = (performance: string) => {
   switch (performance) {
-    case "excellent": return "text-emerald-600 bg-emerald-50 border-emerald-200";
-    case "good": return "text-blue-600 bg-blue-50 border-blue-200";
-    case "poor": return "text-orange-600 bg-orange-50 border-orange-200";
-    case "terrible": return "text-red-600 bg-red-50 border-red-200";
-    default: return "text-gray-600 bg-gray-50 border-gray-200";
+    case "excellent": 
+      return "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 shadow-emerald-500/20 backdrop-blur-sm hover:bg-emerald-500/20 hover:border-emerald-400/50 hover:shadow-lg hover:shadow-emerald-500/30";
+    case "good": 
+      return "text-blue-400 bg-blue-500/10 border-blue-500/30 shadow-blue-500/20 backdrop-blur-sm hover:bg-blue-500/20 hover:border-blue-400/50 hover:shadow-lg hover:shadow-blue-500/30";
+    case "poor": 
+      return "text-orange-400 bg-orange-500/10 border-orange-500/30 shadow-orange-500/20 backdrop-blur-sm hover:bg-orange-500/20 hover:border-orange-400/50 hover:shadow-lg hover:shadow-orange-500/30";
+    case "terrible": 
+      return "text-red-400 bg-red-500/10 border-red-500/30 shadow-red-500/20 backdrop-blur-sm hover:bg-red-500/20 hover:border-red-400/50 hover:shadow-lg hover:shadow-red-500/30";
+    default: 
+      return "text-slate-400 bg-slate-500/10 border-slate-500/30 shadow-slate-500/20 backdrop-blur-sm hover:bg-slate-500/20 hover:border-slate-400/50 hover:shadow-lg hover:shadow-slate-500/30";
   }
 };
 
@@ -128,70 +133,87 @@ export default function AlgorithmComplexity({ className }: { className?: string 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {complexities.map((complexity, index) => (
               <Card
-                key={complexity.id}
-                className={cn(
-                  // Set background of card slightly translucent to hint at global background
-                  "group cursor-pointer transition-all duration-300 hover:shadow-lg border-border/50 bg-card/50 backdrop-blur-sm",
-                  selectedComplexity === complexity.id
-                    ? "ring-2 ring-foreground/20 shadow-lg"
-                    : "hover:border-border",
-                  isVisible && `animate-in slide-in-from-bottom-4 duration-500`,
-                  isVisible && `delay-${index * 100}`
-                )}
-                onClick={() =>
-                  setSelectedComplexity(
-                    selectedComplexity === complexity.id ? null : complexity.id
-                  )
-                }
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="space-y-1">
-                      <div className="font-mono text-lg font-semibold">
-                        {complexity.notation}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {complexity.name}
-                      </div>
+              key={complexity.id}
+              className={cn(
+                // Enhanced base styling with gradient borders and better depth
+                "group relative cursor-pointer transition-all duration-500 border-white/20 overflow-hidden rounded-3xl",
+                "bg-gradient-to-br from-card/80 via-card/50 to-card/30 backdrop-blur-md",
+                // Animated gradient border effect
+                "before:absolute before:inset-0 before:-z-10 before:rounded-lg before:p-[2px]",
+                "before:bg-gradient-to-br before:from-primary/20 before:via-primary/5 before:to-transparent",
+                "before:transition-opacity before:duration-500",
+                // Hover effects - lift and glow
+                "hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 hover:border-primary/30",
+                "hover:before:opacity-100",
+                // Selected state - bold ring and enhanced glow
+                selectedComplexity === complexity.id
+                  ? "ring-4 ring-primary/30 shadow-2xl shadow-primary/20 border-primary/50 scale-[1.02] before:opacity-100"
+                  : "before:opacity-0",
+                // Staggered entrance animations
+                isVisible && `animate-in slide-in-from-bottom-4 fade-in duration-700`,
+                isVisible && `delay-${index * 100}`
+              )}
+              onClick={() =>
+                setSelectedComplexity(
+                  selectedComplexity === complexity.id ? null : complexity.id
+                )
+              }
+            >
+              <CardContent className="p-6 relative">
+                {/* Subtle corner accent */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-full" />
+                
+                <div className="flex items-start justify-between mb-4 relative">
+                  <div className="space-y-1">
+                    <div className="font-mono text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent group-hover:from-primary group-hover:to-primary/70 transition-all duration-500">
+                      {complexity.notation}
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-xs font-medium",
-                        getPerformanceColor(complexity.performance)
-                      )}
-                    >
-                      {complexity.performance}
-                    </Badge>
+                    <div className="text-sm font-medium text-muted-foreground/80 group-hover:text-muted-foreground transition-colors">
+                      {complexity.name}
+                    </div>
                   </div>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-xs font-semibold px-3 py-1 shadow-sm border-2 transition-all duration-300",
+                      "group-hover:scale-110 group-hover:shadow-md",
+                      getPerformanceColor(complexity.performance)
+                    )}
+                  >
+                    {complexity.performance}
+                  </Badge>
+                </div>
 
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                    {complexity.description}
-                  </p>
+                <p className="text-sm text-muted-foreground/90 mb-4 leading-relaxed group-hover:text-muted-foreground transition-colors">
+                  {complexity.description}
+                </p>
 
-                  {selectedComplexity === complexity.id && (
-                    <div className="space-y-3 animate-in slide-in-from-top-2 duration-200">
-                      <div className="h-px bg-border" />
-                      <div>
-                        <h4 className="text-xs font-semibold text-muted-foreground mb-2 tracking-wide">
-                          COMMON EXAMPLES
-                        </h4>
-                        <div className="space-y-1">
-                          {complexity.examples.map((example, idx) => (
-                            <div
-                              key={idx}
-                              className="text-xs text-muted-foreground flex items-center gap-2"
-                            >
-                              <div className="w-1 h-1 bg-muted-foreground/60 rounded-full" />
-                              {example}
-                            </div>
-                          ))}
-                        </div>
+                {selectedComplexity === complexity.id && (
+                  <div className="space-y-3 animate-in slide-in-from-top-4 fade-in duration-300">
+                    {/* Gradient divider instead of plain line */}
+                    <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                    <div className="bg-muted/20 rounded-lg p-4 border border-border/50">
+                      <h4 className="text-xs font-bold text-foreground/70 mb-3 tracking-wider uppercase flex items-center gap-2">
+                        <div className="w-1 h-4 bg-primary/60 rounded-full" />
+                        Common Examples
+                      </h4>
+                      <div className="space-y-2">
+                        {complexity.examples.map((example, idx) => (
+                          <div
+                            key={idx}
+                            className="text-xs text-muted-foreground flex items-start gap-3 animate-in slide-in-from-left-2 fade-in"
+                            style={{ animationDelay: `${idx * 50}ms` }}
+                          >
+                            <div className="w-1.5 h-1.5 bg-primary/60 rounded-full mt-1.5 flex-shrink-0" />
+                            <span className="leading-relaxed">{example}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             ))}
           </div>
 

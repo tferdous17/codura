@@ -51,14 +51,14 @@ export default function NavbarNightwatch() {
           </a>
           
           <nav className="hidden items-center gap-6 text-lg leading-7 font-light -tracking-[0.32px] text-neutral-400 lg:flex ml-12">
-            <a className="hover:text-neutral-200" href="/pricing">
-              Pricing
+            <a className="hover:text-neutral-200" href="#features">
+              Features
             </a>
-            <a className="hover:text-neutral-200" href="/docs">
-              Documentation
+            <a className="hover:text-neutral-200" href="#success-stories">
+              Success
             </a>
-            <a className="hover:text-neutral-200" href="/contact">
-              Enterprise
+            <a className="hover:text-neutral-200" href="#faq">
+              FAQ
             </a>
           </nav>
         </div>
@@ -66,13 +66,13 @@ export default function NavbarNightwatch() {
         <div className="flex items-center gap-4 absolute inset-y-0 right-0 pr-4 lg:relative lg:ml-auto lg:pr-0">
           <div className="hidden space-x-2 md:block">
             <a
-              href="/sign-in"
+              href="/login"
               className="ring-offset-background focus-visible:ring-ring inline-flex cursor-pointer items-center justify-center rounded-[5px] border whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 border border-white/5 bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200 h-8 gap-2 px-3 text-sm leading-tight nav-links"
             >
               Sign in
             </a>
             <a
-              href="/sign-up"
+              href="/signup"
               className="ring-offset-background focus-visible:ring-ring inline-flex cursor-pointer items-center justify-center rounded-[5px] border whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:translate-y-px disabled:pointer-events-none disabled:opacity-50 border-blue-500 bg-blue-600 text-blue-100 hover:bg-blue-600/90 active:bg-blue-700 h-8 gap-2 px-3 text-sm leading-tight nav-links"
             >
               Start for free

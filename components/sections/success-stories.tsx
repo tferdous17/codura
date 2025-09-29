@@ -73,7 +73,7 @@ const companyLogos = [
 
 export default function SuccessStories() {
   return (
-    <Section className="py-20 relative overflow-hidden">
+    <Section id="success-stories" className="py-20 relative overflow-hidden">
       {/* Sophisticated background elements */}
       <div className="absolute inset-0 opacity-30">
         {/* Subtle grid pattern */}
@@ -122,29 +122,81 @@ export default function SuccessStories() {
             <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-brand to-transparent mx-auto" />
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-5xl mx-auto">
+          <div className="relative w-full overflow-hidden">
+          {/* Gradient fade edges */}
+          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+          
+          {/* Infinite scrolling container */}
+          <div className="flex animate-scroll hover:pause-animation">
+            {/* First set of logos */}
             {companyLogos.map((company, index) => (
               <div
-                key={company.name}
-                className="group flex flex-col items-center justify-center p-6 rounded-xl border border-border/40 bg-card/50 backdrop-blur-md hover:border-brand/50 hover:bg-brand/10 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-brand/20"
-                style={{ 
-                  animationDelay: `${index * 150}ms`,
-                  minHeight: '120px'
-                }}
+                key={`${company.name}-1`}
+                className="group relative flex-shrink-0 mx-4"
               >
-                <div className="w-20 h-20 mb-3 flex items-center justify-center">
-                  <img
-                    src={company.logo}
-                    alt={`${company.name} logo`}
-                    className="max-w-full max-h-full object-contain filter brightness-110 group-hover:brightness-125 transition-all duration-300"
-                  />
+                {/* Glassmorphic card */}
+                <div className="relative w-40 h-32 rounded-2xl border-2 border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl transition-all duration-500 hover:scale-110 hover:border-brand/50 hover:shadow-2xl hover:shadow-brand/25 overflow-hidden cursor-pointer">
+                  {/* Hover glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  {/* Shine effect on hover */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative h-full flex flex-col items-center justify-center p-6 gap-3">
+                    <div className="w-20 h-20 flex items-center justify-center">
+                      <img
+                        src={company.logo}
+                        alt={`${company.name} logo`}
+                        className="max-w-full max-h-full object-contain filter brightness-110 group-hover:brightness-125 group-hover:scale-110 transition-all duration-500"
+                      />
+                    </div>
+                    <span className="font-semibold text-xs text-foreground/70 group-hover:text-foreground transition-colors text-center">
+                      {company.name}
+                    </span>
+                  </div>
+
+                  {/* Bottom accent line */}
+                  <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-brand/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
-                <span className="font-semibold text-sm text-foreground/80 group-hover:text-foreground transition-colors">
-                  {company.name}
-                </span>
+              </div>
+            ))}
+            
+            {/* Duplicate set for seamless loop */}
+            {companyLogos.map((company, index) => (
+              <div
+                key={`${company.name}-2`}
+                className="group relative flex-shrink-0 mx-4"
+              >
+                <div className="relative w-40 h-32 rounded-2xl border-2 border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl transition-all duration-500 hover:scale-110 hover:border-brand/50 hover:shadow-2xl hover:shadow-brand/25 overflow-hidden cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
+                  </div>
+
+                  <div className="relative h-full flex flex-col items-center justify-center p-6 gap-3">
+                    <div className="w-20 h-20 flex items-center justify-center">
+                      <img
+                        src={company.logo}
+                        alt={`${company.name} logo`}
+                        className="max-w-full max-h-full object-contain filter brightness-110 group-hover:brightness-125 group-hover:scale-110 transition-all duration-500"
+                      />
+                    </div>
+                    <span className="font-semibold text-xs text-foreground/70 group-hover:text-foreground transition-colors text-center">
+                      {company.name}
+                    </span>
+                  </div>
+
+                  <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-brand/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
               </div>
             ))}
           </div>
+        </div>
         </div>
 
         {/* Enhanced Success Stories Grid */}

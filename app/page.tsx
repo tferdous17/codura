@@ -19,22 +19,22 @@ import Footer from "@/components/navigation/footer";
 export default function LandingPage() {
   return (
     // Set base background to deep black and min-height
-    <div className="relative min-h-screen bg-neutral-950"> 
+    <div className="relative min-h-screen bg-zinc-950"> 
       
       <div className="fixed inset-0 pointer-events-none z-0">
         
-        <FloatingCode className="opacity-30" />
+        {/* <FloatingCode className="opacity-30" /> */}
 
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.5)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 " />
 
-        <div 
-          className="absolute top-[-200px] left-[60%] w-[120vw] h-[120vh] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(255,224,194,0.05)_0%,transparent_60%)] animate-pulse-slow opacity-70" 
-        />
+          <div 
+            className="absolute top-[-200px] left-[60%] w-[120vw] h-[120vh] -translate-x-1/2  animate-pulse-slow opacity-70" 
+          />
         
-        <div 
-          className="absolute bottom-[10%] right-[70%] w-[80vw] h-[80vh] bg-[radial-gradient(ellipse_at_center,rgba(40,40,60,0.05)_0%,transparent_70%)] animate-float-slow"
-          style={{ animationDelay: '10s', animationDuration: '30s' }}
-        />
+          <div 
+            className="absolute bottom-[10%] right-[70%] w-[80vw] h-[80vh]  animate-float-slow"
+            style={{ animationDelay: '10s', animationDuration: '30s' }}
+          />
       </div>
       
       <NavbarNightwatch />

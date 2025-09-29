@@ -60,7 +60,7 @@ export default function FAQProfessional() {
   };
 
   return (
-    <Section className="py-20 relative overflow-hidden">
+    <Section id="faq" className="py-20 relative overflow-hidden">
       {/* Background Glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 w-96 h-96 -translate-x-1/2 bg-brand/5 rounded-full blur-3xl opacity-50 animate-pulse" />

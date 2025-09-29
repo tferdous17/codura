@@ -12,6 +12,7 @@ import { Mockup, MockupFrame } from "@/components/ui/mockup";
 import Screenshot from "@/components/ui/screenshot";
 import { Section } from "@/components/ui/section";
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
+import Link from "next/link";
 
 interface HeroButtonProps {
   href: string;
@@ -191,29 +192,33 @@ export default function HeroElevated({
 
         <div className="max-w-container mx-auto flex flex-col gap-6 text-center pt-16 sm:gap-12 relative z-10">
           <div className="flex flex-col items-center gap-6 text-center">
-            <div className="flex flex-row items-center justify-center mb-[-25px] w-full">
+            <div className="flex flex-row items-center justify-center mb-[-10px] w-full">
               <AnimatedTooltip items={people} />
             </div>
             {badge !== false && badge}
             
-            <h1 className="animate-appear text-white relative z-10 inline-block text-5xl leading-tight font-medium tracking-tight text-balance sm:text-6xl sm:leading-tight md:text-8xl md:leading-tight">
+            <h1 className="animate-appear text-white relative inline-block text-5xl leading-tight font-medium tracking-tight text-balance sm:text-6xl sm:leading-tight md:text-8xl md:leading-tight">
               Where preparation <br className="hidden md:block" />
               <span className="text-neutral-400">meets execution.</span>
             </h1>
             
             {/* Updated description text size and spacing */}
-            <p className="text-lg animate-appear text-muted-foreground relative z-10 max-w-[740px] font-light text-balance opacity-0 delay-100 sm:text-xl leading-relaxed">
+            <p className="text-lg animate-appear text-muted-foreground relative max-w-[740px] font-light text-balance opacity-0 delay-100 sm:text-xl leading-relaxed">
               Prepare smarter for technical interviews with our community-driven and AI-powered platform, complete with mock interviews and problem solving.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 animate-appear opacity-0 delay-200">
-              <button className="cursor-pointer px-8 py-3 z-10 rounded-[8px] bg-gradient-to-r from-foreground to-foreground/90 hover:from-foreground/90 hover:to-foreground text-background font-semibold focus:ring-1 transition-all duration-200 hover:scale-[1.02] shadow-lg">
-                Start practicing
-              </button>
+            <div className="z-10 flex flex-col sm:flex-row gap-4 animate-appear opacity-0 delay-200">
+              <Link href="/signup">
+                <button className="cursor-pointer px-8 py-3 z-10 rounded-[8px] bg-gradient-to-r from-foreground to-foreground/90 hover:from-foreground/90 hover:to-foreground text-background font-semibold focus:ring-1 transition-all duration-200 hover:scale-[1.02] shadow-lg">
+                  Start practicing
+                </button>
+              </Link>
+              
               <button className="cursor-pointer px-8 py-3 z-10 rounded-[8px] border border-border/40 bg-background/50 backdrop-blur-sm hover:bg-background/80 text-foreground font-semibold transition-all duration-200 hover:scale-[1.02]">
                 Watch demo
               </button>
             </div>
+            
             {mockup !== false && (
               <div className="relative w-full pt-12 max-w-4xl">
                 <MockupFrame

@@ -10,8 +10,9 @@ const platformFeatures = [
     id: "interviews",
     title: "Mock Interviews",
     description: "Practice both sides of the interview process",
-    metric: "2,400+",
+    metric: "7800+",
     metricLabel: "interviews conducted",
+    progressWidth: "80%",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -22,8 +23,9 @@ const platformFeatures = [
     id: "collaboration",
     title: "Live Collaboration",
     description: "Real-time coding with peers",
-    metric: "15k+",
+    metric: "15K+",
     metricLabel: "active students",
+    progressWidth: "80%",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
@@ -36,6 +38,7 @@ const platformFeatures = [
     description: "Instant feedback and optimization",
     metric: "94%",
     metricLabel: "accuracy rate",
+    progressWidth: "94%",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 14.5M14.25 3.104c.251.023.501.05.75.082M19.8 14.5l-5.69 5.69c-.77.77-2.05.77-2.82 0L5.6 14.5m14.2 0l-.82.82a5.25 5.25 0 01-7.42 0l-.82-.82m15.64 0a2.25 2.25 0 00-.659-1.591L19.8 7.5" />
@@ -46,8 +49,9 @@ const platformFeatures = [
     id: "progress",
     title: "Progress Tracking",
     description: "Monitor your interview readiness",
-    metric: "250k+",
+    metric: "44K+",
     metricLabel: "problems solved",
+    progressWidth: "80%",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
@@ -88,7 +92,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <Badge className="mb-6 bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-colors">
+          <Badge className="mb-6 px-4 py-1 text-sm bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-colors">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />
               Platform Insights
@@ -109,7 +113,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
             <Card
               key={feature.id}
               className={cn(
-                "group border-border/50 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-500 hover:shadow-lg",
+                "rounded-3xl border-border/25 bg-neutral-800/15 backdrop-blur-sm hover:border-border transition-all duration-500 hover:shadow-lg",
                 isVisible && `animate-in slide-in-from-bottom-4 duration-700`,
                 isVisible && `delay-${index * 150}`
               )}
@@ -117,7 +121,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
               <CardContent className="p-8">
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-muted/50 group-hover:bg-muted transition-colors flex items-center justify-center">
+                    <div className="w-12 h-12 group-hover:bg-muted transition-colors flex items-center justify-center">
                       {feature.icon}
                     </div>
                     <div>
@@ -144,7 +148,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
                   <div
                     className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-1000 ease-out"
                     style={{
-                      width: isVisible ? "85%" : "0%",
+                      width: isVisible ? feature.progressWidth : "0%",
                       transitionDelay: `${index * 150 + 500}ms`,
                     }}
                   />
@@ -157,7 +161,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
         {/* Side-by-side call out sections */}
         <div className="grid lg:grid-cols-2 gap-8">
           {/* University Focus */}
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden">
+          <Card className="border-border/40 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden rounded-3xl">
             <CardContent className="p-8 relative">
               <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-xl" />
               <div className="relative">
@@ -198,7 +202,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
           </Card>
 
           {/* Interview Ready */}
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden">
+          <Card className="border-border/50 bg-card/40 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden rounded-3xl">
             <CardContent className="p-8 relative">
               <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-full blur-xl" />
               <div className="relative">

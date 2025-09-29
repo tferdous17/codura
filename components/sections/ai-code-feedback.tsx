@@ -5,6 +5,10 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-tomorrow.css'; // Choose a theme (e.g., Tomorrow Night)
+import 'prismjs/components/prism-python'; // Import Python language support
+
 const codeExamples = [
   {
     id: "two-sum",
@@ -91,6 +95,11 @@ export default function AICodeFeedback({ className }: { className?: string }) {
 
   const currentExample = codeExamples[activeExample];
 
+  useEffect(() => {
+    // Highlight code after component mounts or code changes
+    Prism.highlightAll();
+  }, [showOptimized, currentExample]); // Re-run when these change
+
   const analyzeCode = () => {
     setIsAnalyzing(true);
     setAnalysisProgress(0);
@@ -169,7 +178,7 @@ export default function AICodeFeedback({ className }: { className?: string }) {
                       setAnalysisProgress(0);
                     }}
                     className={cn(
-                      "px-3 py-1 text-xs rounded-md transition-all duration-200",
+                      "px-3 py-1 text-xs rounded-3xl transition-all duration-200 cursor-pointer",
                       activeExample === index
                         ? "bg-brand/20 text-brand border border-brand/30"
                         : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
@@ -185,7 +194,7 @@ export default function AICodeFeedback({ className }: { className?: string }) {
                 {/* Code display */}
                 <div className="bg-muted/20 rounded-lg p-4 border border-border/30 overflow-x-auto">
                   <pre className="text-sm font-mono leading-relaxed">
-                    <code className="text-foreground">
+                    <code className="language-python text-foreground">
                       {showOptimized ? currentExample.aiAnalysis.optimizedCode : currentExample.code}
                     </code>
                   </pre>
@@ -194,15 +203,16 @@ export default function AICodeFeedback({ className }: { className?: string }) {
                 {/* Action buttons */}
                 <div className="flex gap-3 mt-4">
                   <button
-                    onClick={analyzeCode}
-                    disabled={isAnalyzing}
-                    className={cn(
-                      "px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200",
-                      isAnalyzing
-                        ? "bg-muted/50 text-muted-foreground cursor-not-allowed"
-                        : "bg-brand/15 hover:bg-brand/25 text-brand border border-brand/30 hover:border-brand/50"
-                    )}
-                  >
+                  onClick={analyzeCode}
+                  disabled={isAnalyzing}
+                  className={cn(
+                    "px-5 py-2 mt-2 font-semibold text-sm rounded-2xl transition-all duration-200 ease-out cursor-pointer rounded-3xl",
+                    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400",
+                    isAnalyzing
+                      ? "bg-gray-600/50 text-gray-400 cursor-not-allowed shadow-none"
+                      : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-[1.03] shadow-md hover:shadow-lg"
+                  )}
+                >
                     {isAnalyzing ? (
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
@@ -216,7 +226,7 @@ export default function AICodeFeedback({ className }: { className?: string }) {
                   {analysisProgress === 100 && (
                     <button
                       onClick={toggleOptimized}
-                      className="px-4 py-2 rounded-lg font-medium text-sm bg-green-500/15 hover:bg-green-500/25 text-green-600 border border-green-500/30 hover:border-green-500/50 transition-all duration-200"
+                      className="px-5 py-2 mt-2 rounded-3xl font-medium text-sm bg-green-400/15 hover:bg-green-500/25 text-green-600 border border-green-500/30 hover:border-green-500/50 transition-all duration-200 cursor-pointer"
                     >
                       {showOptimized ? "Show Original" : "Show Optimized"}
                     </button>
@@ -345,12 +355,12 @@ export default function AICodeFeedback({ className }: { className?: string }) {
               description: "Understand time and space complexity with clear explanations"
             }
           ].map((feature, index) => (
-            <Card key={index} className="border-border/40 bg-card/30 backdrop-blur-sm text-center p-6">
-              <div className="w-12 h-12 bg-brand/15 text-brand rounded-lg flex items-center justify-center mx-auto mb-4">
+            <Card key={index} className="border-border/0 bg-card/30 backdrop-blur-sm text-center p-6">
+              <div className="w-12 h-12 bg-brand/15 text-brand rounded-full flex items-center justify-center mx-auto mb-4">
                 {feature.icon}
               </div>
-              <h3 className="font-semibold mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">{feature.description}</p>
+              <h3 className="font-semibold mb-2 text-lg">{feature.title}</h3>
+              <p className="text-muted-foreground text-md">{feature.description}</p>
             </Card>
           ))}
         </div>
