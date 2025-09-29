@@ -8,16 +8,16 @@ export const revalidate = 0;
 export default async function Page() {
   const supabase = await createClient();
 
-  // Load the first two active questions
+  // Load all 4 active questions (positions 1-4)
   const { data: questions, error: qErr } = await supabase
     .from("questions")
     .select("question_id, prompt, allows_multiple, position")
     .eq("is_active", true)
-    .in("position", [1, 2])
+    .in("position", [1, 2, 3, 4])
     .order("position", { ascending: true });
 
   if (qErr || !questions?.length) {
-    return <div className="text-red-500 p-6">Couldn’t load questions.</div>;
+    return <div className="text-red-500 p-6">Couldn't load questions.</div>;
   }
 
   const ids = questions.map((q) => q.question_id);
@@ -30,7 +30,7 @@ export default async function Page() {
     .order("position", { ascending: true });
 
   if (oErr) {
-    return <div className="text-red-500 p-6">Couldn’t load options.</div>;
+    return <div className="text-red-500 p-6">Couldn't load options.</div>;
   }
 
   // Group options by question
@@ -41,15 +41,15 @@ export default async function Page() {
     grouped.set(opt.question_id, list);
   }
 
-  // Shape props for the client component
+  // Shape props for the client component with maxChoices per question
   const items = questions.map((q) => ({
     question_id: q.question_id,
     prompt: q.prompt,
     allows_multiple: q.allows_multiple,
     position: q.position,
     options: grouped.get(q.question_id) ?? [],
-    // Set per-question caps (adjust as you like)
-    maxChoices: q.position === 1 ? 3 : 6,
+    // Set per-question caps based on question type
+    maxChoices: q.allows_multiple ? (q.position === 1 ? 3 : q.position === 4 ? 5 : 6) : 1,
   }));
 
   return (
