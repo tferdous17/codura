@@ -1,7 +1,8 @@
 // components/dashboard.tsx
 "use client"
-import { GalleryVerticalEnd } from "lucide-react"
+import { LogOut, RotateCcw, FileEdit } from "lucide-react"
 import React from "react"
+import Link from "next/link"
 import {
   Card,
   CardContent,
@@ -26,9 +27,16 @@ type DashboardProps = {
     mock_interviews?: number
     day_streak?: number
   }
+  questionnaireCompleted: boolean
+  resetQuestionnaireAction?: (formData: FormData) => Promise<void>
 }
 
-export function Dashboard({ userData, userDashboard }: DashboardProps) {
+export function Dashboard({ 
+  userData, 
+  userDashboard, 
+  questionnaireCompleted,
+  resetQuestionnaireAction 
+}: DashboardProps) {
   return (
     <div className="min-h-screen flex bg-background text-foreground">
       {/* Sidebar */}
@@ -74,8 +82,36 @@ export function Dashboard({ userData, userDashboard }: DashboardProps) {
           </Button>
         </nav>
 
-        {/* Theme Switcher */}
-        <div className="mt-auto">
+        {/* Sign Out, Reset & Theme Switcher */}
+        <div className="mt-auto space-y-2">
+          {/* Reset Questionnaire Button (Testing) */}
+          {resetQuestionnaireAction && questionnaireCompleted && (
+            <form action={resetQuestionnaireAction} className="w-full">
+              <Button 
+                type="submit" 
+                variant="outline" 
+                className="w-full justify-start text-amber-500 hover:text-amber-600"
+                size="sm"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset Questionnaire
+              </Button>
+            </form>
+          )}
+          
+          {/* Sign Out Button */}
+          <form action="/auth/signout" method="POST" className="w-full">
+            <Button 
+              type="submit" 
+              variant="outline" 
+              className="w-full justify-start"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </form>
+
+          {/* Theme Toggle */}
           <ModeToggle />
         </div>
       </aside>
@@ -90,6 +126,27 @@ export function Dashboard({ userData, userDashboard }: DashboardProps) {
           <p className="text-muted-foreground">
             Ready to continue your coding journey?
           </p>
+        </div>
+
+        {/* Questionnaire Status Pill - Like your original */}
+        <div className="flex items-center gap-3">
+          <span
+            className={`rounded-full px-3 py-1 text-sm font-medium ${
+              questionnaireCompleted
+                ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40"
+                : "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40"
+            }`}
+          >
+            {questionnaireCompleted ? "Questionnaire: Completed ✅" : "Questionnaire: Not completed"}
+          </span>
+          {!questionnaireCompleted && (
+            <Link href="/questionnaire">
+              <Button size="sm" variant="secondary">
+                <FileEdit className="w-4 h-4 mr-2" />
+                Finish now
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Stats Section */}
