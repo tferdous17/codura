@@ -98,7 +98,13 @@ export default function FeaturesModern({ className }: { className?: string }) {
 
   return (
     // REMOVED background. Standardized padding.
-    <section id="features" className="py-20">
+    <section id="features" className="relative py-20 overflow-hidden">
+      {/* Glassmorphism glow effects matching hero elevated */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-brand/10 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-1/3 right-1/4 w-[400px] h-[400px] bg-brand-foreground/10 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
+      </div>
+
       <div className="max-w-7xl mx-auto px-6 relative z-10">
 
         <div className="flex flex-col items-center text-center mb-16">

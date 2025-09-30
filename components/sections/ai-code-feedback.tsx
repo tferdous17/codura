@@ -113,6 +113,12 @@ export default function AICodeFeedback({ className }: { className?: string }) {
   return (
     // REMOVED background gradient to let the page.tsx fixed background show through
     <section className={cn("py-20 relative overflow-hidden", className)}>
+      {/* Glassmorphism glow effects matching hero elevated */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/3 w-[550px] h-[550px] bg-brand/9 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/3 right-1/4 w-[450px] h-[450px] bg-brand-foreground/9 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '4s' }} />
+      </div>
+
       {/* Background elements inspired by Nightwatch - Subtle vertical beams */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 opacity-5">

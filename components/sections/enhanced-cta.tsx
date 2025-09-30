@@ -6,14 +6,14 @@ export default function EnhancedCTA() {
   return (
     // REMOVED background gradient - only relying on the fixed global background
     <section className="py-20 relative overflow-hidden">
+      {/* Glassmorphism glow effects matching hero elevated */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-brand/10 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/4 right-1/3 w-[550px] h-[550px] bg-brand-foreground/10 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '4s' }} />
+      </div>
+
       {/* Nightwatch-inspired background elements (Fixed to section) */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-brand/5 rounded-full blur-3xl animate-glow" />
-        <div
-          className="absolute bottom-20 right-20 w-96 h-96 bg-orange-300/5 rounded-full blur-3xl animate-glow"
-          style={{ animationDelay: "1s" }}
-        />
-
         {/* Animated beams - Kept for local moving effect */}
         <div className="absolute inset-0 opacity-20">
           {Array.from({ length: 6 }).map((_, i) => (

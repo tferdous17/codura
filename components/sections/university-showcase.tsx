@@ -93,9 +93,10 @@ export default function UniversityShowcase() {
 
   return (
     <Section className="py-20 relative overflow-hidden">
-      {/* Background Effect */}
+      {/* Glassmorphism glow effects matching hero elevated */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-3/4 h-3/4 bg-gradient-to-br from-brand/5 to-transparent rounded-full blur-3xl opacity-30 animate-spin-slow" />
+        <div className="absolute top-1/4 left-1/3 w-[560px] h-[560px] bg-brand/9 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '2.5s' }} />
+        <div className="absolute bottom-1/3 right-1/4 w-[490px] h-[490px] bg-brand-foreground/9 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '5.5s' }} />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 relative z-10">

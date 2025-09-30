@@ -74,6 +74,12 @@ const companyLogos = [
 export default function SuccessStories() {
   return (
     <Section id="success-stories" className="py-20 relative overflow-hidden">
+      {/* Glassmorphism glow effects matching hero elevated */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/3 right-1/4 w-[540px] h-[540px] bg-brand/8 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '3s' }} />
+        <div className="absolute bottom-1/4 left-1/3 w-[480px] h-[480px] bg-brand-foreground/8 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '6s' }} />
+      </div>
+
       {/* Sophisticated background elements */}
       <div className="absolute inset-0 opacity-30">
         {/* Subtle grid pattern */}

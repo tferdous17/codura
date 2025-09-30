@@ -61,9 +61,10 @@ export default function FAQProfessional() {
 
   return (
     <Section id="faq" className="py-20 relative overflow-hidden">
-      {/* Background Glow */}
+      {/* Glassmorphism glow effects matching hero elevated */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 w-96 h-96 -translate-x-1/2 bg-brand/5 rounded-full blur-3xl opacity-50 animate-pulse" />
+        <div className="absolute top-1/4 right-1/3 w-[520px] h-[520px] bg-brand/9 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '3.5s' }} />
+        <div className="absolute bottom-1/3 left-1/4 w-[470px] h-[470px] bg-brand-foreground/9 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '6.5s' }} />
       </div>
 
       <div className="max-w-4xl mx-auto px-6 relative z-10">

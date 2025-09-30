@@ -21,7 +21,11 @@ export const metadata: Metadata = {
   title: "Codura - Master Technical Interviews",
   description: "Practice coding problems, conduct mock interviews, and compete with peers from your university. Build the skills that land you the job.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 

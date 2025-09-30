@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ const mockUsers = [
   {
     id: 1,
     name: "Sarah Chen",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b2d3?w=400&h=400&fit=crop&crop=face",
+    avatar: "https://images.pexels.com/photos/5876695/pexels-photo-5876695.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop",
     university: "MIT",
     status: "online",
     cursorColor: "#10b981"
@@ -179,41 +179,69 @@ export default function RealTimeCollaboration({ className }: { className?: strin
   const [typingUser, setTypingUser] = useState<number | null>(null);
   const [cursorPosition, setCursorPosition] = useState<{x: number, y: number} | null>(null);
   const [currentlyTypingText, setCurrentlyTypingText] = useState("");
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Progressive character-by-character typing
-  const typeTextProgressively = async (text: string, speed = 80) => {
+  // Smooth progressive character-by-character typing with RAF
+  const typeTextProgressively = async (text: string, speed = 50) => {
     const baseCode = currentCode;
     setCurrentlyTypingText("");
-    
-    for (let i = 0; i <= text.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, speed + Math.random() * 40));
-      const typedSoFar = text.slice(0, i);
-      setCurrentlyTypingText(typedSoFar);
-      
-      // Show the final result only at the end
-      if (i === text.length) {
-        setCurrentCode(baseCode + text);
-        setCurrentlyTypingText("");
-      }
-    }
+
+    return new Promise<void>((resolve) => {
+      let i = 0;
+      const charsPerFrame = text.length > 100 ? 2 : 1; // Type faster for longer text
+
+      const typeNextChars = () => {
+        if (i >= text.length) {
+          setCurrentCode(baseCode + text);
+          setCurrentlyTypingText("");
+          resolve();
+          return;
+        }
+
+        // Type multiple characters per frame for smoother animation
+        i += charsPerFrame;
+        const typedSoFar = text.slice(0, Math.min(i, text.length));
+        setCurrentlyTypingText(typedSoFar);
+
+        // Use variable speed for natural typing rhythm
+        const variance = Math.random() * 20 - 10;
+        setTimeout(typeNextChars, speed + variance);
+      };
+
+      typeNextChars();
+    });
   };
 
-  // Progressive character-by-character deletion
-  const deleteTextProgressively = async (textToDelete: string, speed = 30) => {
+  // Smooth progressive character-by-character deletion
+  const deleteTextProgressively = async (textToDelete: string, speed = 20) => {
     const codeBeforeDeletion = currentCode;
     const deleteStartIndex = codeBeforeDeletion.lastIndexOf(textToDelete);
-    
+
     if (deleteStartIndex === -1) return;
-    
+
     const beforeDeleteText = codeBeforeDeletion.slice(0, deleteStartIndex);
     const afterDeleteText = codeBeforeDeletion.slice(deleteStartIndex + textToDelete.length);
-    
-    // Delete character by character from the end
-    for (let i = textToDelete.length; i >= 0; i--) {
-      await new Promise(resolve => setTimeout(resolve, speed + Math.random() * 20));
-      const remainingText = textToDelete.slice(0, i);
-      setCurrentCode(beforeDeleteText + remainingText + afterDeleteText);
-    }
+
+    return new Promise<void>((resolve) => {
+      let i = textToDelete.length;
+      const charsPerFrame = textToDelete.length > 50 ? 3 : 2; // Delete faster for longer text
+
+      const deleteNextChars = () => {
+        if (i <= 0) {
+          setCurrentCode(beforeDeleteText + afterDeleteText);
+          resolve();
+          return;
+        }
+
+        i -= charsPerFrame;
+        const remainingText = textToDelete.slice(0, Math.max(i, 0));
+        setCurrentCode(beforeDeleteText + remainingText + afterDeleteText);
+
+        setTimeout(deleteNextChars, speed);
+      };
+
+      deleteNextChars();
+    });
   };
 
   // Execute the editing sequence
@@ -222,15 +250,20 @@ export default function RealTimeCollaboration({ className }: { className?: strin
 
     const executeStep = async () => {
       if (currentStep >= editingSequence.length) {
-        // Reset the sequence after completion
+        // Smooth reset with fade out
         setTimeout(() => {
-          setCurrentStep(0);
-          setCurrentCode("");
-          setMessages(initialChatMessages);
+          setIsTyping(false);
           setTypingUser(null);
           setCursorPosition(null);
-          setCurrentlyTypingText("");
-        }, 5000);
+
+          // Fade reset after a pause
+          setTimeout(() => {
+            setCurrentStep(0);
+            setCurrentCode("");
+            setMessages(initialChatMessages);
+            setCurrentlyTypingText("");
+          }, 500);
+        }, 4000);
         return;
       }
 
@@ -250,7 +283,7 @@ export default function RealTimeCollaboration({ className }: { className?: strin
             : { ...user, status: "online" }
         ));
 
-        await typeTextProgressively(step.text, 60);
+        await typeTextProgressively(step.text, 45);
 
         setIsTyping(false);
         setTypingUser(null);
@@ -272,7 +305,7 @@ export default function RealTimeCollaboration({ className }: { className?: strin
             : { ...user, status: "online" }
         ));
 
-        await deleteTextProgressively(step.deleteText, 25);
+        await deleteTextProgressively(step.deleteText, 18);
 
         setIsTyping(false);
         setTypingUser(null);
@@ -291,6 +324,16 @@ export default function RealTimeCollaboration({ className }: { className?: strin
           type: "message" as const
         };
         setMessages(prev => [...prev, newMessage]);
+
+        // Smooth scroll to bottom when new message arrives
+        setTimeout(() => {
+          if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTo({
+              top: chatContainerRef.current.scrollHeight,
+              behavior: 'smooth'
+            });
+          }
+        }, 100);
       }
 
       setCurrentStep(prev => prev + 1);
@@ -302,6 +345,12 @@ export default function RealTimeCollaboration({ className }: { className?: strin
 
   return (
     <section className={cn("py-20 relative overflow-hidden", className)}>
+      {/* Glassmorphism glow effects matching hero elevated */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/4 w-[520px] h-[520px] bg-brand/10 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-1/4 right-1/3 w-[480px] h-[480px] bg-brand-foreground/10 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '5s' }} />
+      </div>
+
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -372,32 +421,38 @@ export default function RealTimeCollaboration({ className }: { className?: strin
                 return (
                   <div
                     key={user.id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-all duration-200"
                   >
-                    <div className="relative">
+                    <div className="relative flex-shrink-0">
                       <img
                         src={user.avatar}
                         alt={user.name}
-                        className="w-10 h-10 rounded-full object-cover"
+                        className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent transition-all duration-200"
+                        style={{
+                          ringColor: isCurrentlyTyping ? `${user.cursorColor}40` : 'transparent'
+                        }}
                       />
                       <div
                         className={cn(
-                          "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background",
-                          isCurrentlyTyping ? "bg-orange-500 animate-pulse" : "bg-green-500"
+                          "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background transition-all duration-200",
+                          isCurrentlyTyping ? "bg-orange-500 animate-pulse scale-110" : "bg-green-500"
                         )}
+                        style={{
+                          boxShadow: isCurrentlyTyping ? '0 0 8px rgba(249, 115, 22, 0.5)' : 'none'
+                        }}
                       />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm">{user.name}</div>
                       <div className="text-xs text-muted-foreground">{user.university}</div>
                       {isCurrentlyTyping && (
-                        <div className="text-xs text-orange-500 mt-1 flex items-center gap-1">
+                        <div className="text-xs text-orange-500 mt-1 flex items-center gap-1.5 animate-in fade-in slide-in-from-left-1 duration-200">
                           <div className="flex gap-0.5">
-                            <div className="w-1 h-1 bg-orange-500 rounded-full animate-bounce" />
-                            <div className="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                            <div className="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                            <div className="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style={{ animationDuration: '0.6s' }} />
+                            <div className="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s', animationDuration: '0.6s' }} />
+                            <div className="w-1 h-1 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s', animationDuration: '0.6s' }} />
                           </div>
-                          typing...
+                          <span className="font-medium">typing...</span>
                         </div>
                       )}
                     </div>
@@ -437,7 +492,7 @@ export default function RealTimeCollaboration({ className }: { className?: strin
             <CardContent>
               <div className="relative">
                 {/* Live Code Editor */}
-                <div className="bg-muted/20 rounded-lg p-4 border border-border/30 overflow-x-auto relative min-h-[400px] font-mono">
+                <div className="bg-muted/20 rounded-lg p-4 border border-border/30 overflow-x-auto relative min-h-[400px] font-mono will-change-contents">
                   <pre className="text-sm leading-relaxed whitespace-pre-wrap">
                     <code className="text-foreground">
                       {currentCode}
@@ -445,27 +500,34 @@ export default function RealTimeCollaboration({ className }: { className?: strin
                         <span className="text-foreground">{currentlyTypingText}</span>
                       )}
                       {isTyping && (
-                        <span className="animate-pulse text-foreground">|</span>
+                        <span className="inline-block w-0.5 h-4 bg-foreground align-middle animate-pulse ml-0.5" style={{ animationDuration: '1s' }}></span>
                       )}
                     </code>
                   </pre>
 
-                  {/* Live cursor */}
+                  {/* Live cursor with smooth transitions */}
                   {typingUser && cursorPosition && (
                     <div
-                      className="absolute pointer-events-none z-10 transition-all duration-300"
+                      className="absolute pointer-events-none z-10 transition-all duration-200 ease-out"
                       style={{
                         left: `${cursorPosition.x}%`,
                         top: `${cursorPosition.y}%`,
+                        transform: 'translate(-2px, -2px)',
                       }}
                     >
                       <div
-                        className="w-0.5 h-4 animate-pulse"
-                        style={{ backgroundColor: mockUsers.find(u => u.id === typingUser)?.cursorColor }}
+                        className="w-0.5 h-5 rounded-full animate-pulse"
+                        style={{
+                          backgroundColor: mockUsers.find(u => u.id === typingUser)?.cursorColor,
+                          boxShadow: `0 0 8px ${mockUsers.find(u => u.id === typingUser)?.cursorColor}40`
+                        }}
                       />
                       <div
-                        className="text-xs text-white px-2 py-1 rounded mt-1 whitespace-nowrap shadow-lg"
-                        style={{ backgroundColor: mockUsers.find(u => u.id === typingUser)?.cursorColor }}
+                        className="text-xs font-medium text-white px-2 py-0.5 rounded-md mt-1 whitespace-nowrap shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-bottom-1 duration-200"
+                        style={{
+                          backgroundColor: mockUsers.find(u => u.id === typingUser)?.cursorColor,
+                          boxShadow: `0 2px 8px ${mockUsers.find(u => u.id === typingUser)?.cursorColor}60`
+                        }}
                       >
                         {mockUsers.find(u => u.id === typingUser)?.name}
                       </div>
@@ -506,34 +568,44 @@ export default function RealTimeCollaboration({ className }: { className?: strin
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 max-h-48 overflow-y-auto">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex items-start gap-3 p-3 rounded-lg transition-all duration-300 animate-in slide-in-from-bottom-2",
-                    msg.type === 'system' ? "bg-blue-500/5 border border-blue-500/20" : "hover:bg-muted/20"
-                  )}
-                >
-                  {msg.type !== 'system' && (
-                    <div className="w-8 h-8 bg-brand/20 rounded-full flex items-center justify-center text-xs font-semibold">
-                      {msg.user.split(' ').map(n => n[0]).join('')}
+            <div ref={chatContainerRef} className="space-y-2 max-h-48 overflow-y-auto scroll-smooth">
+              {messages.map((msg, idx) => {
+                const user = mockUsers.find(u => u.name === msg.user);
+                return (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex items-start gap-3 p-3 rounded-lg transition-all duration-200 ease-out animate-in fade-in slide-in-from-bottom-1",
+                      msg.type === 'system' ? "bg-blue-500/5 border border-blue-500/20" : "hover:bg-muted/20 bg-muted/5"
+                    )}
+                    style={{
+                      animationDelay: `${idx * 50}ms`,
+                      animationDuration: '300ms',
+                      animationFillMode: 'both'
+                    }}
+                  >
+                    {msg.type !== 'system' && user && (
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="w-8 h-8 rounded-full object-cover ring-2 ring-brand/20 flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={cn(
+                          "font-medium text-sm truncate",
+                          msg.type === 'system' && "text-blue-600"
+                        )}>
+                          {msg.user}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">{msg.time}</span>
+                      </div>
+                      <p className="text-sm text-foreground/90 leading-relaxed">{msg.message}</p>
                     </div>
-                  )}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={cn(
-                        "font-medium text-sm",
-                        msg.type === 'system' && "text-blue-600"
-                      )}>
-                        {msg.user}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{msg.time}</span>
-                    </div>
-                    <p className="text-sm">{msg.message}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-4 pt-4 border-t border-border/30">

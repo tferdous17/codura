@@ -3,420 +3,480 @@
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface BigOComplexity {
+interface ComplexityType {
   id: string;
   name: string;
   notation: string;
   color: string;
+  glowColor: string;
   description: string;
   examples: string[];
-  func: (n: number) => number;
-  severity: "excellent" | "good" | "fair" | "poor" | "terrible";
+  performance: "excellent" | "good" | "fair" | "poor" | "terrible";
+  calculate: (n: number) => number;
 }
 
-const complexities: BigOComplexity[] = [
+const complexityTypes: ComplexityType[] = [
   {
     id: "constant",
     name: "Constant",
     notation: "O(1)",
-    color: "hsl(var(--chart-2))",
+    color: "rgb(16, 185, 129)", // emerald
+    glowColor: "rgba(16, 185, 129, 0.4)",
     description: "Execution time remains constant regardless of input size",
     examples: ["Array index access", "Hash table lookup", "Stack push/pop"],
-    func: (n: number) => 1,
-    severity: "excellent",
+    performance: "excellent",
+    calculate: (n) => 1,
   },
   {
     id: "logarithmic",
     name: "Logarithmic",
     notation: "O(log n)",
-    color: "hsl(var(--chart-1))",
-    description: "Execution time grows logarithmically with input size",
-    examples: ["Binary search", "Balanced BST operations", "Binary heap operations"],
-    func: (n: number) => Math.log2(Math.max(1, n)),
-    severity: "excellent",
+    color: "rgb(59, 130, 246)", // blue
+    glowColor: "rgba(59, 130, 246, 0.4)",
+    description: "Time grows logarithmically - very efficient scaling",
+    examples: ["Binary search", "Balanced tree operations", "Skip lists"],
+    performance: "excellent",
+    calculate: (n) => Math.log2(n + 1),
   },
   {
     id: "linear",
     name: "Linear",
     notation: "O(n)",
-    color: "hsl(var(--chart-3))",
-    description: "Execution time scales linearly with input size",
+    color: "rgb(168, 85, 247)", // purple
+    glowColor: "rgba(168, 85, 247, 0.4)",
+    description: "Time scales directly proportional to input size",
     examples: ["Array traversal", "Linear search", "Finding min/max"],
-    func: (n: number) => n,
-    severity: "good",
+    performance: "good",
+    calculate: (n) => n,
   },
   {
     id: "linearithmic",
     name: "Linearithmic",
     notation: "O(n log n)",
-    color: "hsl(var(--chart-4))",
+    color: "rgb(251, 191, 36)", // amber
+    glowColor: "rgba(251, 191, 36, 0.4)",
     description: "Optimal for comparison-based sorting algorithms",
-    examples: ["Merge sort", "Quick sort (average)", "Heap sort"],
-    func: (n: number) => n * Math.log2(Math.max(1, n)),
-    severity: "good",
+    examples: ["Merge sort", "Quick sort (avg)", "Heap sort"],
+    performance: "good",
+    calculate: (n) => n * Math.log2(n + 1),
   },
   {
     id: "quadratic",
     name: "Quadratic",
     notation: "O(n²)",
-    color: "hsl(var(--chart-5))",
-    description: "Execution time grows quadratically - avoid for large inputs",
-    examples: ["Bubble sort", "Insertion sort", "Nested loops"],
-    func: (n: number) => n * n,
-    severity: "fair",
-  },
-  {
-    id: "cubic",
-    name: "Cubic",
-    notation: "O(n³)",
-    color: "hsl(0 84.2% 60.2%)",
-    description: "Execution time grows cubically - very inefficient",
-    examples: ["Triple nested loops", "Floyd-Warshall", "Matrix multiplication"],
-    func: (n: number) => Math.pow(n, 3),
-    severity: "poor",
+    color: "rgb(249, 115, 22)", // orange
+    glowColor: "rgba(249, 115, 22, 0.4)",
+    description: "Time grows quadratically - avoid for large datasets",
+    examples: ["Bubble sort", "Selection sort", "Nested loops"],
+    performance: "poor",
+    calculate: (n) => n * n,
   },
   {
     id: "exponential",
     name: "Exponential",
     notation: "O(2ⁿ)",
-    color: "hsl(0 90% 50%)",
-    description: "Execution time doubles with each input - extremely inefficient",
-    examples: ["Fibonacci (naive)", "Power set generation", "Brute force solutions"],
-    func: (n: number) => Math.pow(2, Math.min(n, 20)),
-    severity: "terrible",
-  },
-  {
-    id: "factorial",
-    name: "Factorial",
-    notation: "O(n!)",
-    color: "hsl(0 100% 30%)",
-    description: "Factorial growth - avoid at all costs",
-    examples: ["Permutation generation", "Traveling salesman (brute force)"],
-    func: (n: number) => {
-      if (n <= 1) return 1;
-      if (n > 10) return Math.pow(10, n * 0.4);
-      let result = 1;
-      for (let i = 2; i <= n; i++) result *= i;
-      return result;
-    },
-    severity: "terrible",
+    color: "rgb(239, 68, 68)", // red
+    glowColor: "rgba(239, 68, 68, 0.4)",
+    description: "Time doubles with each addition - only for tiny inputs",
+    examples: ["Recursive Fibonacci", "Power set", "Traveling salesman (brute force)"],
+    performance: "terrible",
+    calculate: (n) => Math.pow(2, Math.min(n, 15)), // Cap to prevent overflow
   },
 ];
 
-const getSeverityBadgeVariant = (severity: string) => {
-  switch (severity) {
-    case "excellent": return "default";
-    case "good": return "secondary";
-    case "fair": return "outline";
-    case "poor": return "destructive";
-    case "terrible": return "destructive";
-    default: return "default";
-  }
-};
+export default function BigOGraph() {
+  const [selectedComplexity, setSelectedComplexity] = useState<string>("linear");
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animationProgress, setAnimationProgress] = useState(100);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number>();
 
-interface BigOGraphProps {
-  className?: string;
-  interactive?: boolean;
-  showLegend?: boolean;
-}
-
-export default function BigOGraph({ className, interactive = true, showLegend = true }: BigOGraphProps) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [selectedComplexity, setSelectedComplexity] = useState<string | null>(null);
-  const [hoveredComplexity, setHoveredComplexity] = useState<string | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [animationProgress, setAnimationProgress] = useState(0);
+  // Constants for the graph
+  const MAX_N = 50;
+  const POINTS = 100;
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !isVisible) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
+    if (!canvasRef.current) return;
 
-    if (svgRef.current) {
-      observer.observe(svgRef.current);
-    }
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    return () => observer.disconnect();
-  }, [isVisible]);
+    // Set canvas size with device pixel ratio for crisp rendering
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
 
-  useEffect(() => {
-    if (!isVisible) return;
-
-    const animate = () => {
-      setAnimationProgress(prev => {
-        if (prev < 1) {
-          requestAnimationFrame(animate);
-          return Math.min(prev + 0.015, 1);
-        }
-        return 1;
-      });
-    };
-
-    animate();
-  }, [isVisible]);
-
-  const generatePath = (complexity: BigOComplexity, width: number, height: number, padding: number) => {
-    const maxN = 30;
-    const steps = complexity.id === 'exponential' || complexity.id === 'factorial' ? 25 : 50;
-    const stepSize = maxN / steps;
+    const width = rect.width;
+    const height = rect.height;
+    const padding = 50;
     const graphWidth = width - padding * 2;
     const graphHeight = height - padding * 2;
 
-    // Calculate max value for normalization
-    const maxValue = complexity.id === 'exponential' || complexity.id === 'factorial'
-      ? complexity.func(12)
-      : complexity.func(maxN);
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
 
-    let path = '';
+    // Draw grid
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.lineWidth = 1;
 
-    for (let i = 0; i <= steps; i++) {
-      const n = Math.max(1, i * stepSize);
-      const x = padding + (n / maxN) * graphWidth;
-      const value = complexity.func(n);
-      const normalizedValue = Math.min(value / maxValue, 1);
-      const y = height - padding - normalizedValue * graphHeight * animationProgress;
+    // Vertical grid lines
+    for (let i = 0; i <= 10; i++) {
+      const x = padding + (graphWidth / 10) * i;
+      ctx.beginPath();
+      ctx.moveTo(x, padding);
+      ctx.lineTo(x, height - padding);
+      ctx.stroke();
+    }
 
-      if (i === 0) {
-        path += `M ${x} ${y}`;
+    // Horizontal grid lines
+    for (let i = 0; i <= 8; i++) {
+      const y = padding + (graphHeight / 8) * i;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(width - padding, y);
+      ctx.stroke();
+    }
+
+    // Draw axes
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+    ctx.lineWidth = 2;
+
+    // Y-axis
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, height - padding);
+    ctx.stroke();
+
+    // X-axis
+    ctx.beginPath();
+    ctx.moveTo(padding, height - padding);
+    ctx.lineTo(width - padding, height - padding);
+    ctx.stroke();
+
+    // Draw axis labels
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.font = "12px Inter, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Input Size (n)", width / 2, height - 15);
+
+    ctx.save();
+    ctx.translate(15, height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText("Time", 0, 0);
+    ctx.restore();
+
+    // Get selected complexity
+    const selected = complexityTypes.find(c => c.id === selectedComplexity);
+    if (!selected) return;
+
+    // Calculate all points
+    const points: { x: number; y: number }[] = [];
+    let maxValue = 0;
+
+    for (let i = 0; i <= POINTS; i++) {
+      const n = (MAX_N / POINTS) * i;
+      const value = selected.calculate(n);
+      maxValue = Math.max(maxValue, value);
+      points.push({ x: n, y: value });
+    }
+
+    // Normalize and convert to canvas coordinates
+    const canvasPoints = points.map((p) => ({
+      x: padding + (p.x / MAX_N) * graphWidth,
+      y: height - padding - (p.y / maxValue) * graphHeight,
+    }));
+
+    // Calculate how many points to show based on animation progress
+    const visiblePoints = Math.floor((animationProgress / 100) * canvasPoints.length);
+    const drawPoints = canvasPoints.slice(0, visiblePoints);
+
+    if (drawPoints.length < 2) return;
+
+    // Draw glow effect
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = selected.glowColor;
+    ctx.strokeStyle = selected.color;
+    ctx.lineWidth = 3;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    // Draw the curve
+    ctx.beginPath();
+    ctx.moveTo(drawPoints[0].x, drawPoints[0].y);
+
+    for (let i = 1; i < drawPoints.length; i++) {
+      ctx.lineTo(drawPoints[i].x, drawPoints[i].y);
+    }
+    ctx.stroke();
+
+    // Draw area under curve with gradient
+    ctx.shadowBlur = 0;
+    const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+    gradient.addColorStop(0, selected.glowColor.replace("0.4", "0.2"));
+    gradient.addColorStop(1, selected.glowColor.replace("0.4", "0"));
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(drawPoints[0].x, height - padding);
+    ctx.lineTo(drawPoints[0].x, drawPoints[0].y);
+
+    for (let i = 1; i < drawPoints.length; i++) {
+      ctx.lineTo(drawPoints[i].x, drawPoints[i].y);
+    }
+
+    ctx.lineTo(drawPoints[drawPoints.length - 1].x, height - padding);
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw endpoint indicator
+    if (animationProgress === 100) {
+      const lastPoint = drawPoints[drawPoints.length - 1];
+
+      // Outer glow
+      ctx.beginPath();
+      ctx.arc(lastPoint.x, lastPoint.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = selected.glowColor;
+      ctx.fill();
+
+      // Inner circle
+      ctx.beginPath();
+      ctx.arc(lastPoint.x, lastPoint.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = selected.color;
+      ctx.fill();
+    }
+
+  }, [selectedComplexity, animationProgress]);
+
+  // Animation effect when switching complexity
+  useEffect(() => {
+    setIsAnimating(true);
+    setAnimationProgress(0);
+
+    const duration = 1200; // ms
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setAnimationProgress(eased * 100);
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
       } else {
-        path += ` L ${x} ${y}`;
+        setIsAnimating(false);
       }
-    }
+    };
 
-    return path;
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [selectedComplexity]);
+
+  const selectedComplexityData = complexityTypes.find(c => c.id === selectedComplexity);
+
+  const getPerformanceStyles = (performance: string) => {
+    switch (performance) {
+      case "excellent":
+        return "from-emerald-500/20 to-emerald-500/5 border-emerald-500/30";
+      case "good":
+        return "from-blue-500/20 to-blue-500/5 border-blue-500/30";
+      case "fair":
+        return "from-amber-500/20 to-amber-500/5 border-amber-500/30";
+      case "poor":
+        return "from-orange-500/20 to-orange-500/5 border-orange-500/30";
+      case "terrible":
+        return "from-red-500/20 to-red-500/5 border-red-500/30";
+      default:
+        return "from-slate-500/20 to-slate-500/5 border-slate-500/30";
+    }
   };
-
-  const getActiveComplexity = () => {
-    if (selectedComplexity) {
-      return complexities.find(c => c.id === selectedComplexity);
-    }
-    if (hoveredComplexity) {
-      return complexities.find(c => c.id === hoveredComplexity);
-    }
-    return null;
-  };
-
-  const activeComplexity = getActiveComplexity();
-  const width = 600;
-  const height = 400;
-  const padding = 60;
-
-  const visibleComplexities = complexities.filter(complexity => {
-    const isSelected = selectedComplexity === complexity.id;
-    const isHovered = hoveredComplexity === complexity.id;
-    return !selectedComplexity || isSelected || isHovered;
-  });
 
   return (
-    <Card className={cn("border-border/40 bg-card/50 backdrop-blur-sm", className)}>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-xl font-semibold">Algorithm Complexity Analysis</CardTitle>
-            <CardDescription className="mt-1">
-              Interactive visualization of time complexities
-            </CardDescription>
-          </div>
-          {interactive && (
-            <button
-              onClick={() => setSelectedComplexity(null)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1 rounded-md border border-border/40 hover:border-border/60"
-            >
-              Show All
-            </button>
-          )}
-        </div>
-      </CardHeader>
+    <div className="relative w-full">
+      {/* Main container with glassmorphism */}
+      <div className="relative bg-gradient-to-br from-card/80 via-card/60 to-card/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden">
+        {/* Animated background orbs */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-3xl animate-blob" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl animate-blob-reverse" />
 
-      <CardContent className="space-y-6">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Modern SVG Graph */}
-          <div className="lg:col-span-2">
-            <div className="relative">
-              <svg
-                ref={svgRef}
-                width="100%"
-                height={height}
-                viewBox={`0 0 ${width} ${height}`}
-                className="rounded-lg border border-border/20 bg-muted/10"
-              >
-                {/* Grid */}
-                <defs>
-                  <pattern id="grid" width="40" height="35" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 35" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="0.5" opacity="0.2"/>
-                  </pattern>
-                  <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="hsl(var(--background))" stopOpacity="0" />
-                    <stop offset="100%" stopColor="hsl(var(--muted))" stopOpacity="0.1" />
-                  </linearGradient>
-                </defs>
-
-                <rect width="100%" height="100%" fill="url(#grid)" />
-                <rect width="100%" height="100%" fill="url(#chartGradient)" />
-
-                {/* Axes */}
-                <g stroke="hsl(var(--muted-foreground))" strokeWidth="2" opacity="0.6">
-                  <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} />
-                  <line x1={padding} y1={height - padding} x2={padding} y2={padding} />
-                </g>
-
-                {/* Axis labels */}
-                <text
-                  x={width / 2}
-                  y={height - 15}
-                  textAnchor="middle"
-                  className="text-xs fill-muted-foreground font-mono"
-                >
-                  Input Size (n)
-                </text>
-                <text
-                  x={20}
-                  y={height / 2}
-                  textAnchor="middle"
-                  className="text-xs fill-muted-foreground font-mono"
-                  transform={`rotate(-90, 20, ${height / 2})`}
-                >
-                  Time
-                </text>
-
-                {/* Complexity curves */}
-                {visibleComplexities.map(complexity => {
-                  const isSelected = selectedComplexity === complexity.id;
-                  const isHovered = hoveredComplexity === complexity.id;
-                  const path = generatePath(complexity, width, height, padding);
-
-                  return (
-                    <g key={complexity.id}>
-                      <path
-                        d={path}
-                        fill="none"
-                        stroke={complexity.color}
-                        strokeWidth={isSelected || isHovered ? "3" : "2"}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        opacity={isSelected || isHovered ? "1" : "0.8"}
-                        className="transition-all duration-300"
-                        style={{
-                          filter: isSelected || isHovered ? `drop-shadow(0 0 8px ${complexity.color})` : 'none',
-                        }}
-                      />
-                    </g>
-                  );
-                })}
-
-                {/* Curve labels */}
-                {animationProgress > 0.7 && visibleComplexities.map(complexity => {
-                  const isSelected = selectedComplexity === complexity.id;
-                  const isHovered = hoveredComplexity === complexity.id;
-
-                  return (
-                    <text
-                      key={`label-${complexity.id}`}
-                      x={width - 80}
-                      y={50 + visibleComplexities.indexOf(complexity) * 25}
-                      className="text-xs font-mono font-semibold"
-                      fill={complexity.color}
-                      opacity={isSelected || isHovered ? "1" : "0.8"}
-                    >
-                      {complexity.notation}
-                    </text>
-                  );
-                })}
-              </svg>
+        <div className="relative z-10">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand/20 to-brand/5 backdrop-blur-sm border border-brand/20 flex items-center justify-center">
+                <svg className="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  Big O Complexity Visualizer
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Interactive algorithm performance analysis
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Enhanced Legend */}
-          <div className="space-y-4">
-            {showLegend && (
-              <div className="space-y-3">
-                <h4 className="font-semibold text-sm text-muted-foreground tracking-wide">
-                  COMPLEXITIES
-                </h4>
-                <div className="space-y-2">
-                  {complexities.map(complexity => (
-                    <button
-                      key={complexity.id}
-                      onClick={() => interactive ? setSelectedComplexity(
-                        selectedComplexity === complexity.id ? null : complexity.id
-                      ) : undefined}
-                      onMouseEnter={() => interactive ? setHoveredComplexity(complexity.id) : undefined}
-                      onMouseLeave={() => interactive ? setHoveredComplexity(null) : undefined}
-                      className={cn(
-                        "flex items-center gap-3 p-3 rounded-lg w-full text-left transition-all duration-200 border border-transparent",
-                        interactive && "hover:bg-muted/30 hover:border-border/40",
-                        selectedComplexity === complexity.id && "bg-muted/40 border-border/60 shadow-sm"
-                      )}
+          {/* Complexity selector buttons */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+            {complexityTypes.map((complexity, index) => (
+              <button
+                key={complexity.id}
+                onClick={() => setSelectedComplexity(complexity.id)}
+                className={cn(
+                  "group relative px-4 py-3 rounded-xl transition-all duration-300",
+                  "bg-gradient-to-br backdrop-blur-md border",
+                  "hover:scale-105 hover:shadow-lg active:scale-95",
+                  "animate-in fade-in slide-in-from-bottom-2",
+                  selectedComplexity === complexity.id
+                    ? `${getPerformanceStyles(complexity.performance)} shadow-lg scale-105`
+                    : "from-muted/20 to-muted/5 border-white/10 hover:border-white/20"
+                )}
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                  animationDuration: "500ms",
+                  animationFillMode: "both",
+                }}
+              >
+                {/* Glow effect when selected */}
+                {selectedComplexity === complexity.id && (
+                  <div
+                    className="absolute inset-0 rounded-xl blur-xl opacity-50 -z-10"
+                    style={{ backgroundColor: complexity.color }}
+                  />
+                )}
+
+                <div className="flex flex-col items-center gap-1">
+                  <span className="font-mono text-sm font-bold" style={{
+                    color: selectedComplexity === complexity.id ? complexity.color : undefined
+                  }}>
+                    {complexity.notation}
+                  </span>
+                  <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                    {complexity.name}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Graph and details container */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Graph canvas */}
+            <div className="lg:col-span-2">
+              <div className="relative bg-background/30 backdrop-blur-sm border border-white/10 rounded-2xl p-6 overflow-hidden">
+                {/* Grid pattern overlay */}
+                <div className="absolute inset-0 opacity-5" style={{
+                  backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
+                  backgroundSize: "20px 20px"
+                }} />
+
+                <canvas
+                  ref={canvasRef}
+                  className="w-full h-[400px] relative z-10"
+                  style={{ imageRendering: "crisp-edges" }}
+                />
+              </div>
+            </div>
+
+            {/* Details panel */}
+            {selectedComplexityData && (
+              <div className="space-y-4 animate-in slide-in-from-right fade-in duration-500">
+                {/* Performance badge */}
+                <div className={cn(
+                  "p-4 rounded-2xl bg-gradient-to-br backdrop-blur-md border",
+                  getPerformanceStyles(selectedComplexityData.performance)
+                )}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Performance</span>
+                    <Badge
+                      variant="outline"
+                      className="text-xs capitalize border-current/30 bg-current/10"
+                      style={{ color: selectedComplexityData.color }}
                     >
+                      {selectedComplexityData.performance}
+                    </Badge>
+                  </div>
+                  <h4 className="text-2xl font-bold font-mono mb-1" style={{ color: selectedComplexityData.color }}>
+                    {selectedComplexityData.notation}
+                  </h4>
+                  <p className="text-sm font-medium text-foreground/80">
+                    {selectedComplexityData.name}
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div className="p-4 rounded-2xl bg-muted/20 backdrop-blur-sm border border-white/10">
+                  <h5 className="text-sm font-semibold text-foreground/80 mb-2 flex items-center gap-2">
+                    <div className="w-1 h-4 rounded-full" style={{ backgroundColor: selectedComplexityData.color }} />
+                    Description
+                  </h5>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {selectedComplexityData.description}
+                  </p>
+                </div>
+
+                {/* Examples */}
+                <div className="p-4 rounded-2xl bg-muted/20 backdrop-blur-sm border border-white/10">
+                  <h5 className="text-sm font-semibold text-foreground/80 mb-3 flex items-center gap-2">
+                    <div className="w-1 h-4 rounded-full" style={{ backgroundColor: selectedComplexityData.color }} />
+                    Common Examples
+                  </h5>
+                  <div className="space-y-2">
+                    {selectedComplexityData.examples.map((example, idx) => (
                       <div
-                        className="w-4 h-4 rounded-full flex-shrink-0 border border-white/20"
-                        style={{ backgroundColor: complexity.color }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-mono text-sm font-semibold">
-                          {complexity.notation}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {complexity.name}
-                        </div>
-                      </div>
-                      <Badge
-                        variant={getSeverityBadgeVariant(complexity.severity)}
-                        className="text-xs"
+                        key={idx}
+                        className="flex items-start gap-2 text-sm text-muted-foreground animate-in slide-in-from-left fade-in"
+                        style={{
+                          animationDelay: `${idx * 100}ms`,
+                          animationDuration: "300ms",
+                          animationFillMode: "both",
+                        }}
                       >
-                        {complexity.severity}
-                      </Badge>
-                    </button>
-                  ))}
+                        <div
+                          className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                          style={{ backgroundColor: selectedComplexityData.color }}
+                        />
+                        <span className="leading-relaxed">{example}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pro tip */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-brand/10 to-brand/5 backdrop-blur-sm border border-brand/20">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-brand/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-3 h-3 text-brand" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-semibold text-brand mb-1">Pro Tip</h5>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Click different complexity types above to see how algorithm performance scales with input size.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
-
-            {/* Enhanced Active Complexity Info */}
-            {activeComplexity && (
-              <Card className="border-border/40 bg-muted/20">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div
-                      className="w-4 h-4 rounded-full border border-white/20"
-                      style={{ backgroundColor: activeComplexity.color }}
-                    />
-                    <h4 className="font-mono font-semibold text-lg">
-                      {activeComplexity.notation}
-                    </h4>
-                    <Badge variant={getSeverityBadgeVariant(activeComplexity.severity)}>
-                      {activeComplexity.severity}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                    {activeComplexity.description}
-                  </p>
-                  <div>
-                    <h5 className="text-xs font-semibold text-muted-foreground mb-2 tracking-wide">
-                      COMMON EXAMPLES
-                    </h5>
-                    <ul className="space-y-1">
-                      {activeComplexity.examples.map((example, index) => (
-                        <li key={index} className="text-xs text-muted-foreground flex items-center gap-2">
-                          <div className="w-1 h-1 rounded-full bg-muted-foreground/60" />
-                          {example}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

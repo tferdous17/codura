@@ -81,12 +81,10 @@ export default function PlatformShowcase({ className }: { className?: string }) 
       // REMOVED background gradient. Standardized padding.
       className={cn("py-20 relative overflow-hidden", className)}
     >
-      {/* Background Effect: Subtle animated blur orbs */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
-        <div
-          className="absolute top-1/4 left-3/4 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl animate-float-slow"
-          style={{ animationDelay: "1s" }}
-        />
+      {/* Glassmorphism glow effects matching hero elevated */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-brand/8 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-1/4 left-1/3 w-[500px] h-[500px] bg-brand-foreground/8 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '3s' }} />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
