@@ -53,7 +53,7 @@ export default async function Page() {
   }));
 
   return (
-    <div className="bg-gray-900 min-h-screen">
+    <div className="caffeine-theme bg-background min-h-screen">
       <div className="max-w-6xl mx-auto p-6">
         <QuestionnaireForm items={items} />
       </div>
