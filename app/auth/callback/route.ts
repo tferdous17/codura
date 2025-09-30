@@ -1,34 +1,81 @@
 import { NextResponse } from 'next/server'
-// The client you created from the Server-Side Auth instructions
 import { createClient } from '@/utils/supabase/server'
 
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
-  // if "next" is in param, use it as the redirect URL
-  let next = searchParams.get('next') ?? '/dashboard'
-  if (!next.startsWith('/')) {
-    // if "next" is not a relative URL, use the default
-    next = '/dashboard'
+export async function GET(req: Request) {
+  const url = new URL(req.url)
+  const code = url.searchParams.get('code')
+  const next = url.searchParams.get('next') ?? '/dashboard'
+  const error = url.searchParams.get('error')
+  const error_description = url.searchParams.get('error_description')
+
+  if (error) {
+    console.error('OAuth callback error:', error, error_description)
+    return NextResponse.redirect(new URL('/auth/auth-code-error', url.origin))
   }
 
+  const supabase = await createClient()
+
   if (code) {
-    const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
-      const isLocalEnv = process.env.NODE_ENV === 'development'
-      if (isLocalEnv) {
-        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-        return NextResponse.redirect(`${origin}${next}`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
-      } else {
-        return NextResponse.redirect(`${origin}${next}`)
-      }
+    const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code)
+    if (exchangeErr) {
+      console.error('exchangeCodeForSession failed:', exchangeErr)
+      return NextResponse.redirect(new URL('/auth/auth-code-error', url.origin))
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+      const full_name =
+        (user.user_metadata?.full_name as string) ||
+        user.user_metadata?.name ||
+        user.email?.split('@')[0] ||
+        'New User'
+
+      const avatar_url = (user.user_metadata?.avatar_url as string) ?? null
+      const email = user.email
+
+      // --- Upsert into `users` table ---
+      const { error: usersErr } = await supabase
+        .from('users')
+        .upsert(
+          {
+            user_id: user.id,
+            full_name,
+            avatar_url,
+            email,              // Add email if your schema supports it
+            points: 0,          // default values for new users
+            daily_streak: 0,
+            questionnaire_completed: false,
+            major: "",
+            age:0,
+            academic_year:2025,
+            
+          },
+          { onConflict: 'user_id' }
+        )
+
+      if (usersErr) console.error('users upsert failed:', usersErr)
+
+      // --- Upsert into `user_profile` table ---
+      const { error: profileErr } = await supabase
+        .from('user_profile')
+        .upsert(
+          {
+            user_id: user.id,
+            full_name,
+            day_streak: 0,
+            mock_interviews: 0,
+            university_rank: 0,
+            universityID: null,
+            problems_solved: 0,
+            topics_studying: [],
+          },
+          { onConflict: 'user_id' }
+        )
+
+      if (profileErr) console.error('profile upsert failed:', profileErr)
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  return NextResponse.redirect(new URL(next, url.origin))
 }
