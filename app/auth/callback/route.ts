@@ -1,81 +1,119 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+// app/auth/callback/route.ts
+import { NextResponse } from "next/server";
+import { createClient } from "@/utils/supabase/server";
 
-export async function GET(req: Request) {
-  const url = new URL(req.url)
-  const code = url.searchParams.get('code')
-  const next = url.searchParams.get('next') ?? '/dashboard'
-  const error = url.searchParams.get('error')
-  const error_description = url.searchParams.get('error_description')
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const origin = url.origin;
+  const code = url.searchParams.get("code");
 
-  if (error) {
-    console.error('OAuth callback error:', error, error_description)
-    return NextResponse.redirect(new URL('/auth/auth-code-error', url.origin))
+  console.log("=== AUTH CALLBACK START ===");
+  console.log("Code present:", !!code);
+
+  if (!code) {
+    console.error("No code in callback");
+    return NextResponse.redirect(`${origin}/auth/auth-code-error`);
   }
 
-  const supabase = await createClient()
+  const supabase = await createClient();
 
-  if (code) {
-    const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code)
-    if (exchangeErr) {
-      console.error('exchangeCodeForSession failed:', exchangeErr)
-      return NextResponse.redirect(new URL('/auth/auth-code-error', url.origin))
-    }
+  // Exchange code for session
+  const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
+  if (exchangeErr) {
+    console.error("Exchange error:", exchangeErr);
+    return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  }
 
-    const { data: { user } } = await supabase.auth.getUser()
+  // Get the authenticated user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !user) {
+    console.error("User error:", userError);
+    return NextResponse.redirect(`${origin}/login`);
+  }
 
-    if (user) {
-      const full_name =
-        (user.user_metadata?.full_name as string) ||
-        user.user_metadata?.name ||
-        user.email?.split('@')[0] ||
-        'New User'
+  console.log("User authenticated:", user.id, user.email);
 
-      const avatar_url = (user.user_metadata?.avatar_url as string) ?? null
-      const email = user.email
+  // First, check if user row already exists
+  const { data: existingUser, error: checkError } = await supabase
+    .from("users")
+    .select("user_id, federal_school_code, questionnaire_completed")
+    .eq("user_id", user.id)
+    .maybeSingle(); // Use maybeSingle() instead of single() to avoid error if not found
 
-      // --- Upsert into `users` table ---
-      const { error: usersErr } = await supabase
-        .from('users')
-        .upsert(
-          {
-            user_id: user.id,
-            full_name,
-            avatar_url,
-            email,              // Add email if your schema supports it
-            points: 0,          // default values for new users
-            daily_streak: 0,
-            questionnaire_completed: false,
-            major: "",
-            age:0,
-            academic_year:2025,
-            
-          },
-          { onConflict: 'user_id' }
-        )
+  console.log("Existing user:", existingUser);
+  console.log("Check error:", checkError);
 
-      if (usersErr) console.error('users upsert failed:', usersErr)
+  let profile = existingUser;
 
-      // --- Upsert into `user_profile` table ---
-      const { error: profileErr } = await supabase
-        .from('user_profile')
-        .upsert(
-          {
-            user_id: user.id,
-            full_name,
-            day_streak: 0,
-            mock_interviews: 0,
-            university_rank: 0,
-            universityID: null,
-            problems_solved: 0,
-            topics_studying: [],
-          },
-          { onConflict: 'user_id' }
-        )
+  // If user doesn't exist, create them
+  if (!existingUser) {
+    console.log("Creating new user row...");
+    
+    const fullName = 
+      user.user_metadata?.full_name || 
+      user.user_metadata?.name || 
+      user.user_metadata?.user_name ||
+      user.email?.split('@')[0] || 
+      "User";
 
-      if (profileErr) console.error('profile upsert failed:', profileErr)
+    const { data: newUser, error: insertError } = await supabase
+      .from("users")
+      .insert({
+        user_id: user.id,
+        full_name: fullName,
+        federal_school_code: null,
+        questionnaire_completed: false,
+      })
+      .select("user_id, federal_school_code, questionnaire_completed")
+      .single();
+
+    if (insertError) {
+      console.error("Insert error:", insertError);
+      // Continue anyway - they'll get redirected properly
+    } else {
+      console.log("New user created:", newUser);
+      profile = newUser;
     }
   }
 
-  return NextResponse.redirect(new URL(next, url.origin))
+  // Decide destination based on profile
+  let dest = "/onboarding";
+  
+  if (profile) {
+    console.log("Profile data:", {
+      questionnaire_completed: profile.questionnaire_completed,
+      federal_school_code: profile.federal_school_code,
+    });
+
+    if (profile.questionnaire_completed) {
+      dest = "/dashboard";
+    } else {
+      const code = profile.federal_school_code;
+      const hasCode = code !== null && code !== undefined && String(code).trim() !== "";
+      
+      if (hasCode) {
+        dest = "/questionnaire";
+      } else {
+        dest = "/onboarding";
+      }
+    }
+  }
+
+  console.log("Redirecting to:", dest);
+  console.log("=== AUTH CALLBACK END ===");
+
+  // Handle different environments
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const isLocal = process.env.NODE_ENV === "development";
+
+  if (isLocal) {
+    return NextResponse.redirect(`${origin}${dest}`);
+  }
+  
+  if (forwardedHost) {
+    return NextResponse.redirect(`https://${forwardedHost}${dest}`);
+  }
+  
+  return NextResponse.redirect(`${origin}${dest}`);
 }
