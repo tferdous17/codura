@@ -65,11 +65,193 @@ export async function login(formData: FormData) {
  * Function to handle user signup
  * @param formData - FormData from signup form
  */
-/**
- * Function to handle user signup
- * @param formData - FormData from signup form
- */
 export async function signup(formData: FormData) {
   console.log('=== SIGNUP ACTION START ===')
   const supabase = await createClient()
+
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+  const confirmPassword = formData.get('confirm-password') as string
+  const fullName = formData.get('full_name') as string
+
+  console.log('Signup data:', { email, fullName, hasPassword: !!password })
+
+  // Validate inputs
+  if (!email || !password || !fullName) {
+    console.error('Missing required fields')
+    redirect('/error')
+  }
+
+  if (password !== confirmPassword) {
+    console.error('Passwords do not match')
+    redirect('/error')
+  }
+
+  if (password.length < 6) {
+    console.error('Password too short (minimum 6 characters)')
+    redirect('/error')
+  }
+
+  const data = {
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+      }
+    }
+  }
+
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp(data)
+
+  if (signUpError) {
+    console.error('Signup error:', signUpError)
+    
+    // If there's a database trigger error, the user might still be created in auth.users
+    // Let's check and handle it manually
+    if (signUpError.message?.includes('Database error')) {
+      console.log('Database trigger error detected, checking if user was created...')
+      
+      // Wait a moment for auth to process
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Try to sign in to see if the user exists
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (!signInError && signInData.user) {
+        console.log('User exists in auth.users, creating profile manually...')
+        
+        // Create the profile manually
+        const { error: profileError } = await supabase
+          .from('users')
+          .upsert({
+            user_id: signInData.user.id,
+            full_name: fullName,
+            federal_school_code: null,
+            questionnaire_completed: false,
+          }, {
+            onConflict: 'user_id',
+            ignoreDuplicates: false
+          })
+
+        if (profileError && profileError.code !== '23505') {
+          console.error('Profile creation error:', profileError)
+        } else {
+          console.log('Profile created successfully via manual insertion')
+          revalidatePath('/', 'layout')
+          redirect('/onboarding')
+        }
+      }
+    }
+    
+    redirect('/error')
+  }
+
+  console.log('Signup successful:', signUpData.user?.id)
+
+  // Verify the profile was created by the trigger
+  if (signUpData.user) {
+    // Wait a moment for the trigger to complete
+    await new Promise(resolve => setTimeout(resolve, 300))
+    
+    const { data: profile, error: profileCheckError } = await supabase
+      .from('users')
+      .select('user_id')
+      .eq('user_id', signUpData.user.id)
+      .maybeSingle()
+
+    if (profileCheckError) {
+      console.error('Profile check error:', profileCheckError)
+    }
+
+    // If profile doesn't exist, create it manually
+    if (!profile) {
+      console.log('Profile not found after signup, creating manually...')
+      
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          user_id: signUpData.user.id,
+          full_name: fullName,
+          federal_school_code: null,
+          questionnaire_completed: false,
+        })
+
+      if (profileError && profileError.code !== '23505') {
+        console.error('Manual profile creation error:', profileError)
+        // Continue anyway - the callback will handle it
+      } else {
+        console.log('Manual profile creation successful')
+      }
+    } else {
+      console.log('Profile exists, all good!')
+    }
+  }
+
+  revalidatePath('/', 'layout')
+  console.log('=== SIGNUP ACTION END ===')
+  redirect('/onboarding')
+}
+
+/**
+ * Function to handle GitHub OAuth login
+ */
+export async function signInWithGithub() {
+  console.log('=== GITHUB OAUTH START ===')
+  const supabase = await createClient()
+  const redirectTo = await getURL()
+  
+  console.log('GitHub redirect URL:', `${redirectTo}/auth/callback`)
+  
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: {
+      redirectTo: `${redirectTo}/auth/callback`
+    }
+  })
+
+  if (error) {
+    console.error('GitHub OAuth error:', error)
+    redirect('/error')
+  }
+
+  if (data.url) {
+    console.log('Redirecting to GitHub...')
+    redirect(data.url)
+  }
+}
+
+/**
+ * Function to handle Google OAuth login
+ */
+export async function signInWithGoogle() {
+  console.log('=== GOOGLE OAUTH START ===')
+  const supabase = await createClient()
+  const redirectTo = await getURL()
+  
+  console.log('Google redirect URL:', `${redirectTo}/auth/callback`)
+  
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${redirectTo}/auth/callback`,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      }
+    }
+  })
+
+  if (error) {
+    console.error('Google OAuth error:', error)
+    redirect('/error')
+  }
+
+  if (data.url) {
+    console.log('Redirecting to Google...')
+    redirect(data.url)
+  }
 }
