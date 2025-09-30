@@ -1,56 +1,63 @@
-import React from 'react'
-import { createClient } from '@/utils/supabase/server'
-import { Button } from '@/components/ui/button'
+import React from "react";
+import { createClient } from "@/utils/supabase/server";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { resetQuestionnaire } from "./action";  // 👈 import your server action
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // Get the currently authenticated user
-  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null;
 
+  const { data: userData } = await supabase
+    .from("users")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
 
-  // Getting user's email and id, if they're not authenticated, middleware should handle redirect
-  const email = user!.email
-  const userId = user!.id
-
-
-  // Only get the current user's data with error handling
-  const { data: userData, error: dbError } = await supabase
-    .from('users')
-    .select('*')
-    .eq('user_id', userId)
-    .single()
-
-
-
-  // Handle database errors gracefully
-  if (dbError) {
-    alert('Error fetching user data.')
-  }
+  const completed = userData?.questionnaire_completed === true;
 
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen  gap-5'>
-      <h1 className='text-white text-4xl font-bold'>Dashboard</h1>
-    
-      <p className='text-violet-500'>You are logged in as: {email}</p>
+    <div className="flex flex-col items-center justify-center min-h-screen gap-5">
+      <h1 className="text-white text-4xl font-bold">Dashboard</h1>
 
-      {/* Display user data */}
-      {userData && (
-        <div className='text-white'>
-          <p>User ID: {userData.user_id}</p>
-          <p>Name: {userData.full_name}</p>
-          <p>Is Student: {userData.is_student ? 'Yes' : 'No'}</p>
-          <p>Points: {userData.points}</p>
-          <p>Daily Streak: {userData.daily_streak}</p>
-          <p>University id: {userData.university_id}</p>
-          <p>Avatar url: {userData.avatar_url}</p>
-        </div>
+      <p className="text-violet-500">You are logged in as: {user.email}</p>
+
+      {/* Status pill */}
+      <div className="flex items-center gap-3">
+        <span
+          className={`rounded-full px-3 py-1 text-sm font-medium ${
+            completed
+              ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40"
+              : "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40"
+          }`}
+        >
+          {completed ? "Questionnaire: Completed ✅" : "Questionnaire: Not completed"}
+        </span>
+
+        {!completed && (
+          <Link href="/questionnaire">
+            <Button size="sm" variant="secondary">Finish now</Button>
+          </Link>
+        )}
+      </div>
+
+      {/* 👇 Reset button (only when completed) */}
+      {completed && (
+        <form action={resetQuestionnaire}>
+          <Button type="submit" variant="destructive" size="sm">
+            Reset Questionnaire (Testing)
+          </Button>
+        </form>
       )}
 
-      {/* Button to sign out */}
+      {/* Sign out */}
       <form action="/auth/signout" method="POST">
         <Button type="submit">Sign Out</Button>
       </form>
     </div>
-  )
+  );
 }
