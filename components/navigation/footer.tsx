@@ -18,28 +18,27 @@ import {
 // Footer link structure
 const footerSections = [
   {
-    title: "Nightwatch",
+    title: "Codura",
     links: [
-      { name: "Pricing", href: "/pricing" },
-      { name: "Documentation", href: "/docs" },
-      { name: "Contact sales", href: "/contact" },
+      { name: "Pricing", href: "#" },
+      { name: "Documentation", href: "#" },
+      { name: "Contact sales", href: "#" },
     ],
   },
   {
     title: "Explore",
     links: [
-      { name: "Nightwatch vs Pulse", href: "/compare/pulse" },
-      { name: "Nightwatch vs Telescope", href: "/compare/telescope" },
+      { name: "Live Collaboration", href: "#" },
     ],
   },
   {
     title: "Discover Codura",
     links: [
-      { name: "Documentation", href: "/docs" },
-      { name: "Release notes", href: "/release-notes" },
-      { name: "Blog", href: "/blog" },
-      { name: "Community", href: "/community" },
-      { name: "Careers", href: "/careers" },
+      { name: "Documentation", href: "#" },
+      { name: "Release notes", href: "#" },
+      { name: "Blog", href: "#" },
+      { name: "Community", href: "#" },
+      { name: "Careers", href: "#" },
     ],
   },
 ];
@@ -78,9 +77,9 @@ export default function Footer() {
           {/* Column 1: Branding, Subscription, and Status */}
           <div className="lg:col-span-2 space-y-8">
             <div className="space-y-3">
-              <h2 className="text-3xl font-bold">Monitoring made by Codura.</h2>
+              <h2 className="text-3xl font-bold">Practice smarter with Codura.</h2>
               <p className="text-xl text-white/90">
-                Full observability with zero config.
+                
               </p>
             </div>
 

@@ -206,7 +206,7 @@ export default function AICodeFeedback({ className }: { className?: string }) {
                   onClick={analyzeCode}
                   disabled={isAnalyzing}
                   className={cn(
-                    "px-5 py-2 mt-2 font-semibold text-sm rounded-2xl transition-all duration-200 ease-out cursor-pointer rounded-3xl",
+                    "px-5 py-2 mt-2 font-semibold text-sm rounded-2xl transition-all duration-200 ease-out cursor-pointer rounded-lg",
                     "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400",
                     isAnalyzing
                       ? "bg-gray-600/50 text-gray-400 cursor-not-allowed shadow-none"

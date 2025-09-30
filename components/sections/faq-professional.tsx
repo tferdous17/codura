@@ -94,7 +94,7 @@ export default function FAQProfessional() {
             >
               <button
                 onClick={() => toggleItem(faq.id)}
-                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-muted/20 transition-colors duration-200"
+                className="cursor-pointer w-full px-6 py-4 text-left flex items-center justify-between hover:bg-muted/20 transition-colors duration-200"
               >
                 <span className="font-semibold text-lg pr-8">{faq.question}</span>
                 <div className={cn(

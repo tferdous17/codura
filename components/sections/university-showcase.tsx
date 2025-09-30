@@ -7,24 +7,25 @@ import { Section } from "@/components/ui/section";
 import { IconTrophy, IconUsers, IconCode, IconArrowRight } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 
 const universities = [
   {
     id: "fsc",
     name: "Farmingdale State College",
     abbreviation: "FSC",
-    logo: "🏛️",
+    logo: "/college-logos/fsc.png",
     students: 1247,
     problemsSolved: 5680,
     ranking: 1,
     featured: true,
-    color: "from-blue-500/20 to-purple-500/20"
+    color: "from-green-600/20 to-green-500/20"
   },
   {
     id: "sbu",
     name: "Stony Brook University",
     abbreviation: "SBU",
-    logo: "🐺",
+    logo: "/college-logos/sbu.png",
     students: 892,
     problemsSolved: 4321,
     ranking: 2,
@@ -35,7 +36,7 @@ const universities = [
     id: "nyu",
     name: "New York University",
     abbreviation: "NYU",
-    logo: "🗽",
+    logo: "/college-logos/nyu.png",
     students: 743,
     problemsSolved: 3890,
     ranking: 3,
@@ -46,18 +47,18 @@ const universities = [
     id: "mit",
     name: "Massachusetts Institute of Technology",
     abbreviation: "MIT",
-    logo: "⚡",
+    logo: "/college-logos/mit.png",
     students: 654,
     problemsSolved: 7234,
     ranking: 4,
     featured: false,
-    color: "from-green-500/20 to-teal-500/20"
+    color: "from-red-400/20 to-red-800/20"
   },
   {
     id: "columbia",
     name: "Columbia University",
     abbreviation: "CU",
-    logo: "🦁",
+    logo: "/college-logos/columbia.png",
     students: 567,
     problemsSolved: 2945,
     ranking: 5,
@@ -141,7 +142,14 @@ export default function UniversityShowcase() {
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted font-bold text-sm">
                         #{university.ranking}
                       </div>
-                      <span className="text-3xl">{university.logo}</span>
+                      <div className="w-20 h-12 relative flex-shrink-0">
+                        <Image
+                          src={university.logo}
+                          alt={`${university.abbreviation} logo`}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -181,7 +189,14 @@ export default function UniversityShowcase() {
 
               <div className="relative z-10">
                 <div className="flex items-center gap-4 mb-8">
-                  <span className="text-6xl">{selectedUniversity.logo}</span>
+                  <div className="w-25 h-15 relative flex-shrink-0">
+                        <Image
+                          src={selectedUniversity.logo}
+                          alt={`${selectedUniversity.abbreviation} logo`}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
                   <div>
                     <h3 className="text-3xl font-bold">{selectedUniversity.abbreviation}</h3>
                     <p className="text-lg text-muted-foreground">{selectedUniversity.name}</p>

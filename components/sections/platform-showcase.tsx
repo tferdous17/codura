@@ -113,7 +113,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
             <Card
               key={feature.id}
               className={cn(
-                "rounded-3xl border-border/25 bg-neutral-800/15 backdrop-blur-sm hover:border-border transition-all duration-500 hover:shadow-lg",
+                "rounded-xl border-border/25 bg-neutral-800/15 backdrop-blur-sm hover:border-border transition-all duration-500 hover:shadow-lg",
                 isVisible && `animate-in slide-in-from-bottom-4 duration-700`,
                 isVisible && `delay-${index * 150}`
               )}
@@ -161,7 +161,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
         {/* Side-by-side call out sections */}
         <div className="grid lg:grid-cols-2 gap-8">
           {/* University Focus */}
-          <Card className="border-border/40 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden rounded-3xl">
+          <Card className="border-border/40 bg-card/50 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden rounded-xl">
             <CardContent className="p-8 relative">
               <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-xl" />
               <div className="relative">
@@ -202,7 +202,7 @@ export default function PlatformShowcase({ className }: { className?: string }) 
           </Card>
 
           {/* Interview Ready */}
-          <Card className="border-border/50 bg-card/40 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden rounded-3xl">
+          <Card className="border-border/50 bg-card/40 backdrop-blur-sm hover:border-border transition-all duration-300 hover:shadow-lg overflow-hidden rounded-xl">
             <CardContent className="p-8 relative">
               <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-full blur-xl" />
               <div className="relative">

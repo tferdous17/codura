@@ -45,11 +45,11 @@ export default function EnhancedCTA() {
               Join thousands of students who have mastered technical interviews with Codura's comprehensive platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-3 bg-gradient-to-r from-foreground to-foreground/90 hover:from-foreground/90 hover:to-foreground text-background rounded-lg font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-foreground/25 relative overflow-hidden group">
+              <button className="cursor-pointer px-8 py-3 bg-gradient-to-r from-foreground to-foreground/90 hover:from-foreground/90 hover:to-foreground text-background rounded-lg font-semibold transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-foreground/25 relative overflow-hidden group">
                 <span className="relative z-10">Start practicing now</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
               </button>
-              <button className="px-8 py-3 border border-border/40 hover:border-border/60 bg-background/50 hover:bg-background/80 backdrop-blur-sm rounded-lg font-semibold transition-all duration-300 hover:scale-105 relative overflow-hidden group">
+              <button className="cursor-pointer px-8 py-3 border border-border/40 hover:border-border/60 bg-background/50 hover:bg-background/80 backdrop-blur-sm rounded-lg font-semibold transition-all duration-300 hover:scale-105 relative overflow-hidden group">
                 <span className="relative z-10">Watch platform demo</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
               </button>
