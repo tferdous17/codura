@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,6 +77,8 @@ export default function AICodeFeedback({ className }: { className?: string }) {
   const [showOptimized, setShowOptimized] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isAnalyzing) {
@@ -110,46 +112,56 @@ export default function AICodeFeedback({ className }: { className?: string }) {
     setShowOptimized(!showOptimized);
   };
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    setMousePosition({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
   return (
-    // REMOVED background gradient to let the page.tsx fixed background show through
     <section className={cn("py-20 relative overflow-hidden", className)}>
-      {/* Glassmorphism glow effects matching hero elevated */}
+      {/* Enhanced glassmorphism glow effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/3 w-[550px] h-[550px] bg-brand/9 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-1/3 right-1/4 w-[450px] h-[450px] bg-brand-foreground/9 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '4s' }} />
+        <div className="absolute bottom-1/3 right-1/4 w-[450px] h-[450px] bg-purple-500/8 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-blue-500/6 rounded-full blur-[80px] animate-float" style={{ animationDelay: '2s' }} />
       </div>
 
-      {/* Background elements inspired by Nightwatch - Subtle vertical beams */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-px bg-gradient-to-b from-transparent via-brand/30 to-transparent animate-pulse"
-              style={{
-                left: `${8 + i * 7}%`,
-                height: '100%',
-                animationDelay: `${i * 0.6}s`,
-                animationDuration: `${3 + i * 0.2}s`
-              }}
-            />
-          ))}
-        </div>
-        {/* Subtle radial glow focused on the section content */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,224,194,0.03)_0%,transparent_70%)]" />
+      {/* Animated beam lines */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-px bg-gradient-to-b from-transparent via-brand/30 to-transparent animate-pulse"
+            style={{
+              left: `${15 + i * 17}%`,
+              height: '100%',
+              animationDelay: `${i * 0.5}s`,
+              animationDuration: `${2 + i * 0.3}s`
+            }}
+          />
+        ))}
       </div>
+
+      {/* Radial gradient overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,224,194,0.03)_0%,transparent_70%)]" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
-        {/* ... (rest of content) ... */}
-        {/* Header */}
+        {/* Enhanced Header */}
         <div className="flex flex-col items-center text-center mb-16">
-          <Badge className="mb-6 bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-colors">
-            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            AI-Powered Analysis
+          <Badge className="mb-6 bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 transition-all duration-300 hover:scale-105">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <div className="w-1.5 h-1.5 bg-brand rounded-full animate-pulse" />
+              AI-Powered Analysis
+            </div>
           </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent leading-tight">
             Instant Code Feedback
           </h2>
           <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl">
@@ -159,21 +171,41 @@ export default function AICodeFeedback({ className }: { className?: string }) {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {/* Code Editor */}
-          <Card className="border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden">
-            <CardHeader className="pb-3">
+          {/* Enhanced Code Editor Card */}
+          <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-2xl overflow-hidden group hover:border-brand/30 transition-all duration-500 shadow-xl">
+            {/* Top gradient accent */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+
+            {/* Floating particles */}
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-blue-500/30 rounded-full opacity-40 animate-float"
+                style={{
+                  left: `${20 + i * 30}%`,
+                  top: `${15 + i * 25}%`,
+                  animationDelay: `${i * 0.7}s`,
+                  animationDuration: `${4 + i * 0.5}s`
+                }}
+              />
+            ))}
+
+            <CardHeader className="pb-3 relative z-10">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 3a1 1 0 0 0-1 1v3H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-3V4a1 1 0 0 0-1-1H8zM9 5h6v2H9V5zm-4 4h14v6H5V9z"/>
-                  </svg>
+                  <div className="relative">
+                    <svg className="w-5 h-5 text-blue-500 relative z-10" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 3a1 1 0 0 0-1 1v3H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-3V4a1 1 0 0 0-1-1H8zM9 5h6v2H9V5zm-4 4h14v6H5V9z"/>
+                    </svg>
+                    <div className="absolute inset-0 bg-blue-500/20 blur-lg" />
+                  </div>
                   {currentExample.title}
                 </CardTitle>
-                <Badge variant="outline" className="font-mono text-xs">
+                <Badge variant="outline" className="font-mono text-xs bg-background/40 backdrop-blur-sm">
                   {currentExample.language}
                 </Badge>
               </div>
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-4">
                 {codeExamples.map((example, index) => (
                   <button
                     key={example.id}
@@ -184,10 +216,10 @@ export default function AICodeFeedback({ className }: { className?: string }) {
                       setAnalysisProgress(0);
                     }}
                     className={cn(
-                      "px-3 py-1 text-xs rounded-3xl transition-all duration-200 cursor-pointer",
+                      "px-3 py-1.5 text-xs rounded-full transition-all duration-300 cursor-pointer font-medium",
                       activeExample === index
-                        ? "bg-brand/20 text-brand border border-brand/30"
-                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                        ? "bg-gradient-to-r from-brand/20 to-orange-300/20 text-brand border border-brand/40 shadow-lg shadow-brand/10 scale-105"
+                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent hover:border-muted/50 hover:scale-105"
                     )}
                   >
                     {example.title}
@@ -195,62 +227,86 @@ export default function AICodeFeedback({ className }: { className?: string }) {
                 ))}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
               <div className="relative">
-                {/* Code display */}
-                <div className="bg-muted/20 rounded-lg p-4 border border-border/30 overflow-x-auto">
+                {/* Enhanced Code display */}
+                <div className="relative bg-gradient-to-br from-muted/30 to-muted/10 rounded-2xl p-5 border border-border/30 overflow-x-auto backdrop-blur-sm group/code hover:border-brand/20 transition-all duration-300">
+                  <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/20 to-transparent opacity-0 group-hover/code:opacity-100 transition-opacity duration-500" />
                   <pre className="text-sm font-mono leading-relaxed">
                     <code className="language-python text-foreground">
                       {showOptimized ? currentExample.aiAnalysis.optimizedCode : currentExample.code}
                     </code>
                   </pre>
+                  {showOptimized && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/20 border border-green-500/30">
+                      <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                      <span className="text-xs font-semibold text-green-500">Optimized</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex gap-3 mt-4">
+                {/* Enhanced Action buttons */}
+                <div className="flex gap-3 mt-5">
                   <button
-                  onClick={analyzeCode}
-                  disabled={isAnalyzing}
-                  className={cn(
-                    "px-5 py-2 mt-2 font-semibold text-sm rounded-2xl transition-all duration-200 ease-out cursor-pointer rounded-lg",
-                    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400",
-                    isAnalyzing
-                      ? "bg-gray-600/50 text-gray-400 cursor-not-allowed shadow-none"
-                      : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-[1.03] shadow-md hover:shadow-lg"
-                  )}
-                >
-                    {isAnalyzing ? (
+                    onClick={analyzeCode}
+                    disabled={isAnalyzing}
+                    className={cn(
+                      "relative px-6 py-3 font-semibold text-sm rounded-2xl transition-all duration-300 overflow-hidden group/btn",
+                      isAnalyzing
+                        ? "bg-muted/40 text-muted-foreground cursor-not-allowed"
+                        : "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:scale-[1.02] shadow-lg hover:shadow-xl hover:shadow-blue-500/30"
+                    )}
+                  >
+                    {!isAnalyzing && (
+                      <>
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500 bg-[length:200%_100%] animate-shimmer" />
+                        <span className="relative z-10 flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                          </svg>
+                          Analyze Code
+                        </span>
+                      </>
+                    )}
+                    {isAnalyzing && (
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
                         Analyzing...
                       </div>
-                    ) : (
-                      "Analyze Code"
                     )}
                   </button>
 
                   {analysisProgress === 100 && (
                     <button
                       onClick={toggleOptimized}
-                      className="px-5 py-2 mt-2 rounded-3xl font-medium text-sm bg-green-400/15 hover:bg-green-500/25 text-green-600 border border-green-500/30 hover:border-green-500/50 transition-all duration-200 cursor-pointer"
+                      className="relative px-6 py-3 rounded-2xl font-semibold text-sm bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-500 border border-green-500/40 hover:border-green-500/60 transition-all duration-300 cursor-pointer hover:scale-[1.02] shadow-lg hover:shadow-green-500/20 overflow-hidden group/opt"
                     >
-                      {showOptimized ? "Show Original" : "Show Optimized"}
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-green-600/10 opacity-0 group-hover/opt:opacity-100 transition-opacity duration-300" />
+                      <span className="relative z-10 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {showOptimized ? "Show Original" : "Show Optimized"}
+                      </span>
                     </button>
                   )}
                 </div>
 
-                {/* Analysis progress */}
+                {/* Enhanced Analysis progress */}
                 {isAnalyzing && (
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                      <span>Analyzing complexity...</span>
-                      <span>{Math.round(analysisProgress)}%</span>
+                  <div className="mt-5 p-4 rounded-2xl bg-gradient-to-br from-background/60 to-background/40 backdrop-blur-lg border border-border/20">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                      <span className="font-medium">Analyzing complexity and patterns...</span>
+                      <span className="font-bold text-brand">{Math.round(analysisProgress)}%</span>
                     </div>
-                    <div className="w-full bg-muted/20 rounded-full h-1.5">
+                    <div className="relative w-full bg-muted/30 rounded-full h-2 overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-brand to-orange-300 h-1.5 rounded-full transition-all duration-300 ease-out"
+                        className="absolute inset-0 bg-gradient-to-r from-brand via-orange-300 to-brand h-2 rounded-full transition-all duration-300 ease-out"
                         style={{ width: `${analysisProgress}%` }}
                       />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                     </div>
                   </div>
                 )}
@@ -258,70 +314,132 @@ export default function AICodeFeedback({ className }: { className?: string }) {
             </CardContent>
           </Card>
 
-          {/* AI Analysis Results */}
-          <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
+          {/* Enhanced AI Analysis Results Card */}
+          <Card
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-2xl overflow-hidden group hover:border-purple-500/30 transition-all duration-500 shadow-xl"
+          >
+            {/* Ambient light following cursor */}
+            <div
+              className="absolute w-96 h-96 rounded-full blur-3xl opacity-15 transition-all duration-300 pointer-events-none"
+              style={{
+                background: `radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, transparent 70%)`,
+                left: mousePosition.x - 192,
+                top: mousePosition.y - 192,
+              }}
+            />
+
+            {/* Top gradient accent */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
+
+            {/* Floating particles */}
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-purple-500/30 rounded-full opacity-40 animate-float"
+                style={{
+                  left: `${25 + i * 30}%`,
+                  top: `${20 + i * 25}%`,
+                  animationDelay: `${i * 0.8}s`,
+                  animationDuration: `${4 + i * 0.6}s`
+                }}
+              />
+            ))}
+
+            <CardHeader className="relative z-10">
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <svg className="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="m2 17 10 5 10-5"/>
-                  <path d="m2 12 10 5 10-5"/>
-                </svg>
+                <div className="relative">
+                  <svg className="w-5 h-5 text-purple-500 relative z-10" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="m2 17 10 5 10-5"/>
+                    <path d="m2 12 10 5 10-5"/>
+                  </svg>
+                  <div className="absolute inset-0 bg-purple-500/20 blur-lg animate-pulse" />
+                </div>
                 AI Analysis Results
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 relative z-10">
               {analysisProgress === 100 ? (
                 <>
-                  {/* Complexity Analysis */}
-                  <div>
-                    <h4 className="font-semibold text-sm text-muted-foreground mb-2 tracking-wide">COMPLEXITY</h4>
-                    <Badge variant="outline" className="font-mono text-sm">
+                  {/* Enhanced Complexity Analysis */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-background/60 to-background/40 backdrop-blur-lg border border-border/20">
+                    <h4 className="font-bold text-xs text-muted-foreground mb-3 tracking-wider uppercase flex items-center gap-2">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                      </svg>
+                      Complexity
+                    </h4>
+                    <Badge variant="outline" className="font-mono text-sm bg-brand/10 text-brand border-brand/30 px-3 py-1.5">
                       {currentExample.aiAnalysis.complexity}
                     </Badge>
                   </div>
 
-                  {/* Issues */}
+                  {/* Enhanced Issues */}
                   <div>
-                    <h4 className="font-semibold text-sm text-muted-foreground mb-3 tracking-wide">IDENTIFIED ISSUES</h4>
-                    <div className="space-y-2">
+                    <h4 className="font-bold text-xs text-muted-foreground mb-3 tracking-wider uppercase flex items-center gap-2">
+                      <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                      </svg>
+                      Identified Issues
+                    </h4>
+                    <div className="space-y-2.5">
                       {currentExample.aiAnalysis.issues.map((issue, index) => (
-                        <div key={index} className="flex items-start gap-2 p-3 rounded-lg bg-red-500/5 border border-red-500/20">
-                          <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                          </svg>
-                          <span className="text-sm text-red-600">{issue}</span>
+                        <div key={index} className="relative group/issue p-4 rounded-2xl bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/30 hover:border-red-500/50 transition-all duration-300 overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent opacity-0 group-hover/issue:opacity-100 transition-opacity duration-300" />
+                          <div className="flex items-start gap-3 relative z-10">
+                            <div className="relative mt-0.5">
+                              <svg className="w-4 h-4 text-red-500 relative z-10" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                              </svg>
+                              <div className="absolute inset-0 bg-red-500/20 blur-md" />
+                            </div>
+                            <span className="text-sm text-red-500 leading-relaxed font-medium">{issue}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Suggestions */}
+                  {/* Enhanced Suggestions */}
                   <div>
-                    <h4 className="font-semibold text-sm text-muted-foreground mb-3 tracking-wide">AI SUGGESTIONS</h4>
-                    <div className="space-y-2">
+                    <h4 className="font-bold text-xs text-muted-foreground mb-3 tracking-wider uppercase flex items-center gap-2">
+                      <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                      AI Suggestions
+                    </h4>
+                    <div className="space-y-2.5">
                       {currentExample.aiAnalysis.suggestions.map((suggestion, index) => (
-                        <div key={index} className="flex items-start gap-2 p-3 rounded-lg bg-green-500/5 border border-green-500/20">
-                          <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
-                          <span className="text-sm text-green-600">{suggestion}</span>
+                        <div key={index} className="relative group/suggestion p-4 rounded-2xl bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/30 hover:border-green-500/50 transition-all duration-300 overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent opacity-0 group-hover/suggestion:opacity-100 transition-opacity duration-300" />
+                          <div className="flex items-start gap-3 relative z-10">
+                            <div className="relative mt-0.5">
+                              <svg className="w-4 h-4 text-green-500 relative z-10" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                              </svg>
+                              <div className="absolute inset-0 bg-green-500/20 blur-md" />
+                            </div>
+                            <span className="text-sm text-green-500 leading-relaxed font-medium">{suggestion}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mb-4">
-                    <svg className="w-8 h-8 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="relative w-20 h-20 bg-gradient-to-br from-muted/30 to-muted/10 rounded-full flex items-center justify-center mb-6 group/icon">
+                    <svg className="w-10 h-10 text-muted-foreground group-hover/icon:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                       <path d="m2 17 10 5 10-5"/>
                       <path d="m2 12 10 5 10-5"/>
                     </svg>
+                    <div className="absolute inset-0 bg-purple-500/10 rounded-full blur-xl opacity-0 group-hover/icon:opacity-100 transition-opacity duration-500" />
                   </div>
-                  <h3 className="font-semibold mb-2">Ready to Analyze</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-bold text-lg mb-2">Ready to Analyze</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
                     Click "Analyze Code" to get instant AI-powered feedback on complexity, issues, and optimizations.
                   </p>
                 </div>
@@ -330,8 +448,8 @@ export default function AICodeFeedback({ className }: { className?: string }) {
           </Card>
         </div>
 
-        {/* Feature highlights */}
-        <div className="mt-16 grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        {/* Enhanced Feature highlights */}
+        <div className="mt-20 grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {[
             {
               icon: (
@@ -340,7 +458,10 @@ export default function AICodeFeedback({ className }: { className?: string }) {
                 </svg>
               ),
               title: "Instant Analysis",
-              description: "Get feedback in seconds, not hours"
+              description: "Get feedback in seconds, not hours",
+              color: "from-yellow-500/20 to-orange-500/10",
+              iconColor: "text-brand",
+              glowColor: "rgba(255, 224, 194, 0.15)"
             },
             {
               icon: (
@@ -349,7 +470,10 @@ export default function AICodeFeedback({ className }: { className?: string }) {
                 </svg>
               ),
               title: "Best Practices",
-              description: "Learn industry-standard patterns and optimizations"
+              description: "Learn industry-standard patterns and optimizations",
+              color: "from-green-500/20 to-emerald-500/10",
+              iconColor: "text-green-500",
+              glowColor: "rgba(34, 197, 94, 0.15)"
             },
             {
               icon: (
@@ -358,15 +482,57 @@ export default function AICodeFeedback({ className }: { className?: string }) {
                 </svg>
               ),
               title: "Complexity Insights",
-              description: "Understand time and space complexity with clear explanations"
+              description: "Understand time and space complexity with clear explanations",
+              color: "from-purple-500/20 to-pink-500/10",
+              iconColor: "text-purple-500",
+              glowColor: "rgba(168, 85, 247, 0.15)"
             }
           ].map((feature, index) => (
-            <Card key={index} className="border-border/0 bg-card/30 backdrop-blur-sm text-center p-6">
-              <div className="w-12 h-12 bg-brand/15 text-brand rounded-full flex items-center justify-center mx-auto mb-4">
-                {feature.icon}
+            <Card
+              key={index}
+              className="relative border-2 border-border/20 bg-gradient-to-br from-card/40 via-card/20 to-transparent backdrop-blur-xl text-center p-8 group hover:border-brand/30 transition-all duration-500 overflow-hidden hover:scale-[1.02] shadow-lg hover:shadow-xl"
+              style={{
+                animationDelay: `${index * 100}ms`
+              }}
+            >
+              {/* Top gradient accent */}
+              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              {/* Background glow */}
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl"
+                style={{ background: `radial-gradient(circle at center, ${feature.glowColor}, transparent 70%)` }}
+              />
+
+              {/* Icon */}
+              <div className={cn(
+                "relative w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 transition-all duration-500 group-hover:scale-110",
+                "bg-gradient-to-br backdrop-blur-lg border border-border/30 group-hover:border-brand/40",
+                feature.color
+              )}>
+                <div className="relative z-10">
+                  <div className={cn("relative", feature.iconColor)}>
+                    {feature.icon}
+                  </div>
+                </div>
+                {/* Icon glow */}
+                <div
+                  className="absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{ backgroundColor: feature.glowColor }}
+                />
               </div>
-              <h3 className="font-semibold mb-2 text-lg">{feature.title}</h3>
-              <p className="text-muted-foreground text-md">{feature.description}</p>
+
+              <div className="relative z-10">
+                <h3 className="font-bold mb-3 text-lg group-hover:text-brand transition-colors duration-300">
+                  {feature.title}
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+
+              {/* Bottom shine */}
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
             </Card>
           ))}
         </div>
