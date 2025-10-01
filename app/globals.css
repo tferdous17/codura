@@ -147,6 +147,27 @@
       background-position: 200% 0;
     }
   }
+
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes float-slow {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  --animate-pulse-slow: pulse-slow 6s ease-in-out infinite;
+  --animate-float-slow: float-slow 8s ease-in-out infinite;
 }
 
 :root {
