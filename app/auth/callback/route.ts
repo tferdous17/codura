@@ -34,29 +34,30 @@ export async function GET(request: Request) {
 
   console.log("User authenticated:", user.id, user.email);
 
-  // First, check if user row already exists
+  // First, check if user row already exists in users table (onboarding)
   const { data: existingUser, error: checkError } = await supabase
     .from("users")
     .select("user_id, federal_school_code, questionnaire_completed")
     .eq("user_id", user.id)
-    .maybeSingle(); // Use maybeSingle() instead of single() to avoid error if not found
+    .maybeSingle();
 
   console.log("Existing user:", existingUser);
   console.log("Check error:", checkError);
 
   let profile = existingUser;
 
-  // If user doesn't exist, create them
+  // If user doesn't exist, create them in both users and user_profiles tables
   if (!existingUser) {
     console.log("Creating new user row...");
-    
-    const fullName = 
-      user.user_metadata?.full_name || 
-      user.user_metadata?.name || 
+
+    const fullName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
       user.user_metadata?.user_name ||
-      user.email?.split('@')[0] || 
+      user.email?.split('@')[0] ||
       "User";
 
+    // Create entry in users table (for onboarding)
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
@@ -70,10 +71,36 @@ export async function GET(request: Request) {
 
     if (insertError) {
       console.error("Insert error:", insertError);
-      // Continue anyway - they'll get redirected properly
     } else {
       console.log("New user created:", newUser);
       profile = newUser;
+    }
+
+    // Also create entry in user_profiles table (for profile page)
+    const { error: profileError } = await supabase
+      .from("user_profiles")
+      .insert({
+        id: user.id,
+        full_name: fullName,
+      });
+
+    if (profileError) {
+      console.error("Profile insert error:", profileError);
+    } else {
+      console.log("User profile created");
+    }
+
+    // Create initial stats entry
+    const { error: statsError } = await supabase
+      .from("user_stats")
+      .insert({
+        user_id: user.id,
+      });
+
+    if (statsError) {
+      console.error("Stats insert error:", statsError);
+    } else {
+      console.log("User stats created");
     }
   }
 

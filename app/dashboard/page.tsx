@@ -421,7 +421,13 @@ export default function DashboardPage() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-border/40" />
-                <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-500">
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-500 focus:text-red-500"
+                  onClick={async () => {
+                    await fetch('/auth/signout', { method: 'POST' });
+                    window.location.href = '/';
+                  }}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign Out</span>
                 </DropdownMenuItem>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ import {
   Flame,
   Star,
   TrendingUp,
-  Settings,
   Share2,
   MapPin,
   Briefcase,
@@ -28,48 +27,42 @@ import {
   Globe,
   CheckCircle2
 } from "lucide-react";
+import { EditProfileDialog } from "@/components/edit-profile-dialog";
+import { UserProfile, UserStats, Submission } from "@/types/database";
 
-// Mock user profile data
-const userProfile = {
-  name: "Abdullah Khan",
-  username: "abdkhan",
-  email: "abdullah@codura.com",
-  avatar: "AK",
-  bio: "Senior CS Student @ FSC | Aspiring Software Engineer | Passionate about algorithms and system design",
-  university: "Farmingdale State College",
-  graduationYear: "2027",
-  location: "New York, USA",
-  jobTitle: "Student",
-  website: "https://abdkhan-dev.netlify.app",
-  github: "abdkhan-git",
-  linkedin: "abdullah-khan",
-  totalSolved: 47,
-  easy: 23,
-  medium: 18,
-  hard: 6,
-  streak: 7,
-  longestStreak: 14,
-  rank: 12,
-  points: 2847,
-  contestRating: 1456,
-  acceptanceRate: 78.5,
-};
+interface ProfileData {
+  user: {
+    id: string;
+    email: string | undefined;
+  };
+  profile: UserProfile | null;
+  stats: UserStats | null;
+  submissions: Submission[];
+  achievements: any[];
+}
 
-// GitHub-style contribution data (52 weeks)
-const generateContributionData = () => {
+// GitHub-style contribution data (52 weeks) - Will be replaced with real submission data
+const generateContributionData = (submissions: Submission[]) => {
   const weeks = [];
   const today = new Date();
+
+  // Create a map of dates to submission counts
+  const submissionsByDate = new Map<string, number>();
+  submissions.forEach(sub => {
+    const date = new Date(sub.submitted_at).toISOString().split('T')[0];
+    submissionsByDate.set(date, (submissionsByDate.get(date) || 0) + 1);
+  });
 
   for (let week = 0; week < 52; week++) {
     const days = [];
     for (let day = 0; day < 7; day++) {
       const date = new Date(today);
       date.setDate(date.getDate() - ((51 - week) * 7 + (6 - day)));
+      const dateStr = date.toISOString().split('T')[0];
 
-      // Random contribution count (0-5)
-      const count = Math.floor(Math.random() * 6);
+      const count = submissionsByDate.get(dateStr) || 0;
       days.push({
-        date: date.toISOString().split('T')[0],
+        date: dateStr,
         count,
         level: count === 0 ? 0 : count <= 1 ? 1 : count <= 2 ? 2 : count <= 3 ? 3 : 4
       });
@@ -79,35 +72,23 @@ const generateContributionData = () => {
   return weeks;
 };
 
-const contributionData = generateContributionData();
-
-// Calculate stats from contribution data
-const totalContributions = contributionData.flat().reduce((sum, day) => sum + day.count, 0);
-const currentStreak = 7;
-
-// Achievements
-const achievements = [
-  { id: 1, name: "First Problem", description: "Solved your first problem", icon: Code, color: "text-blue-500", earned: true },
-  { id: 2, name: "Week Warrior", description: "7 day streak", icon: Flame, color: "text-orange-500", earned: true },
-  { id: 3, name: "Interview Ready", description: "Completed 10 mock interviews", icon: Video, color: "text-purple-500", earned: true },
-  { id: 4, name: "Team Player", description: "Helped 20 peers", icon: Users, color: "text-green-500", earned: true },
-  { id: 5, name: "Century Club", description: "Solved 100 problems", icon: Trophy, color: "text-yellow-500", earned: false },
-  { id: 6, name: "Hard Master", description: "Solved 20 hard problems", icon: Star, color: "text-red-500", earned: false },
-];
-
-// Recent submissions
-const recentSubmissions = [
-  { id: 1, problem: "Two Sum", difficulty: "Easy", status: "Accepted", language: "Python", time: "2h ago" },
-  { id: 2, problem: "Valid Parentheses", difficulty: "Easy", status: "Accepted", language: "JavaScript", time: "5h ago" },
-  { id: 3, problem: "Merge Intervals", difficulty: "Medium", status: "Wrong Answer", language: "Python", time: "1d ago" },
-  { id: 4, problem: "LRU Cache", difficulty: "Medium", status: "Accepted", language: "Java", time: "2d ago" },
-  { id: 5, problem: "Binary Tree Inorder", difficulty: "Medium", status: "Accepted", language: "Python", time: "3d ago" },
-];
+// Icon mapping for achievements
+const iconMap: Record<string, any> = {
+  'Code': Code,
+  'Flame': Flame,
+  'Video': Video,
+  'Users': Users,
+  'Trophy': Trophy,
+  'Star': Star,
+};
 
 export default function ProfilePage() {
   const [showBorder, setShowBorder] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const evaluateScrollPosition = () => {
       setShowBorder(window.pageYOffset >= 24);
     };
@@ -115,6 +96,89 @@ export default function ProfilePage() {
     evaluateScrollPosition();
     return () => window.removeEventListener("scroll", evaluateScrollPosition);
   }, []);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/profile');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile data');
+      }
+
+      const data = await response.json();
+      setProfileData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = (updatedProfile: UserProfile) => {
+    if (profileData) {
+      setProfileData({
+        ...profileData,
+        profile: updatedProfile,
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="caffeine-theme min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !profileData) {
+    return (
+      <div className="caffeine-theme min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <Trophy className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Failed to load profile</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={fetchProfileData}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { user, profile, stats, submissions, achievements } = profileData;
+
+  // Generate contribution data from submissions
+  const contributionData = generateContributionData(submissions);
+  const totalContributions = contributionData.flat().reduce((sum, day) => sum + day.count, 0);
+
+  // Get user's initials for avatar
+  const getInitials = () => {
+    if (profile?.full_name) {
+      const names = profile.full_name.split(' ');
+      return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return user.email?.[0]?.toUpperCase() || 'U';
+  };
+
+  // Get all achievements with earned status
+  const allAchievements = [
+    { id: 1, name: "First Problem", description: "Solved your first problem", icon: "Code", color: "text-blue-500" },
+    { id: 2, name: "Week Warrior", description: "7 day streak", icon: "Flame", color: "text-orange-500" },
+    { id: 3, name: "Interview Ready", description: "Completed 10 mock interviews", icon: "Video", color: "text-purple-500" },
+    { id: 4, name: "Team Player", description: "Helped 20 peers", icon: "Users", color: "text-green-500" },
+    { id: 5, name: "Century Club", description: "Solved 100 problems", icon: "Trophy", color: "text-yellow-500" },
+    { id: 6, name: "Hard Master", description: "Solved 20 hard problems", icon: "Star", color: "text-red-500" },
+  ].map(achievement => ({
+    ...achievement,
+    earned: achievements.some(ua => ua.achievements?.name === achievement.name)
+  }));
 
   return (
     <div className="caffeine-theme min-h-screen bg-zinc-950 relative">
@@ -196,81 +260,90 @@ export default function ProfilePage() {
               {/* Avatar & Basic Info */}
               <div className="flex flex-col items-center md:items-start gap-4">
                 <div className="w-32 h-32 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-bold text-4xl shadow-xl shadow-brand/20">
-                  {userProfile.avatar}
+                  {getInitials()}
                 </div>
                 <div className="text-center md:text-left">
-                  <h1 className="text-3xl font-bold mb-1">{userProfile.name}</h1>
-                  <p className="text-muted-foreground">@{userProfile.username}</p>
+                  <h1 className="text-3xl font-bold mb-1">{profile?.full_name || 'Anonymous User'}</h1>
+                  <p className="text-muted-foreground">@{profile?.username || 'user'}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="gap-2">
                     <Share2 className="w-4 h-4" />
                     Share
                   </Button>
-                  <Button size="sm" variant="outline" className="gap-2">
-                    <Settings className="w-4 h-4" />
-                    Edit
-                  </Button>
+                  <EditProfileDialog profile={profile} onProfileUpdate={handleProfileUpdate} />
                 </div>
               </div>
 
               {/* Bio & Details */}
               <div className="flex-1">
-                <p className="text-muted-foreground mb-6">{userProfile.bio}</p>
+                <p className="text-muted-foreground mb-6">{profile?.bio || 'No bio yet.'}</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="flex items-center gap-2 text-sm">
-                    <GraduationCap className="w-4 h-4 text-brand" />
-                    <span>{userProfile.university} '{userProfile.graduationYear.slice(-2)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-brand" />
-                    <span>{userProfile.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Briefcase className="w-4 h-4 text-brand" />
-                    <span>{userProfile.jobTitle}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Globe className="w-4 h-4 text-brand" />
-                    <a href={userProfile.website} target="_blank" rel="noopener noreferrer" className="hover:text-brand transition-colors">
-                      Portfolio
-                    </a>
-                  </div>
+                  {profile?.university && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <GraduationCap className="w-4 h-4 text-brand" />
+                      <span>{profile.university} {profile.graduation_year ? `'${profile.graduation_year.slice(-2)}` : ''}</span>
+                    </div>
+                  )}
+                  {profile?.location && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="w-4 h-4 text-brand" />
+                      <span>{profile.location}</span>
+                    </div>
+                  )}
+                  {profile?.job_title && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Briefcase className="w-4 h-4 text-brand" />
+                      <span>{profile.job_title}</span>
+                    </div>
+                  )}
+                  {profile?.website && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Globe className="w-4 h-4 text-brand" />
+                      <a href={profile.website} target="_blank" rel="noopener noreferrer" className="hover:text-brand transition-colors">
+                        Portfolio
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-3">
-                  <a href={`https://github.com/${userProfile.github}`} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="ghost" className="gap-2 hover:bg-white/5">
-                      <Github className="w-4 h-4" />
-                      GitHub
-                    </Button>
-                  </a>
-                  <a href={`https://linkedin.com/in/${userProfile.linkedin}`} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="ghost" className="gap-2 hover:bg-white/5">
-                      <Linkedin className="w-4 h-4" />
-                      LinkedIn
-                    </Button>
-                  </a>
+                  {profile?.github_username && (
+                    <a href={`https://github.com/${profile.github_username}`} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="ghost" className="gap-2 hover:bg-white/5">
+                        <Github className="w-4 h-4" />
+                        GitHub
+                      </Button>
+                    </a>
+                  )}
+                  {profile?.linkedin_username && (
+                    <a href={`https://linkedin.com/in/${profile.linkedin_username}`} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="ghost" className="gap-2 hover:bg-white/5">
+                        <Linkedin className="w-4 h-4" />
+                        LinkedIn
+                      </Button>
+                    </a>
+                  )}
                 </div>
               </div>
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
                 <div className="text-center p-4 rounded-lg bg-muted/20 border border-border/30">
-                  <div className="text-2xl font-bold text-brand">#{userProfile.rank}</div>
+                  <div className="text-2xl font-bold text-brand">#{stats?.university_rank || '-'}</div>
                   <div className="text-xs text-muted-foreground">University Rank</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-muted/20 border border-border/30">
-                  <div className="text-2xl font-bold">{userProfile.points}</div>
+                  <div className="text-2xl font-bold">{stats?.total_points || 0}</div>
                   <div className="text-xs text-muted-foreground">Total Points</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-muted/20 border border-border/30">
-                  <div className="text-2xl font-bold">{userProfile.contestRating}</div>
+                  <div className="text-2xl font-bold">{stats?.contest_rating || 0}</div>
                   <div className="text-xs text-muted-foreground">Contest Rating</div>
                 </div>
                 <div className="text-center p-4 rounded-lg bg-muted/20 border border-border/30">
-                  <div className="text-2xl font-bold text-brand">{userProfile.streak} 🔥</div>
+                  <div className="text-2xl font-bold text-brand">{stats?.current_streak || 0} 🔥</div>
                   <div className="text-xs text-muted-foreground">Day Streak</div>
                 </div>
               </div>
@@ -290,7 +363,7 @@ export default function ProfilePage() {
                   {totalContributions} submissions in the last year
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Longest streak: {userProfile.longestStreak} days • Current streak: {currentStreak} days
+                  Longest streak: {stats?.longest_streak || 0} days • Current streak: {stats?.current_streak || 0} days
                 </p>
               </div>
             </div>
@@ -352,7 +425,7 @@ export default function ProfilePage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Total Solved</span>
-                    <span className="text-3xl font-bold">{userProfile.totalSolved}</span>
+                    <span className="text-3xl font-bold">{stats?.total_solved || 0}</span>
                   </div>
 
                   <div className="space-y-3">
@@ -361,10 +434,10 @@ export default function ProfilePage() {
                         <div className="w-3 h-3 bg-green-500 rounded-full" />
                         <span className="text-sm">Easy</span>
                       </div>
-                      <span className="text-sm font-semibold">{userProfile.easy}</span>
+                      <span className="text-sm font-semibold">{stats?.easy_solved || 0}</span>
                     </div>
                     <div className="w-full bg-muted/30 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${(userProfile.easy / 100) * 100}%` }} />
+                      <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${((stats?.easy_solved || 0) / 100) * 100}%` }} />
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -372,10 +445,10 @@ export default function ProfilePage() {
                         <div className="w-3 h-3 bg-yellow-500 rounded-full" />
                         <span className="text-sm">Medium</span>
                       </div>
-                      <span className="text-sm font-semibold">{userProfile.medium}</span>
+                      <span className="text-sm font-semibold">{stats?.medium_solved || 0}</span>
                     </div>
                     <div className="w-full bg-muted/30 rounded-full h-2">
-                      <div className="bg-yellow-500 h-2 rounded-full transition-all" style={{ width: `${(userProfile.medium / 100) * 100}%` }} />
+                      <div className="bg-yellow-500 h-2 rounded-full transition-all" style={{ width: `${((stats?.medium_solved || 0) / 100) * 100}%` }} />
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -383,17 +456,17 @@ export default function ProfilePage() {
                         <div className="w-3 h-3 bg-red-500 rounded-full" />
                         <span className="text-sm">Hard</span>
                       </div>
-                      <span className="text-sm font-semibold">{userProfile.hard}</span>
+                      <span className="text-sm font-semibold">{stats?.hard_solved || 0}</span>
                     </div>
                     <div className="w-full bg-muted/30 rounded-full h-2">
-                      <div className="bg-red-500 h-2 rounded-full transition-all" style={{ width: `${(userProfile.hard / 100) * 100}%` }} />
+                      <div className="bg-red-500 h-2 rounded-full transition-all" style={{ width: `${((stats?.hard_solved || 0) / 100) * 100}%` }} />
                     </div>
                   </div>
 
                   <div className="pt-4 border-t border-border/20">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Acceptance Rate</span>
-                      <span className="text-lg font-semibold text-brand">{userProfile.acceptanceRate}%</span>
+                      <span className="text-lg font-semibold text-brand">{stats?.acceptance_rate || 0}%</span>
                     </div>
                   </div>
                 </div>
@@ -412,36 +485,43 @@ export default function ProfilePage() {
               </CardHeader>
 
               <CardContent>
-                <div className="space-y-3">
-                  {recentSubmissions.map((submission) => (
-                    <div key={submission.id} className="flex items-center justify-between p-3 rounded-lg border border-border/40 hover:bg-muted/30 transition-all">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-sm">{submission.problem}</h4>
-                          <Badge variant="outline" className={cn(
-                            "text-xs",
-                            submission.difficulty === "Easy" && "border-green-500/30 text-green-600",
-                            submission.difficulty === "Medium" && "border-yellow-500/30 text-yellow-600",
-                            submission.difficulty === "Hard" && "border-red-500/30 text-red-600"
-                          )}>
-                            {submission.difficulty}
-                          </Badge>
+                {submissions.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Code className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No submissions yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {submissions.map((submission) => (
+                      <div key={submission.id} className="flex items-center justify-between p-3 rounded-lg border border-border/40 hover:bg-muted/30 transition-all">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium text-sm">{submission.problem_title}</h4>
+                            <Badge variant="outline" className={cn(
+                              "text-xs",
+                              submission.difficulty === "Easy" && "border-green-500/30 text-green-600",
+                              submission.difficulty === "Medium" && "border-yellow-500/30 text-yellow-600",
+                              submission.difficulty === "Hard" && "border-red-500/30 text-red-600"
+                            )}>
+                              {submission.difficulty}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span>{submission.language}</span>
+                            <span>•</span>
+                            <span>{new Date(submission.submitted_at).toLocaleDateString()}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>{submission.language}</span>
-                          <span>•</span>
-                          <span>{submission.time}</span>
-                        </div>
+                        <Badge variant="outline" className={cn(
+                          submission.status === "Accepted" && "border-green-500/30 bg-green-500/10 text-green-600",
+                          submission.status !== "Accepted" && "border-red-500/30 bg-red-500/10 text-red-600"
+                        )}>
+                          {submission.status}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className={cn(
-                        submission.status === "Accepted" && "border-green-500/30 bg-green-500/10 text-green-600",
-                        submission.status !== "Accepted" && "border-red-500/30 bg-red-500/10 text-red-600"
-                      )}>
-                        {submission.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -459,33 +539,36 @@ export default function ProfilePage() {
               </CardHeader>
 
               <CardContent className="space-y-3">
-                {achievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className={cn(
-                      "p-3 rounded-lg border transition-all",
-                      achievement.earned
-                        ? "border-border/40 bg-muted/20"
-                        : "border-border/20 bg-muted/10 opacity-50"
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center",
-                        achievement.earned ? "bg-muted/30" : "bg-muted/10"
-                      )}>
-                        <achievement.icon className={cn("w-5 h-5", achievement.color)} />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-sm mb-0.5">{achievement.name}</h4>
-                        <p className="text-xs text-muted-foreground">{achievement.description}</p>
-                      </div>
-                      {achievement.earned && (
-                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                {allAchievements.map((achievement) => {
+                  const IconComponent = iconMap[achievement.icon] || Code;
+                  return (
+                    <div
+                      key={achievement.id}
+                      className={cn(
+                        "p-3 rounded-lg border transition-all",
+                        achievement.earned
+                          ? "border-border/40 bg-muted/20"
+                          : "border-border/20 bg-muted/10 opacity-50"
                       )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-lg flex items-center justify-center",
+                          achievement.earned ? "bg-muted/30" : "bg-muted/10"
+                        )}>
+                          <IconComponent className={cn("w-5 h-5", achievement.color)} />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm mb-0.5">{achievement.name}</h4>
+                          <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                        </div>
+                        {achievement.earned && (
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </CardContent>
             </Card>
           </div>
