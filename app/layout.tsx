@@ -14,8 +14,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Codura",
-  description: "Let's Aim For Tech Jobs",
+  title: "Codura - Master Technical Interviews",
+  description: "Practice coding problems, conduct mock interviews, and compete with peers from your university. Build the skills that land you the job.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
