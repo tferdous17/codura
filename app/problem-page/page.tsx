@@ -12,13 +12,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Play, Send, RotateCcw } from 'lucide-react'
 
 export default function ProblemPage() {
-  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai', content: string }>>([])
-  const [chatInput, setChatInput] = useState('')
 
+    // State for AI Chatbot that maintains chat messages and input
+    const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai', content: string }>>([])
+    const [chatInput, setChatInput] = useState('')
+
+
+
+    // Temporary function to simulate AI response
     const handleSendMessage = () => {
         if (chatInput.trim()) {
+
+            // Add user message to setChatMessages array
             setChatMessages([...chatMessages, { role: 'user', content: chatInput }])
             setChatInput('')
+
+            
             // Simulate AI response
             setTimeout(() => {
                 setChatMessages(prev => [...prev, { role: 'ai', content: 'I can help you solve this problem. What would you like to know?' }])
@@ -27,13 +36,15 @@ export default function ProblemPage() {
     }
 
     return (
-        <div className="h-screen w-full bg-background">
+        <div className="caffeine-theme h-screen w-full bg-background">
             <ResizablePanelGroup direction="horizontal" className="h-full">
                 {/* Left Panel - Problem Description with Tabs */}
                 <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
                     <div className="h-full flex flex-col">
                         <Tabs defaultValue="description" className="flex-1 flex flex-col">
                             <div className="border-b px-4">
+
+                                {/* Tab Lists */}
                                 <TabsList className="w-full justify-start">
                                     <TabsTrigger value="description">Description</TabsTrigger>
                                     <TabsTrigger value="solution">Solution</TabsTrigger>
@@ -41,9 +52,12 @@ export default function ProblemPage() {
                                     <TabsTrigger value="community">Community</TabsTrigger>
                                     <TabsTrigger value="submissions">Submissions</TabsTrigger>
                                 </TabsList>
+
                             </div>
 
                             <ScrollArea className="flex-1">
+
+                                {/* Description Tab */}
                                 <TabsContent value="description" className="p-4 mt-0">
                                     <div className="space-y-4">
                                         <div>
@@ -65,6 +79,7 @@ export default function ProblemPage() {
                                             </p>
                                         </div>
 
+                                        {/* Example 1 Preview */}
                                         <div className="space-y-2">
                                             <h3 className="font-semibold">Example 1:</h3>
                                             <div className="bg-muted p-3 rounded text-sm font-mono">
@@ -74,6 +89,8 @@ export default function ProblemPage() {
                                             </div>
                                         </div>
 
+
+                                        {/* Example 2 Preview */}
                                         <div className="space-y-2">
                                             <h3 className="font-semibold">Example 2:</h3>
                                             <div className="bg-muted p-3 rounded text-sm font-mono">
@@ -82,6 +99,8 @@ export default function ProblemPage() {
                                             </div>
                                         </div>
 
+
+                                        {/* Constraints Preview */}
                                         <div className="space-y-2">
                                             <h3 className="font-semibold">Constraints:</h3>
                                             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
@@ -94,6 +113,8 @@ export default function ProblemPage() {
                                     </div>
                                 </TabsContent>
 
+
+                                {/* Solution Tab */}
                                 <TabsContent value="solution" className="p-4 mt-0">
                                     <div className="space-y-4">
                                         <h2 className="text-xl font-bold">Solution Approach</h2>
@@ -103,6 +124,8 @@ export default function ProblemPage() {
                                     </div>
                                 </TabsContent>
 
+
+                                {/* Community Discussions Tab */}
                                 <TabsContent value="discussion" className="p-4 mt-0">
                                     <div className="space-y-4">
                                         <h2 className="text-xl font-bold">Discussion</h2>
@@ -112,6 +135,8 @@ export default function ProblemPage() {
                                     </div>
                                 </TabsContent>
 
+
+                                {/* Community Solutions Tab */}
                                 <TabsContent value="community" className="p-4 mt-0">
                                     <div className="space-y-4">
                                         <h2 className="text-xl font-bold">Community Solutions</h2>
@@ -121,6 +146,8 @@ export default function ProblemPage() {
                                     </div>
                                 </TabsContent>
 
+
+                                {/* User's Submissions Tab*/}
                                 <TabsContent value="submissions" className="p-4 mt-0">
                                     <div className="space-y-4">
                                         <h2 className="text-xl font-bold">My Submissions</h2>
@@ -244,8 +271,8 @@ export default function ProblemPage() {
                                             >
                                                 <div
                                                     className={`max-w-[80%] rounded-lg p-3 text-sm ${message.role === 'user'
-                                                            ? 'bg-primary text-primary-foreground'
-                                                            : 'bg-muted'
+                                                        ? 'bg-primary text-primary-foreground'
+                                                        : 'bg-muted'
                                                         }`}
                                                 >
                                                     {message.content}
