@@ -18,8 +18,15 @@ const geistMono = Geist_Mono({
  * Metadata for the application, including title and description.
  */
 export const metadata: Metadata = {
-  title: "Codura",
-  description: "Let's Aim For Tech Jobs",
+  title: "Codura - Master Technical Interviews",
+  description: "Practice coding problems, conduct mock interviews, and compete with peers from your university. Build the skills that land you the job.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -28,20 +35,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
-      <html lang="en" suppressHydrationWarning>
-        <head />
-        <body>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
-        </body>
-      </html>
-    </>
+    <html lang="en" className="scroll-smooth">
+      <head>
+         <link rel="preconnect" href="https://rsms.me/" />
+         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+         <link rel="preconnect" href="https://fonts.bunny.net" />
+         <link rel="stylesheet" href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" />
+      </head>
+      
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

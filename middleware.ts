@@ -1,37 +1,110 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { updateSession } from '@/utils/supabase/middleware'
+// middleware.ts
+import { NextResponse, type NextRequest } from "next/server";
+import { updateSession } from "./utils/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
-  const { response, user } = await updateSession(request)
+const PUBLIC_PATHS = new Set<string>([
+  "/",
+  "/login",
+  "/signup",  // ← ADD THIS LINE
+  "/auth/callback",
+  "/auth/auth-code-error",
+  "/error",
+  "/api/health",
+  "/onboarding",
+  "/questionnaire",
+]);
 
-  // You can now use the `user` object to check if the user is authenticated
-  // and perform any additional logic based on the user's authentication status.
-  // For example, you might want to redirect unauthenticated users to a login page.
+function isAssetPath(pathname: string) {
+  return (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/assets") ||
+    pathname.startsWith("/images") ||
+    pathname.startsWith("/favicon.") ||
+    /\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map|txt|xml|woff2?|ttf)$/i.test(pathname)
+  );
+}
 
-  // protecting routes from unauthenticated access
-  if(request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-    return NextResponse.redirect(new URL('/', request.url))
-  } 
+function isApiPath(pathname: string) {
+  return pathname.startsWith("/api/");
+}
 
+export async function middleware(req: NextRequest) {
+  const { pathname, origin } = req.nextUrl;
 
-  // redirecting authenticated users away from auth pages
-  if((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  // ✅ Never touch API or static
+  if (isAssetPath(pathname) || isApiPath(pathname)) {
+    return NextResponse.next();
   }
 
-  return response
+  // Keep session fresh for app routes only
+  const { response, user, supabase } = await updateSession(req);
 
+  const isPublic = PUBLIC_PATHS.has(pathname);
+  const isAuthRoute = pathname.startsWith("/auth");
+
+  // Not logged in → only allow public routes
+  if (!user && !isPublic && !isAuthRoute) {
+    return NextResponse.redirect(new URL("/login", origin));
+  }
+
+  // Logged in → handle onboarding/questionnaire flow
+  if (user) {
+    const { data: profile, error } = await supabase
+      .from("users")
+      .select("questionnaire_completed, federal_school_code")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!error && profile) {
+      const onQuestionnairePage = pathname === "/questionnaire";
+      const onOnboardingPage   = pathname === "/onboarding";
+      const onDashboardPage    = pathname === "/dashboard";
+      const onSignupPage       = pathname === "/signup"; // ← ADD THIS
+      const onLoginPage        = pathname === "/login";  // ← ADD THIS
+      const onAuth             = isAuthRoute || pathname === "/logout";
+
+      const code      = profile.federal_school_code;
+      const hasCode   = !!(code && String(code).trim() !== "");
+      const completed = profile.questionnaire_completed;
+
+      // ✅ If already logged in, don't allow signup/login pages
+      if (onSignupPage || onLoginPage) {
+        if (completed) {
+          return NextResponse.redirect(new URL("/dashboard", origin));
+        } else if (hasCode) {
+          return NextResponse.redirect(new URL("/questionnaire", origin));
+        } else {
+          return NextResponse.redirect(new URL("/onboarding", origin));
+        }
+      }
+
+      if (completed) {
+        if (!onDashboardPage && !onAuth) {
+          return NextResponse.redirect(new URL("/dashboard", origin));
+        }
+        return response;
+      }
+
+      if (!completed) {
+        if (!hasCode) {
+          if (!onOnboardingPage && !onQuestionnairePage && !onAuth) {
+            return NextResponse.redirect(new URL("/onboarding", origin));
+          }
+        } else {
+          if (!onQuestionnairePage && !onAuth) {
+            return NextResponse.redirect(new URL("/questionnaire", origin));
+          }
+        }
+      }
+    }
+  }
+
+  return response;
 }
 
+// ✅ Exclude /api/* at the matcher level too
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map|txt|xml|woff2?|ttf)$).*)",
   ],
-}
+};

@@ -2,9 +2,18 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-
 import { createClient } from '@/utils/supabase/server'
+import { headers } from 'next/headers'
 
+/**
+ * Get the base URL dynamically
+ */
+async function getURL() {
+  const headersList = await headers()
+  const host = headersList.get('host') || 'localhost:3000'
+  const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https'
+  return `${protocol}://${host}`
+}
 
 /**
  * Function to handle user login
@@ -13,8 +22,6 @@ import { createClient } from '@/utils/supabase/server'
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
   const data = {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
@@ -23,87 +30,214 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
+    console.error('Login error:', error)
     redirect('/error')
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+
+  // Decide destination based on onboarding flags
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('federal_school_code, questionnaire_completed')
+    .eq('user_id', user.id)
+    .single()
+
+  const fafsaCode = (profile?.federal_school_code ?? '').trim()
+  const hasValidCode = /^[0-9A-Za-z]{6}$/.test(fafsaCode)
+  const isCompleted = !!profile?.questionnaire_completed
+
+  if (isCompleted) {
+    redirect('/dashboard')
+  } else if (hasValidCode) {
+    redirect('/questionnaire')
+  } else {
+    redirect('/onboarding')
+  }
 }
-
-
 
 /**
  * Function to handle user signup
  * @param formData - FormData from signup form
  */
 export async function signup(formData: FormData) {
+  console.log('=== SIGNUP ACTION START ===')
   const supabase = await createClient()
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+  const confirmPassword = formData.get('confirm-password') as string
+  const fullName = formData.get('full_name') as string
+
+  console.log('Signup data:', { email, fullName, hasPassword: !!password })
+
+  // Validate inputs
+  if (!email || !password || !fullName) {
+    console.error('Missing required fields')
+    redirect('/error')
+  }
+
+  if (password !== confirmPassword) {
+    console.error('Passwords do not match')
+    redirect('/error')
+  }
+
+  if (password.length < 6) {
+    console.error('Password too short (minimum 6 characters)')
+    redirect('/error')
+  }
+
   const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
+    email,
+    password,
     options: {
       data: {
-        full_name: formData.get('full_name') as string,
-        // avatar_url: formData.get('avatar_url') as string, // coming soon
+        full_name: fullName,
       }
     }
   }
 
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp(data)
 
-  const { error } = await supabase.auth.signUp(data)
+  if (signUpError) {
+    console.error('Signup error:', signUpError)
+    
+    // If there's a database trigger error, the user might still be created in auth.users
+    // Let's check and handle it manually
+    if (signUpError.message?.includes('Database error')) {
+      console.log('Database trigger error detected, checking if user was created...')
+      
+      // Wait a moment for auth to process
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Try to sign in to see if the user exists
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
 
-  if (error) {
-    console.log(error)
+      if (!signInError && signInData.user) {
+        console.log('User exists in auth.users, creating profile manually...')
+        
+        // Create the profile manually
+        const { error: profileError } = await supabase
+          .from('users')
+          .upsert({
+            user_id: signInData.user.id,
+            full_name: fullName,
+            federal_school_code: null,
+            questionnaire_completed: false,
+          }, {
+            onConflict: 'user_id',
+            ignoreDuplicates: false
+          })
+
+        if (profileError && profileError.code !== '23505') {
+          console.error('Profile creation error:', profileError)
+        } else {
+          console.log('Profile created successfully via manual insertion')
+          revalidatePath('/', 'layout')
+          redirect('/onboarding')
+        }
+      }
+    }
+    
     redirect('/error')
   }
 
+  console.log('Signup successful:', signUpData.user?.id)
+
+  // Verify the profile was created by the trigger
+  if (signUpData.user) {
+    // Wait a moment for the trigger to complete
+    await new Promise(resolve => setTimeout(resolve, 300))
+    
+    const { data: profile, error: profileCheckError } = await supabase
+      .from('users')
+      .select('user_id')
+      .eq('user_id', signUpData.user.id)
+      .maybeSingle()
+
+    if (profileCheckError) {
+      console.error('Profile check error:', profileCheckError)
+    }
+
+    // If profile doesn't exist, create it manually
+    if (!profile) {
+      console.log('Profile not found after signup, creating manually...')
+      
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          user_id: signUpData.user.id,
+          full_name: fullName,
+          federal_school_code: null,
+          questionnaire_completed: false,
+        })
+
+      if (profileError && profileError.code !== '23505') {
+        console.error('Manual profile creation error:', profileError)
+        // Continue anyway - the callback will handle it
+      } else {
+        console.log('Manual profile creation successful')
+      }
+    } else {
+      console.log('Profile exists, all good!')
+    }
+  }
+
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  console.log('=== SIGNUP ACTION END ===')
+  redirect('/onboarding')
 }
-
-
-
 
 /**
  * Function to handle GitHub OAuth login
  */
 export async function signInWithGithub() {
+  console.log('=== GITHUB OAUTH START ===')
   const supabase = await createClient()
+  const redirectTo = await getURL()
+  
+  console.log('GitHub redirect URL:', `${redirectTo}/auth/callback`)
+  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: 'http://localhost:3000/auth/callback?next=/dashboard'
+      redirectTo: `${redirectTo}/auth/callback`
     }
   })
 
   if (error) {
-    console.log(error)
+    console.error('GitHub OAuth error:', error)
     redirect('/error')
   }
 
-  
-  /**
-   * Redirect to GitHub for authentication
-   * After GitHub auth, user will be redirected back to /auth/callback
-   * which will then redirect to /dashboard
-   */
   if (data.url) {
+    console.log('Redirecting to GitHub...')
     redirect(data.url)
   }
 }
 
-
-
+/**
+ * Function to handle Google OAuth login
+ */
 export async function signInWithGoogle() {
+  console.log('=== GOOGLE OAUTH START ===')
   const supabase = await createClient()
+  const redirectTo = await getURL()
+  
+  console.log('Google redirect URL:', `${redirectTo}/auth/callback`)
+  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'http://localhost:3000/auth/callback?next=/dashboard',
-
+      redirectTo: `${redirectTo}/auth/callback`,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
@@ -112,16 +246,12 @@ export async function signInWithGoogle() {
   })
 
   if (error) {
-    console.log(error)
+    console.error('Google OAuth error:', error)
     redirect('/error')
   }
 
-  /**
-   * Redirect to Google for authentication
-   * After Google auth, user will be redirected back to /auth/callback
-   * which will then redirect to /dashboard
-   */
   if (data.url) {
+    console.log('Redirecting to Google...')
     redirect(data.url)
   }
 }
