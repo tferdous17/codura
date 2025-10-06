@@ -11,6 +11,45 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Play, Send, RotateCcw } from 'lucide-react'
 
+// Add custom styles for tab scrolling
+const tabScrollStyles = `
+  .tab-scroll-container {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+  }
+
+  .tab-scroll-container:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  }
+
+  .dark .tab-scroll-container:hover {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+
+  .tab-scroll-container::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .tab-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .tab-scroll-container::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 2px;
+    transition: background 0.3s ease;
+  }
+
+  .tab-scroll-container:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .dark .tab-scroll-container:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+`
+
 export default function ProblemPage() {
 
     // State for AI Chatbot that maintains chat messages and input
@@ -37,20 +76,21 @@ export default function ProblemPage() {
 
     return (
         <div className="caffeine-theme h-screen w-full bg-background">
+            <style jsx global>{tabScrollStyles}</style>
             <ResizablePanelGroup direction="horizontal" className="h-full">
                 {/* Left Panel - Problem Description with Tabs */}
                 <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
                     <div className="h-full flex flex-col">
                         <Tabs defaultValue="description" className="flex-1 flex flex-col">
-                            <div className="border-b px-4">
+                            <div className="border-b overflow-x-auto tab-scroll-container">
 
                                 {/* Tab Lists */}
-                                <TabsList className="w-full justify-start">
-                                    <TabsTrigger value="description">Description</TabsTrigger>
-                                    <TabsTrigger value="solution">Solution</TabsTrigger>
-                                    <TabsTrigger value="discussion">Discussion</TabsTrigger>
-                                    <TabsTrigger value="community">Community</TabsTrigger>
-                                    <TabsTrigger value="submissions">Submissions</TabsTrigger>
+                                <TabsList className="inline-flex w-auto min-w-full justify-start h-12 px-2 bg-transparent">
+                                    <TabsTrigger value="description" className="flex-shrink-0">Description</TabsTrigger>
+                                    <TabsTrigger value="solution" className="flex-shrink-0">Solution</TabsTrigger>
+                                    <TabsTrigger value="discussion" className="flex-shrink-0">Discussion</TabsTrigger>
+                                    <TabsTrigger value="community" className="flex-shrink-0">Community</TabsTrigger>
+                                    <TabsTrigger value="submissions" className="flex-shrink-0">Submissions</TabsTrigger>
                                 </TabsList>
 
                             </div>
@@ -173,10 +213,10 @@ export default function ProblemPage() {
                                     <SelectValue placeholder="Select Language" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="javascript">JavaScript</SelectItem>
                                     <SelectItem value="python">Python</SelectItem>
                                     <SelectItem value="java">Java</SelectItem>
                                     <SelectItem value="cpp">C++</SelectItem>
+                                    <SelectItem value="javascript">JavaScript</SelectItem>
                                     <SelectItem value="typescript">TypeScript</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -203,10 +243,10 @@ export default function ProblemPage() {
                         {/* Bottom Section - Test Cases */}
                         <div className="border-t">
                             <Tabs defaultValue="testcases" className="w-full">
-                                <div className="border-b px-4">
-                                    <TabsList>
-                                        <TabsTrigger value="testcases">Test Cases</TabsTrigger>
-                                        <TabsTrigger value="result">Result</TabsTrigger>
+                                <div className="border-b overflow-x-auto tab-scroll-container">
+                                    <TabsList className="inline-flex w-auto min-w-full justify-start h-12 px-2 bg-transparent">
+                                        <TabsTrigger value="testcases" className="flex-shrink-0">Test Cases</TabsTrigger>
+                                        <TabsTrigger value="result" className="flex-shrink-0">Result</TabsTrigger>
                                     </TabsList>
                                 </div>
 
@@ -245,9 +285,14 @@ export default function ProblemPage() {
                 {/* Right Panel - AI Chatbot */}
                 <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
                     <Card className="h-full rounded-none border-0 flex flex-col">
+
+                        {/* Codura A.I Card Header */}
                         <CardHeader className="border-b">
-                            <CardTitle className="text-lg">AI Assistant</CardTitle>
+                            <CardTitle className="text-lg">Codura A.I</CardTitle>
                         </CardHeader>
+
+
+                        {/* A.I Chat Bot Container */}
                         <CardContent className="flex-1 p-0 flex flex-col">
                             {/* Chat Messages */}
                             <ScrollArea className="flex-1 p-4">
@@ -303,6 +348,7 @@ export default function ProblemPage() {
                                     </Button>
                                 </div>
                             </div>
+                            
                         </CardContent>
                     </Card>
                 </ResizablePanel>
