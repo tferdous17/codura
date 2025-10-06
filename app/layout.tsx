@@ -13,10 +13,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-
-/**
- * Metadata for the application, including title and description.
- */
 export const metadata: Metadata = {
   title: "Codura",
   description: "Let's Aim For Tech Jobs",
@@ -34,7 +30,7 @@ export default function RootLayout({
         <body>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme="dark"  // Default to dark but allow switching
             enableSystem
             disableTransitionOnChange
           >
