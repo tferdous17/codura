@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,17 +46,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Mock user data
-const mockUserData = {
-  name: "Abdullah Khan",
-  email: "abdullah@codura.com",
-  avatar: "AK",
-  streak: 7,
-  problemsSolved: 47,
-  easy: 23,
-  medium: 18,
-  hard: 6
-};
+// User data type
+interface UserData {
+  name: string;
+  email: string;
+  avatar: string;
+  streak: number;
+  problemsSolved: number;
+  easy: number;
+  medium: number;
+  hard: number;
+}
 
 // Chart data for activity
 const activityChartData = [
@@ -300,8 +300,49 @@ function Calendar({ streak }: { streak: number }) {
 }
 
 export default function DashboardPage() {
-  const user = mockUserData;
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [showBorder, setShowBorder] = useState(false);
+
+  // Fetch user data from Supabase
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) throw new Error('Failed to fetch profile');
+
+        const data = await response.json();
+
+        // Map API response to UserData format
+        const fullName = data.profile?.full_name || data.user?.email?.split('@')[0] || 'User';
+        const initials = fullName
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2);
+
+
+          // Set user data
+        setUser({
+          name: fullName,
+          email: data.user?.email || '',
+          avatar: data.profile?.avatar_url || initials,
+          streak: data.stats?.current_streak || 0,
+          problemsSolved: data.stats?.total_problems_solved || 0,
+          easy: data.stats?.easy_solved || 0,
+          medium: data.stats?.medium_solved || 0,
+          hard: data.stats?.hard_solved || 0,
+        });
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchUserData();
+  }, []);
 
   React.useEffect(() => {
     const evaluateScrollPosition = () => {
@@ -311,6 +352,30 @@ export default function DashboardPage() {
     evaluateScrollPosition();
     return () => window.removeEventListener("scroll", evaluateScrollPosition);
   }, []);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="caffeine-theme min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if user data failed to load
+  if (!user) {
+    return (
+      <div className="caffeine-theme min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Failed to load user data</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="caffeine-theme min-h-screen bg-zinc-950 relative">
@@ -387,6 +452,8 @@ export default function DashboardPage() {
             </Link>
           </nav>
 
+
+          {/* User Menu */}
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
