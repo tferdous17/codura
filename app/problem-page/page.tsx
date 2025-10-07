@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Play, Send, RotateCcw } from 'lucide-react'
+import Editor, { useMonaco } from '@monaco-editor/react';
 
 // Add custom styles for tab scrolling
 const tabScrollStyles = `
@@ -51,13 +52,52 @@ const tabScrollStyles = `
 `
 
 export default function ProblemPage() {
+    const monaco = useMonaco()
 
     // State for AI Chatbot that maintains chat messages and input
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai', content: string }>>([])
     const [chatInput, setChatInput] = useState('')
 
 
+    // Define custom Monaco theme matching Caffeine theme
+    useEffect(() => {
+        if (monaco) {
+            monaco.editor.defineTheme('caffeine-dark', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [
+                    { token: '', foreground: 'f2f2f2', background: '2d2d2d' },
+                    { token: 'comment', foreground: 'c5c5c5', fontStyle: 'italic' },
+                    { token: 'keyword', foreground: 'f4d394' },
+                    { token: 'string', foreground: 'a8d191' },
+                    { token: 'number', foreground: 'd4a5c7' },
+                    { token: 'function', foreground: '8ec8d8' },
+                    { token: 'variable', foreground: 'f2f2f2' },
+                    { token: 'type', foreground: '8ec8d8' },
+                    { token: 'class', foreground: 'f4d394' },
+                ],
+                colors: {
+                    'editor.background': '#2d2d2d',
+                    'editor.foreground': '#f2f2f2',
+                    'editor.lineHighlightBackground': '#3a3a3a',
+                    'editorLineNumber.foreground': '#c5c5c5',
+                    'editorLineNumber.activeForeground': '#f2f2f2',
+                    'editor.selectionBackground': '#404040',
+                    'editor.inactiveSelectionBackground': '#353535',
+                    'editorCursor.foreground': '#f4d394',
+                    'editorWhitespace.foreground': '#404040',
+                    'editorIndentGuide.background': '#404040',
+                    'editorIndentGuide.activeBackground': '#505050',
+                }
+            })
+            monaco.editor.setTheme('caffeine-dark')
+        }
+    }, [monaco])
 
+
+
+
+    
     // Temporary function to simulate AI response
     const handleSendMessage = () => {
         if (chatInput.trim()) {
@@ -73,6 +113,10 @@ export default function ProblemPage() {
             }, 1000)
         }
     }
+
+
+
+
 
     return (
         <div className="caffeine-theme h-screen w-full bg-background">
@@ -205,79 +249,101 @@ export default function ProblemPage() {
 
                 {/* Middle Panel - Code Editor and Test Cases */}
                 <ResizablePanel defaultSize={45} minSize={30}>
-                    <div className="h-full flex flex-col">
-                        {/* Top Section - Language Selector and Action Buttons */}
-                        <div className="border-b p-2 flex items-center justify-between">
-                            <Select defaultValue="javascript">
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Select Language" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="python">Python</SelectItem>
-                                    <SelectItem value="java">Java</SelectItem>
-                                    <SelectItem value="cpp">C++</SelectItem>
-                                    <SelectItem value="javascript">JavaScript</SelectItem>
-                                    <SelectItem value="typescript">TypeScript</SelectItem>
-                                </SelectContent>
-                            </Select>
+                    <ResizablePanelGroup direction="vertical">
+                        {/* Code Editor Section */}
+                        <ResizablePanel defaultSize={65} minSize={30}>
+                            <div className="h-full flex flex-col">
+                                {/* Top Section - Language Selector and Action Buttons */}
+                                <div className="border-b p-2 flex items-center justify-between">
+                                    <Select defaultValue="python">
+                                        <SelectTrigger className="w-[180px]">
+                                            <SelectValue placeholder="Select Language" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="python">Python</SelectItem>
+                                            <SelectItem value="java">Java</SelectItem>
+                                            <SelectItem value="cpp">C++</SelectItem>
+                                            <SelectItem value="javascript">JavaScript</SelectItem>
+                                            <SelectItem value="typescript">TypeScript</SelectItem>
+                                        </SelectContent>
+                                    </Select>
 
-                            <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
-                                    <RotateCcw className="w-4 h-4 mr-2" />
-                                    Reset
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Code Editor Area */}
-                        <div className="flex-1 bg-muted/30 p-4">
-                            <div className="h-full border rounded-lg bg-background/50 p-4 font-mono text-sm">
-                                <p className="text-muted-foreground">// Code editor placeholder</p>
-                                <p className="text-muted-foreground">// Monaco Editor or similar will be integrated here</p>
-                                <p className="mt-4">function twoSum(nums, target) {'{'}</p>
-                                <p className="ml-4">// Write your solution here</p>
-                                <p>{'}'}</p>
-                            </div>
-                        </div>
-
-                        {/* Bottom Section - Test Cases */}
-                        <div className="border-t">
-                            <Tabs defaultValue="testcases" className="w-full">
-                                <div className="border-b overflow-x-auto tab-scroll-container">
-                                    <TabsList className="inline-flex w-auto min-w-full justify-start h-12 px-2 bg-transparent">
-                                        <TabsTrigger value="testcases" className="flex-shrink-0">Test Cases</TabsTrigger>
-                                        <TabsTrigger value="result" className="flex-shrink-0">Result</TabsTrigger>
-                                    </TabsList>
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" size="sm">
+                                            <RotateCcw className="w-4 h-4 mr-2" />
+                                            Reset
+                                        </Button>
+                                    </div>
                                 </div>
 
-                                <TabsContent value="testcases" className="p-4 space-y-3">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm font-medium">Test Case 1</span>
-                                            <Button size="sm" variant="default">
-                                                <Play className="w-4 h-4 mr-2" />
-                                                Run Code
-                                            </Button>
-                                        </div>
-                                        <div className="bg-muted p-3 rounded text-sm font-mono">
-                                            <p>nums = [2,7,11,15]</p>
-                                            <p>target = 9</p>
-                                        </div>
+                                {/* Code Editor Area */}
+                                <div className="flex-1 bg-muted/30 p-4">
+                                    <div className="h-full border rounded-lg bg-background/50 overflow-hidden">
+                                        <Editor
+                                            height={'100%'}
+                                            defaultLanguage='python'
+                                            defaultValue={'# Write your code here'}
+                                            theme="caffeine-dark"
+                                            options={{
+                                                fontSize: 14,
+                                                fontFamily: 'var(--font-mono)',
+                                                minimap: { enabled: false },
+                                                scrollBeyondLastLine: false,
+                                                lineNumbers: 'on',
+                                                renderLineHighlight: 'all',
+                                                cursorBlinking: 'smooth',
+                                                cursorSmoothCaretAnimation: 'on',
+                                                smoothScrolling: true,
+                                                padding: { top: 16, bottom: 16 },
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </ResizablePanel>
+
+                        <ResizableHandle withHandle />
+
+                        {/* Bottom Section - Test Cases */}
+                        <ResizablePanel defaultSize={35} minSize={20}>
+                            <div className="h-full border-t">
+                                <Tabs defaultValue="testcases" className="w-full h-full flex flex-col">
+                                    <div className="border-b overflow-x-auto tab-scroll-container">
+                                        <TabsList className="inline-flex w-auto min-w-full justify-start h-12 px-2 bg-transparent">
+                                            <TabsTrigger value="testcases" className="flex-shrink-0">Test Cases</TabsTrigger>
+                                            <TabsTrigger value="result" className="flex-shrink-0">Result</TabsTrigger>
+                                        </TabsList>
                                     </div>
 
-                                    <Button variant="default" className="w-full">
-                                        Submit Solution
-                                    </Button>
-                                </TabsContent>
+                                    <TabsContent value="testcases" className="p-4 space-y-3 flex-1 overflow-auto">
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium">Test Case 1</span>
+                                                <Button size="sm" variant="default">
+                                                    <Play className="w-4 h-4 mr-2" />
+                                                    Run Code
+                                                </Button>
+                                            </div>
+                                            <div className="bg-muted p-3 rounded text-sm font-mono">
+                                                <p>nums = [2,7,11,15]</p>
+                                                <p>target = 9</p>
+                                            </div>
+                                        </div>
 
-                                <TabsContent value="result" className="p-4">
-                                    <div className="bg-muted p-3 rounded text-sm">
-                                        <p className="text-muted-foreground">Run your code to see results here</p>
-                                    </div>
-                                </TabsContent>
-                            </Tabs>
-                        </div>
-                    </div>
+                                        <Button variant="default" className="w-full">
+                                            Submit Solution
+                                        </Button>
+                                    </TabsContent>
+
+                                    <TabsContent value="result" className="p-4 flex-1 overflow-auto">
+                                        <div className="bg-muted p-3 rounded text-sm">
+                                            <p className="text-muted-foreground">Run your code to see results here</p>
+                                        </div>
+                                    </TabsContent>
+                                </Tabs>
+                            </div>
+                        </ResizablePanel>
+                    </ResizablePanelGroup>
                 </ResizablePanel>
 
                 <ResizableHandle withHandle />
