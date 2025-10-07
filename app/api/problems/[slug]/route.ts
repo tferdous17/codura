@@ -3,11 +3,11 @@ import { NextResponse } from 'next/server';
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const { slug } = params;
+    const { slug } = await params;
 
     // Get the problem by title_slug
     const { data: problem, error } = await supabase

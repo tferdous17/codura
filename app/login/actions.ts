@@ -73,12 +73,32 @@ export async function signup(formData: FormData) {
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirm-password') as string
   const fullName = formData.get('full_name') as string
+  const username = formData.get('username') as string
 
-  console.log('Signup data:', { email, fullName, hasPassword: !!password })
+  console.log('Signup data:', { email, fullName, username, hasPassword: !!password })
 
   // Validate inputs
-  if (!email || !password || !fullName) {
+  if (!email || !password || !fullName || !username) {
     console.error('Missing required fields')
+    redirect('/error')
+  }
+
+  // Validate username format
+  const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/
+  if (!usernameRegex.test(username)) {
+    console.error('Invalid username format')
+    redirect('/error')
+  }
+
+  // Check if username is already taken
+  const { data: existingUser } = await supabase
+    .from('user_profiles')
+    .select('username')
+    .eq('username', username.toLowerCase())
+    .single()
+
+  if (existingUser) {
+    console.error('Username already taken')
     redirect('/error')
   }
 
@@ -98,6 +118,7 @@ export async function signup(formData: FormData) {
     options: {
       data: {
         full_name: fullName,
+        username: username.toLowerCase(),
       }
     }
   }
@@ -126,14 +147,13 @@ export async function signup(formData: FormData) {
         
         // Create the profile manually
         const { error: profileError } = await supabase
-          .from('users')
+          .from('user_profiles')
           .upsert({
-            user_id: signInData.user.id,
+            id: signInData.user.id,
             full_name: fullName,
-            federal_school_code: null,
-            questionnaire_completed: false,
+            username: username.toLowerCase(),
           }, {
-            onConflict: 'user_id',
+            onConflict: 'id',
             ignoreDuplicates: false
           })
 
@@ -158,9 +178,9 @@ export async function signup(formData: FormData) {
     await new Promise(resolve => setTimeout(resolve, 300))
     
     const { data: profile, error: profileCheckError } = await supabase
-      .from('users')
-      .select('user_id')
-      .eq('user_id', signUpData.user.id)
+      .from('user_profiles')
+      .select('id')
+      .eq('id', signUpData.user.id)
       .maybeSingle()
 
     if (profileCheckError) {
@@ -172,12 +192,11 @@ export async function signup(formData: FormData) {
       console.log('Profile not found after signup, creating manually...')
       
       const { error: profileError } = await supabase
-        .from('users')
+        .from('user_profiles')
         .insert({
-          user_id: signUpData.user.id,
+          id: signUpData.user.id,
           full_name: fullName,
-          federal_school_code: null,
-          questionnaire_completed: false,
+          username: username.toLowerCase(),
         })
 
       if (profileError && profileError.code !== '23505') {

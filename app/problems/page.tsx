@@ -9,15 +9,28 @@ import Link from "next/link";
 import Image from "next/image";
 import CoduraLogo from "@/components/logos/codura-logo.svg";
 import { cn } from "@/lib/utils";
-import {
-  Search,
-  Filter,
-  CheckCircle2,
-  Circle,
-  Lock,
-  TrendingUp,
-  BarChart3,
-} from "lucide-react";
+import dynamic from 'next/dynamic';
+import { AddToListDialog } from "@/components/problems/add-to-list-dialog";
+
+// Dynamic imports to avoid TypeScript issues with lucide-react type definitions
+// @ts-ignore - lucide-react has incomplete type definitions
+const Search = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Search as any })), { ssr: false });
+// @ts-ignore
+const Filter = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Filter as any })), { ssr: false });
+// @ts-ignore
+const CheckCircle2 = dynamic(() => import('lucide-react').then(mod => ({ default: mod.CheckCircle2 as any })), { ssr: false });
+// @ts-ignore
+const Circle = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Circle as any })), { ssr: false });
+// @ts-ignore
+const Lock = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Lock as any })), { ssr: false });
+// @ts-ignore
+const TrendingUp = dynamic(() => import('lucide-react').then(mod => ({ default: mod.TrendingUp as any })), { ssr: false });
+// @ts-ignore
+const BarChart3 = dynamic(() => import('lucide-react').then(mod => ({ default: mod.BarChart3 as any })), { ssr: false });
+// @ts-ignore
+const Bookmark = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Bookmark as any })), { ssr: false });
+// @ts-ignore
+const BookmarkPlus = dynamic(() => import('lucide-react').then(mod => ({ default: mod.BookmarkPlus as any })), { ssr: false });
 
 interface Problem {
   id: number;
@@ -50,6 +63,8 @@ export default function ProblemsPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showAddToList, setShowAddToList] = useState(false);
+  const [selectedProblem, setSelectedProblem] = useState<{ id: number; title: string } | null>(null);
 
   useEffect(() => {
     const evaluateScrollPosition = () => {
@@ -323,10 +338,9 @@ export default function ProblemsPage() {
             ) : (
               <div className="divide-y divide-border/20">
                 {problems.map((problem) => (
-                  <Link
+                  <div
                     key={problem.id}
-                    href={`/problems/${problem.title_slug}`}
-                    className="block hover:bg-muted/30 transition-colors"
+                    className="group/problem hover:bg-muted/30 transition-colors"
                   >
                     <div className="p-4 flex items-center gap-4">
                       {/* Status Icon */}
@@ -335,17 +349,22 @@ export default function ProblemsPage() {
                       </div>
 
                       {/* Problem Number & Title */}
-                      <div className="flex-1 min-w-0">
+                      <Link
+                        href={`/problems/${problem.title_slug}`}
+                        className="flex-1 min-w-0"
+                      >
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-muted-foreground">
                             #{problem.leetcode_id}
                           </span>
-                          <h3 className="font-medium truncate">{problem.title}</h3>
+                          <h3 className="font-medium truncate hover:text-brand transition-colors">
+                            {problem.title}
+                          </h3>
                           {problem.is_premium && (
                             <Lock className="w-4 h-4 text-yellow-500 flex-shrink-0" />
                           )}
                         </div>
-                      </div>
+                      </Link>
 
                       {/* Tags */}
                       <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
@@ -379,8 +398,22 @@ export default function ProblemsPage() {
                           {problem.difficulty}
                         </Badge>
                       </div>
+
+                      {/* Add to List Button */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="flex-shrink-0 opacity-0 group-hover/problem:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setSelectedProblem({ id: problem.id, title: problem.title });
+                          setShowAddToList(true);
+                        }}
+                      >
+                        <BookmarkPlus className="w-4 h-4" />
+                      </Button>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}
@@ -426,6 +459,15 @@ export default function ProblemsPage() {
           </div>
         )}
       </main>
+
+      {selectedProblem && (
+        <AddToListDialog
+          open={showAddToList}
+          onOpenChange={setShowAddToList}
+          problemId={selectedProblem.id}
+          problemTitle={selectedProblem.title}
+        />
+      )}
     </div>
   );
 }
