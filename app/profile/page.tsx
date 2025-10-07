@@ -30,6 +30,24 @@ import {
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { UserProfile, UserStats, Submission } from "@/types/database";
 
+interface Achievement {
+  achievement_id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  earned_at: string;
+  requirement_type: string;
+  requirement_value: number;
+}
+
+interface AchievementSummary {
+  total_achievements: number;
+  latest_achievement_name: string | null;
+  latest_achievement_date: string | null;
+  achievement_progress: Achievement[];
+}
+
 interface ProfileData {
   user: {
     id: string;
@@ -38,7 +56,8 @@ interface ProfileData {
   profile: UserProfile | null;
   stats: UserStats | null;
   submissions: Submission[];
-  achievements: any[];
+  achievements: Achievement[];
+  achievementSummary: AchievementSummary;
 }
 
 // GitHub-style contribution data (52 weeks) - Will be replaced with real submission data
@@ -72,14 +91,23 @@ const generateContributionData = (submissions: Submission[]) => {
   return weeks;
 };
 
-// Icon mapping for achievements
-const iconMap: Record<string, any> = {
-  'Code': Code,
-  'Flame': Flame,
-  'Video': Video,
-  'Users': Users,
-  'Trophy': Trophy,
-  'Star': Star,
+// Icon mapping for achievements - emoji fallback
+const iconMap: Record<string, string> = {
+  'Code': '💻',
+  'CheckCircle': '✅',
+  'Flame': '🔥',
+  'Fire': '🔥',
+  'Zap': '⚡',
+  'Target': '🎯',
+  'TrendingUp': '📈',
+  'Award': '🏆',
+  'Trophy': '🏆',
+  'Crown': '👑',
+  'Star': '⭐',
+  'Sparkles': '✨',
+  'Check': '✔️',
+  'Video': '🎥',
+  'Users': '👥',
 };
 
 export default function ProfilePage() {
@@ -152,7 +180,7 @@ export default function ProfilePage() {
     );
   }
 
-  const { user, profile, stats, submissions, achievements } = profileData;
+  const { user, profile, stats, submissions, achievements, achievementSummary } = profileData;
 
   // Generate contribution data from submissions
   const contributionData = generateContributionData(submissions);
@@ -166,19 +194,6 @@ export default function ProfilePage() {
     }
     return user.email?.[0]?.toUpperCase() || 'U';
   };
-
-  // Get all achievements with earned status
-  const allAchievements = [
-    { id: 1, name: "First Problem", description: "Solved your first problem", icon: "Code", color: "text-blue-500" },
-    { id: 2, name: "Week Warrior", description: "7 day streak", icon: "Flame", color: "text-orange-500" },
-    { id: 3, name: "Interview Ready", description: "Completed 10 mock interviews", icon: "Video", color: "text-purple-500" },
-    { id: 4, name: "Team Player", description: "Helped 20 peers", icon: "Users", color: "text-green-500" },
-    { id: 5, name: "Century Club", description: "Solved 100 problems", icon: "Trophy", color: "text-yellow-500" },
-    { id: 6, name: "Hard Master", description: "Solved 20 hard problems", icon: "Star", color: "text-red-500" },
-  ].map(achievement => ({
-    ...achievement,
-    earned: achievements.some(ua => ua.achievements?.name === achievement.name)
-  }));
 
   return (
     <div className="caffeine-theme min-h-screen bg-zinc-950 relative">
@@ -534,41 +549,61 @@ export default function ProfilePage() {
               <CardHeader>
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
                   <Award className="w-5 h-5 text-yellow-500" />
-                  Achievements
+                  Achievements ({achievementSummary.total_achievements})
                 </CardTitle>
+                {achievementSummary.latest_achievement_name && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Latest: {achievementSummary.latest_achievement_name}
+                  </p>
+                )}
               </CardHeader>
 
               <CardContent className="space-y-3">
-                {allAchievements.map((achievement) => {
-                  const IconComponent = iconMap[achievement.icon] || Code;
-                  return (
-                    <div
-                      key={achievement.id}
-                      className={cn(
-                        "p-3 rounded-lg border transition-all",
-                        achievement.earned
-                          ? "border-border/40 bg-muted/20"
-                          : "border-border/20 bg-muted/10 opacity-50"
-                      )}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center",
-                          achievement.earned ? "bg-muted/30" : "bg-muted/10"
-                        )}>
-                          <IconComponent className={cn("w-5 h-5", achievement.color)} />
+                {achievements.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Trophy className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No achievements yet</p>
+                    <p className="text-xs mt-1">Solve problems to unlock achievements!</p>
+                  </div>
+                ) : (
+                  <>
+                    {achievements.slice(0, 6).map((achievement) => (
+                      <div
+                        key={achievement.achievement_id}
+                        className="p-3 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/30 transition-all"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="text-2xl flex-shrink-0">
+                            {iconMap[achievement.icon] || '🏅'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className={cn("font-semibold text-sm mb-0.5", achievement.color)}>
+                              {achievement.name}
+                            </h4>
+                            <p className="text-xs text-muted-foreground mb-1">
+                              {achievement.description}
+                            </p>
+                            <p className="text-xs text-muted-foreground/60">
+                              {new Date(achievement.earned_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                          <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-sm mb-0.5">{achievement.name}</h4>
-                          <p className="text-xs text-muted-foreground">{achievement.description}</p>
-                        </div>
-                        {achievement.earned && (
-                          <CheckCircle2 className="w-5 h-5 text-green-500" />
-                        )}
                       </div>
-                    </div>
-                  );
-                })}
+                    ))}
+                    {achievements.length > 6 && (
+                      <div className="text-center pt-2">
+                        <p className="text-xs text-muted-foreground">
+                          +{achievements.length - 6} more achievements
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

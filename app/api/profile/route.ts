@@ -86,14 +86,24 @@ export async function GET() {
       return NextResponse.json({ error: submissionsError.message }, { status: 500 });
     }
 
-    // Get user achievements with achievement details
+    // Get user achievements with achievement details (using optimized view)
     const { data: userAchievements, error: achievementsError } = await supabase
-      .from('user_achievements')
-      .select('*, achievements(*)')
-      .eq('user_id', user.id);
+      .from('user_achievements_with_details')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('earned_at', { ascending: false });
 
     if (achievementsError) {
       return NextResponse.json({ error: achievementsError.message }, { status: 500 });
+    }
+
+    // Get achievement summary using the database function
+    const { data: achievementSummary, error: summaryError } = await supabase
+      .rpc('get_user_achievement_summary', { p_user_id: user.id })
+      .single();
+
+    if (summaryError) {
+      console.error('Failed to fetch achievement summary:', summaryError);
     }
 
     return NextResponse.json({
@@ -105,6 +115,12 @@ export async function GET() {
       stats: stats || null,
       submissions: submissions || [],
       achievements: userAchievements || [],
+      achievementSummary: achievementSummary || {
+        total_achievements: 0,
+        latest_achievement_name: null,
+        latest_achievement_date: null,
+        achievement_progress: []
+      },
     });
   } catch (error) {
     console.error('Error fetching profile:', error);
