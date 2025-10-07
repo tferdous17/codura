@@ -74,13 +74,16 @@ export async function GET() {
       }
     }
 
-    // Get recent submissions
+    // Get ALL submissions for contribution grid (past year)
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
     const { data: submissions, error: submissionsError } = await supabase
       .from('submissions')
       .select('*')
       .eq('user_id', user.id)
-      .order('submitted_at', { ascending: false })
-      .limit(5);
+      .gte('submitted_at', oneYearAgo.toISOString())
+      .order('submitted_at', { ascending: false });
 
     if (submissionsError) {
       return NextResponse.json({ error: submissionsError.message }, { status: 500 });

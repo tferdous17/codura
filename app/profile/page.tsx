@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { UserProfile, UserStats, Submission } from "@/types/database";
+import RecentSubmissions from "@/components/RecentSubmissions";
 
 interface Achievement {
   achievement_id: string;
@@ -555,43 +556,7 @@ export default function ProfilePage() {
               </CardHeader>
 
               <CardContent>
-                {submissions.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Code className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No submissions yet</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {submissions.map((submission) => (
-                      <div key={submission.id} className="flex items-center justify-between p-3 rounded-lg border border-border/40 hover:bg-muted/30 transition-all">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium text-sm">{submission.problem_title}</h4>
-                            <Badge variant="outline" className={cn(
-                              "text-xs",
-                              submission.difficulty === "Easy" && "border-green-500/30 text-green-600",
-                              submission.difficulty === "Medium" && "border-yellow-500/30 text-yellow-600",
-                              submission.difficulty === "Hard" && "border-red-500/30 text-red-600"
-                            )}>
-                              {submission.difficulty}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <span>{submission.language}</span>
-                            <span>•</span>
-                            <span>{new Date(submission.submitted_at).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className={cn(
-                          submission.status === "Accepted" && "border-green-500/30 bg-green-500/10 text-green-600",
-                          submission.status !== "Accepted" && "border-red-500/30 bg-red-500/10 text-red-600"
-                        )}>
-                          {submission.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <RecentSubmissions submissions={submissions} />
               </CardContent>
             </Card>
           </div>
