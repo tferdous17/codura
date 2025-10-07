@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 
   console.log("User authenticated:", user.id, user.email);
 
-  // First, check if user row already exists in users table (onboarding)
+  // Check if user row already exists in unified users table
   const { data: existingUser, error: checkError } = await supabase
     .from("users")
     .select("user_id, federal_school_code, questionnaire_completed")
@@ -46,7 +46,8 @@ export async function GET(request: Request) {
 
   let profile = existingUser;
 
-  // If user doesn't exist, create them in both users and user_profiles tables
+  // If user doesn't exist, create them in unified users table
+  // The trigger will automatically create user_stats entry
   if (!existingUser) {
     console.log("Creating new user row...");
 
@@ -57,14 +58,19 @@ export async function GET(request: Request) {
       user.email?.split('@')[0] ||
       "User";
 
-    // Create entry in users table (for onboarding)
+    const email = user.email || "";
+
+    // Create entry in unified users table
+    // Trigger will automatically create user_stats
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
         user_id: user.id,
         full_name: fullName,
+        email: email,
         federal_school_code: null,
         questionnaire_completed: false,
+        avatar_url: user.user_metadata?.avatar_url || null,
       })
       .select("user_id, federal_school_code, questionnaire_completed")
       .single();
@@ -73,34 +79,8 @@ export async function GET(request: Request) {
       console.error("Insert error:", insertError);
     } else {
       console.log("New user created:", newUser);
+      console.log("User stats auto-created by trigger");
       profile = newUser;
-    }
-
-    // Also create entry in user_profiles table (for profile page)
-    const { error: profileError } = await supabase
-      .from("user_profiles")
-      .insert({
-        id: user.id,
-        full_name: fullName,
-      });
-
-    if (profileError) {
-      console.error("Profile insert error:", profileError);
-    } else {
-      console.log("User profile created");
-    }
-
-    // Create initial stats entry
-    const { error: statsError } = await supabase
-      .from("user_stats")
-      .insert({
-        user_id: user.id,
-      });
-
-    if (statsError) {
-      console.error("Stats insert error:", statsError);
-    } else {
-      console.log("User stats created");
     }
   }
 

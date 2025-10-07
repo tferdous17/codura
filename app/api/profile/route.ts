@@ -12,26 +12,28 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user profile (or create if doesn't exist)
+    // Get unified user profile from users table
     let { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select('*')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .maybeSingle();
 
     if (profileError) {
       return NextResponse.json({ error: profileError.message }, { status: 500 });
     }
 
-    // If no profile exists, create one
+    // If no profile exists, create one (trigger will auto-create user_stats)
     if (!profile) {
       const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
 
       const { data: newProfile, error: createProfileError } = await supabase
-        .from('user_profiles')
+        .from('users')
         .insert({
-          id: user.id,
+          user_id: user.id,
           full_name: fullName,
+          email: user.email || '',
+          avatar_url: user.user_metadata?.avatar_url || null,
         })
         .select()
         .single();
@@ -43,7 +45,7 @@ export async function GET() {
       profile = newProfile;
     }
 
-    // Get user stats (or create if doesn't exist)
+    // Get user stats (should exist due to trigger, but check anyway)
     let { data: stats, error: statsError } = await supabase
       .from('user_stats')
       .select('*')
@@ -54,21 +56,22 @@ export async function GET() {
       return NextResponse.json({ error: statsError.message }, { status: 500 });
     }
 
-    // If no stats exist, create default stats
+    // If stats still don't exist (edge case), create them
     if (!stats) {
       const { data: newStats, error: createStatsError } = await supabase
         .from('user_stats')
         .insert({
           user_id: user.id,
+          current_streak: profile.day_streak || 0,
         })
         .select()
         .single();
 
       if (createStatsError) {
-        return NextResponse.json({ error: createStatsError.message }, { status: 500 });
+        console.error('Failed to create stats:', createStatsError);
+      } else {
+        stats = newStats;
       }
-
-      stats = newStats;
     }
 
     // Get recent submissions
@@ -140,22 +143,21 @@ export async function PUT(request: Request) {
     // Check if username is already taken (if changed)
     if (username) {
       const { data: existingUser } = await supabase
-        .from('user_profiles')
-        .select('id')
+        .from('users')
+        .select('user_id')
         .eq('username', username)
-        .neq('id', user.id)
-        .single();
+        .neq('user_id', user.id)
+        .maybeSingle();
 
       if (existingUser) {
         return NextResponse.json({ error: 'Username already taken' }, { status: 400 });
       }
     }
 
-    // Upsert profile
+    // Update unified users table (trigger will update timestamp)
     const { data, error } = await supabase
-      .from('user_profiles')
-      .upsert({
-        id: user.id,
+      .from('users')
+      .update({
         username,
         full_name,
         bio,
@@ -167,8 +169,8 @@ export async function PUT(request: Request) {
         website,
         github_username,
         linkedin_username,
-        updated_at: new Date().toISOString(),
       })
+      .eq('user_id', user.id)
       .select()
       .single();
 

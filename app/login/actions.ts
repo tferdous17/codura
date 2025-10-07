@@ -92,10 +92,10 @@ export async function signup(formData: FormData) {
 
   // Check if username is already taken
   const { data: existingUser } = await supabase
-    .from('user_profiles')
+    .from('users')
     .select('username')
     .eq('username', username.toLowerCase())
-    .single()
+    .maybeSingle()
 
   if (existingUser) {
     console.error('Username already taken')
@@ -144,16 +144,17 @@ export async function signup(formData: FormData) {
 
       if (!signInError && signInData.user) {
         console.log('User exists in auth.users, creating profile manually...')
-        
-        // Create the profile manually
+
+        // Create the profile manually in unified users table
         const { error: profileError } = await supabase
-          .from('user_profiles')
+          .from('users')
           .upsert({
-            id: signInData.user.id,
+            user_id: signInData.user.id,
             full_name: fullName,
             username: username.toLowerCase(),
+            email: email,
           }, {
-            onConflict: 'id',
+            onConflict: 'user_id',
             ignoreDuplicates: false
           })
 
@@ -172,15 +173,15 @@ export async function signup(formData: FormData) {
 
   console.log('Signup successful:', signUpData.user?.id)
 
-  // Verify the profile was created by the trigger
+  // Verify the profile was created by the callback
   if (signUpData.user) {
-    // Wait a moment for the trigger to complete
+    // Wait a moment for the callback to complete
     await new Promise(resolve => setTimeout(resolve, 300))
-    
+
     const { data: profile, error: profileCheckError } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .eq('id', signUpData.user.id)
+      .from('users')
+      .select('user_id')
+      .eq('user_id', signUpData.user.id)
       .maybeSingle()
 
     if (profileCheckError) {
@@ -190,13 +191,14 @@ export async function signup(formData: FormData) {
     // If profile doesn't exist, create it manually
     if (!profile) {
       console.log('Profile not found after signup, creating manually...')
-      
+
       const { error: profileError } = await supabase
-        .from('user_profiles')
+        .from('users')
         .insert({
-          id: signUpData.user.id,
+          user_id: signUpData.user.id,
           full_name: fullName,
           username: username.toLowerCase(),
+          email: email,
         })
 
       if (profileError && profileError.code !== '23505') {
