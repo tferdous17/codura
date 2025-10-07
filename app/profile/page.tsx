@@ -60,10 +60,11 @@ interface ProfileData {
   achievementSummary: AchievementSummary;
 }
 
-// GitHub-style contribution data (52 weeks) - Will be replaced with real submission data
+// GitHub-style contribution data (52 weeks) with month labels
 const generateContributionData = (submissions: Submission[]) => {
   const weeks = [];
   const today = new Date();
+  const monthLabels: { month: string; weekIndex: number }[] = [];
 
   // Create a map of dates to submission counts
   const submissionsByDate = new Map<string, number>();
@@ -71,6 +72,8 @@ const generateContributionData = (submissions: Submission[]) => {
     const date = new Date(sub.submitted_at).toISOString().split('T')[0];
     submissionsByDate.set(date, (submissionsByDate.get(date) || 0) + 1);
   });
+
+  let lastMonth = -1;
 
   for (let week = 0; week < 52; week++) {
     const days = [];
@@ -82,13 +85,26 @@ const generateContributionData = (submissions: Submission[]) => {
       const count = submissionsByDate.get(dateStr) || 0;
       days.push({
         date: dateStr,
+        dateObj: new Date(date),
         count,
         level: count === 0 ? 0 : count <= 1 ? 1 : count <= 2 ? 2 : count <= 3 ? 3 : 4
       });
+
+      // Track month boundaries (check first day of week)
+      if (day === 0) {
+        const month = date.getMonth();
+        if (month !== lastMonth && week > 0) {
+          monthLabels.push({
+            month: date.toLocaleDateString('en-US', { month: 'short' }),
+            weekIndex: week
+          });
+          lastMonth = month;
+        }
+      }
     }
     weeks.push(days);
   }
-  return weeks;
+  return { weeks, monthLabels };
 };
 
 // Icon mapping for achievements - emoji fallback
@@ -183,7 +199,7 @@ export default function ProfilePage() {
   const { user, profile, stats, submissions, achievements, achievementSummary } = profileData;
 
   // Generate contribution data from submissions
-  const contributionData = generateContributionData(submissions);
+  const { weeks: contributionData, monthLabels } = generateContributionData(submissions);
   const totalContributions = contributionData.flat().reduce((sum, day) => sum + day.count, 0);
 
   // Get user's initials for avatar
@@ -386,25 +402,64 @@ export default function ProfilePage() {
 
           <CardContent>
             <div className="overflow-x-auto pb-4">
-              <div className="inline-flex gap-1">
-                {contributionData.map((week, weekIndex) => (
-                  <div key={weekIndex} className="flex flex-col gap-1">
-                    {week.map((day, dayIndex) => (
-                      <div
-                        key={`${weekIndex}-${dayIndex}`}
-                        className={cn(
-                          "w-3 h-3 rounded-sm transition-all duration-200 cursor-pointer hover:scale-125 hover:ring-1 hover:ring-green-500",
-                          day.level === 0 && "bg-muted/30",
-                          day.level === 1 && "bg-green-500/30",
-                          day.level === 2 && "bg-green-500/50",
-                          day.level === 3 && "bg-green-500/70",
-                          day.level === 4 && "bg-green-500"
-                        )}
-                        title={`${day.count} submissions on ${day.date}`}
-                      />
+              <div className="relative">
+                {/* Month Labels */}
+                <div className="flex gap-1 mb-2 ml-8">
+                  {monthLabels.map((label, idx) => (
+                    <div
+                      key={idx}
+                      className="text-xs text-muted-foreground absolute"
+                      style={{ left: `${label.weekIndex * 16}px` }}
+                    >
+                      {label.month}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Day Labels */}
+                <div className="flex gap-3">
+                  <div className="flex flex-col justify-around text-xs text-muted-foreground pr-2 py-1">
+                    <span>Mon</span>
+                    <span>Wed</span>
+                    <span>Fri</span>
+                  </div>
+
+                  {/* Contribution Grid */}
+                  <div className="inline-flex gap-1 mt-6">
+                    {contributionData.map((week, weekIndex) => (
+                      <div key={weekIndex} className="flex flex-col gap-1">
+                        {week.map((day, dayIndex) => (
+                          <div
+                            key={`${weekIndex}-${dayIndex}`}
+                            className={cn(
+                              "w-3 h-3 rounded-sm transition-all duration-200 cursor-pointer hover:scale-125 hover:ring-2 hover:ring-green-500 hover:z-10 relative group",
+                              day.level === 0 && "bg-muted/30 hover:bg-muted/50",
+                              day.level === 1 && "bg-green-500/30 hover:bg-green-500/40",
+                              day.level === 2 && "bg-green-500/50 hover:bg-green-500/60",
+                              day.level === 3 && "bg-green-500/70 hover:bg-green-500/80",
+                              day.level === 4 && "bg-green-500 hover:bg-green-500"
+                            )}
+                            title={`${day.count} ${day.count === 1 ? 'submission' : 'submissions'} on ${day.dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}`}
+                          >
+                            {/* Enhanced Tooltip on Hover */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                              <div className="text-xs font-semibold text-white">
+                                {day.count} {day.count === 1 ? 'submission' : 'submissions'}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {day.dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                              </div>
+                              {/* Tooltip arrow */}
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                                <div className="border-4 border-transparent border-t-gray-700"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
 
