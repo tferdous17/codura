@@ -188,10 +188,20 @@ export default function ProblemPage() {
         }
     }, [monaco])
 
-    const handleCodeSubmission = () => {
+    const handleCodeSubmission = async () => {
         const data = {
-            // placeholder
+            "language_id": userLang.id,
+            "source_code": usersCode,
+            "stdin": "test",
         }
+
+        const response = await fetch('http://localhost:8080/api/problems/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
     }
 
     // Temporary function to simulate AI response
