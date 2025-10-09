@@ -1142,6 +1142,7 @@ export default function DashboardPage() {
                 listId={selectedStudyPlan.id}
                 listName={selectedStudyPlan.name}
                 listColor={selectedStudyPlan.color}
+                isPublic={selectedStudyPlan.is_public}
                 onListUpdated={fetchStudyPlans}
               />
             )}

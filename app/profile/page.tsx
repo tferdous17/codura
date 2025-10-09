@@ -119,6 +119,8 @@ export default function ProfilePage() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'submissions' | 'lists'>('submissions');
+  const [userLists, setUserLists] = useState<any[]>([]);
 
   useEffect(() => {
     const evaluateScrollPosition = () => {
@@ -131,6 +133,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     fetchProfileData();
+    fetchUserLists();
   }, []);
 
   const fetchProfileData = async () => {
@@ -148,6 +151,18 @@ export default function ProfilePage() {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserLists = async () => {
+    try {
+      const response = await fetch('/api/study-plans');
+      if (!response.ok) return;
+
+      const data = await response.json();
+      setUserLists(data.userLists || []);
+    } catch (err) {
+      console.error('Error fetching user lists:', err);
     }
   };
 
@@ -478,19 +493,88 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Recent Submissions */}
+            {/* Tabbed Section: Recent Submissions & Lists */}
             <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
 
               <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-purple-500" />
-                  Recent Submissions
-                </CardTitle>
+                <div className="flex items-center gap-4 border-b border-border/20 pb-3">
+                  <button
+                    onClick={() => setActiveTab('submissions')}
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                      activeTab === 'submissions'
+                        ? "bg-brand/10 text-brand border border-brand/30"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      Recent Submissions
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('lists')}
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                      activeTab === 'lists'
+                        ? "bg-brand/10 text-brand border border-brand/30"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Code className="w-4 h-4" />
+                      Lists ({userLists.length})
+                    </div>
+                  </button>
+                </div>
               </CardHeader>
 
               <CardContent>
-                <RecentSubmissions submissions={submissions} />
+                {activeTab === 'submissions' ? (
+                  <RecentSubmissions submissions={submissions} />
+                ) : (
+                  <div className="space-y-3">
+                    {userLists.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Code className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No study plan lists yet</p>
+                        <p className="text-xs mt-1">Create a list from your dashboard!</p>
+                      </div>
+                    ) : (
+                      userLists.map((list) => (
+                        <div
+                          key={list.id}
+                          className="p-4 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/30 transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold">{list.name}</h4>
+                                {list.is_public && (
+                                  <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500 border-green-500/30">
+                                    Public
+                                  </Badge>
+                                )}
+                              </div>
+                              {list.description && (
+                                <p className="text-sm text-muted-foreground mb-2">{list.description}</p>
+                              )}
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <span>{list.problem_count || 0} problems</span>
+                                <span>•</span>
+                                <span>Created {new Date(list.created_at).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            <div className={cn("w-12 h-12 rounded-lg bg-gradient-to-br", list.color, "flex items-center justify-center flex-shrink-0")}>
+                              <Code className="w-6 h-6 text-white" />
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
