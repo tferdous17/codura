@@ -58,6 +58,7 @@ interface UserData {
   easy: number;
   medium: number;
   hard: number;
+  createdAt?: string;
 }
 
 const chartConfig = {
@@ -385,6 +386,7 @@ export default function DashboardPage() {
           easy: data.stats?.easy_solved || 0,
           medium: data.stats?.medium_solved || 0,
           hard: data.stats?.hard_solved || 0,
+          createdAt: data.user?.created_at || null,
         });
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -665,13 +667,28 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-24 pb-16">
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
-            Welcome to Codura
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Continue your interview preparation journey
-          </p>
+        <div className="mb-12 relative">
+          {/* Decorative gradient orb behind text */}
+          <div className="absolute -top-8 -left-8 w-64 h-64 bg-gradient-to-br from-brand/10 via-purple-500/5 to-transparent rounded-full blur-[120px] opacity-40 animate-pulse-slow pointer-events-none" />
+
+          <div className="relative">
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 relative">
+              <span className="bg-gradient-to-r from-foreground via-brand to-purple-400 bg-clip-text text-transparent animate-gradient-x">
+                {(() => {
+                  const firstName = user.name.split(' ')[0];
+                  const isNewUser = user.createdAt ?
+                    new Date().getTime() - new Date(user.createdAt).getTime() < 24 * 60 * 60 * 1000 :
+                    false;
+                  return isNewUser
+                    ? `Welcome to Codura, ${firstName}`
+                    : `Welcome back, ${firstName}`;
+                })()}
+              </span>
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Continue your interview preparation journey
+            </p>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">

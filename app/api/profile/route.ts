@@ -113,6 +113,7 @@ export async function GET() {
       user: {
         id: user.id,
         email: user.email,
+        created_at: profile?.created_at || null,
       },
       profile: profile || null,
       stats: stats || null,
