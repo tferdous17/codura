@@ -59,6 +59,7 @@ export async function middleware(req: NextRequest) {
       const onQuestionnairePage = pathname === "/questionnaire";
       const onOnboardingPage   = pathname === "/onboarding";
       const onDashboardPage    = pathname === "/dashboard";
+      const onProblemPage      = pathname === "/problem-page";
       const onProfilePage      = pathname === "/profile";
       const onSignupPage       = pathname === "/signup"; // ← ADD THIS
       const onLoginPage        = pathname === "/login";  // ← ADD THIS
@@ -77,6 +78,11 @@ export async function middleware(req: NextRequest) {
         } else {
           return NextResponse.redirect(new URL("/onboarding", origin));
         }
+      }
+
+      // ✅ Allow problem page for authenticated users
+      if (onProblemPage) {
+        return response;
       }
 
       if (completed) {
