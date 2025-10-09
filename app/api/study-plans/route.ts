@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, description, color } = body;
+    const { name, description, color, is_public } = body;
 
     if (!name) {
       return NextResponse.json({ error: 'List name is required' }, { status: 400 });
@@ -71,7 +71,8 @@ export async function POST(request: Request) {
         name,
         description: description || null,
         color: color || 'from-brand to-orange-300',
-        is_default: false
+        is_default: false,
+        is_public: is_public || false
       })
       .select()
       .single();
@@ -101,7 +102,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, name, description, color } = body;
+    const { id, name, description, color, is_public } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'List ID is required' }, { status: 400 });
@@ -111,6 +112,7 @@ export async function PUT(request: Request) {
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
     if (color !== undefined) updates.color = color;
+    if (is_public !== undefined) updates.is_public = is_public;
 
     // Update the list
     const { data: list, error } = await supabase
