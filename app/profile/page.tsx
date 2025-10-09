@@ -163,7 +163,9 @@ export default function ProfilePage() {
       if (!response.ok) return;
 
       const data = await response.json();
-      setUserLists(data.userLists || []);
+      // Filter to only show public lists on profile page
+      const publicLists = (data.userLists || []).filter((list: any) => list.is_public);
+      setUserLists(publicLists);
     } catch (err) {
       console.error('Error fetching user lists:', err);
     }
@@ -545,40 +547,70 @@ export default function ProfilePage() {
                         <p className="text-xs mt-1">Create a list from your dashboard!</p>
                       </div>
                     ) : (
-                      userLists.map((list) => (
-                        <div
-                          key={list.id}
-                          onClick={() => {
-                            setSelectedList(list);
-                            setShowListDialog(true);
-                          }}
-                          className="p-4 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/30 transition-all cursor-pointer hover:border-brand/30"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-semibold">{list.name}</h4>
-                                {list.is_public && (
-                                  <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500 border-green-500/30">
-                                    Public
-                                  </Badge>
+                      userLists.map((list) => {
+                        // Calculate progress stats (placeholder - will be real data later)
+                        const totalProblems = list.problem_count || 0;
+                        const solvedProblems = list.solved_count || 0;
+                        const progressPercent = totalProblems > 0 ? Math.round((solvedProblems / totalProblems) * 100) : 0;
+
+                        return (
+                          <div
+                            key={list.id}
+                            onClick={() => {
+                              setSelectedList(list);
+                              setShowListDialog(true);
+                            }}
+                            className="group p-4 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/30 transition-all cursor-pointer hover:border-brand/30 relative overflow-hidden"
+                          >
+                            {/* Hover gradient effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-brand/5 via-purple-500/5 to-brand/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                            <div className="relative flex items-start justify-between gap-3">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-semibold">{list.name}</h4>
+                                  {list.is_public && (
+                                    <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500 border-green-500/30">
+                                      Public
+                                    </Badge>
+                                  )}
+                                </div>
+                                {list.description && (
+                                  <p className="text-sm text-muted-foreground mb-3">{list.description}</p>
                                 )}
+
+                                {/* Progress Stats */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="text-muted-foreground">Progress</span>
+                                    <span className="font-semibold">
+                                      {solvedProblems}/{totalProblems} solved ({progressPercent}%)
+                                    </span>
+                                  </div>
+
+                                  {/* Progress Bar */}
+                                  <div className="w-full bg-muted/30 rounded-full h-2">
+                                    <div
+                                      className="bg-gradient-to-r from-brand to-purple-500 h-2 rounded-full transition-all"
+                                      style={{ width: `${progressPercent}%` }}
+                                    />
+                                  </div>
+
+                                  {/* Additional Stats */}
+                                  <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
+                                    <span>{totalProblems} problems</span>
+                                    <span>•</span>
+                                    <span>Created {new Date(list.created_at).toLocaleDateString()}</span>
+                                  </div>
+                                </div>
                               </div>
-                              {list.description && (
-                                <p className="text-sm text-muted-foreground mb-2">{list.description}</p>
-                              )}
-                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                <span>{list.problem_count || 0} problems</span>
-                                <span>•</span>
-                                <span>Created {new Date(list.created_at).toLocaleDateString()}</span>
+                              <div className={cn("w-12 h-12 rounded-lg bg-gradient-to-br", list.color, "flex items-center justify-center flex-shrink-0 shadow-lg")}>
+                                <Code className="w-6 h-6 text-white" />
                               </div>
-                            </div>
-                            <div className={cn("w-12 h-12 rounded-lg bg-gradient-to-br", list.color, "flex items-center justify-center flex-shrink-0")}>
-                              <Code className="w-6 h-6 text-white" />
                             </div>
                           </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 )}

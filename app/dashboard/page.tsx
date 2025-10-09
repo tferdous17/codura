@@ -1060,9 +1060,9 @@ export default function DashboardPage() {
                 ) : (
                   <>
                     {studyPlans.slice(0, 3).map((plan) => {
-                      // For now, show problem count as both total and completed (will be updated later with progress tracking)
+                      // Calculate progress stats
                       const total = plan.problem_count || 0;
-                      const completed = 0; // Will be calculated from user_problem_progress
+                      const completed = plan.solved_count || 0; // Will be real data from API
                       const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
                       return (
@@ -1070,7 +1070,7 @@ export default function DashboardPage() {
                           key={plan.id}
                           className="group/plan cursor-pointer"
                           onClick={() => {
-                            setSelectedStudyPlan({ id: plan.id, name: plan.name, color: plan.color });
+                            setSelectedStudyPlan({ id: plan.id, name: plan.name, color: plan.color, is_public: plan.is_public });
                             setShowStudyPlanDialog(true);
                           }}
                         >
@@ -1082,9 +1082,16 @@ export default function DashboardPage() {
                                   Default
                                 </Badge>
                               )}
+                              {plan.is_public && (
+                                <Badge variant="outline" className="text-xs h-5 bg-green-500/10 text-green-500 border-green-500/30">
+                                  Public
+                                </Badge>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm text-muted-foreground">{total} problems</span>
+                              <span className="text-xs text-muted-foreground">
+                                {completed}/{total} solved ({percentage}%)
+                              </span>
                             </div>
                           </div>
                           <div className="relative w-full bg-muted/30 rounded-full h-2.5 overflow-hidden group-hover/plan:h-3 transition-all">
