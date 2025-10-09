@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EventDialog } from "@/components/calendar/event-dialog";
 import { PlanDialog } from "@/components/study-plans/plan-dialog";
+import { StudyPlanDetailDialog } from "@/components/study-plans/study-plan-detail-dialog";
 
 // User data type
 interface UserData {
@@ -356,6 +357,8 @@ export default function DashboardPage() {
   const [eventToEdit, setEventToEdit] = useState<any>(null);
   const [activityChartData, setActivityChartData] = useState<any[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('1M');
+  const [selectedStudyPlan, setSelectedStudyPlan] = useState<{ id: string; name: string; color: string } | null>(null);
+  const [showStudyPlanDialog, setShowStudyPlanDialog] = useState(false);
 
   // Fetch user data from Supabase
   useEffect(() => {
@@ -1065,31 +1068,33 @@ export default function DashboardPage() {
                       return (
                         <div
                           key={plan.id}
-                          className="group/plan"
+                          className="group/plan cursor-pointer"
+                          onClick={() => {
+                            setSelectedStudyPlan({ id: plan.id, name: plan.name, color: plan.color });
+                            setShowStudyPlanDialog(true);
+                          }}
                         >
-                          <Link href={`/study-plans/${plan.id}`} className="block">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium hover:text-brand transition-colors">{plan.name}</span>
-                                {plan.is_default && (
-                                  <Badge variant="outline" className="text-xs h-5 border-brand/30">
-                                    Default
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">{total} problems</span>
-                              </div>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium hover:text-brand transition-colors">{plan.name}</span>
+                              {plan.is_default && (
+                                <Badge variant="outline" className="text-xs h-5 border-brand/30">
+                                  Default
+                                </Badge>
+                              )}
                             </div>
-                            <div className="relative w-full bg-muted/30 rounded-full h-2.5 overflow-hidden group-hover/plan:h-3 transition-all">
-                              <div
-                                className={`bg-gradient-to-r ${plan.color} h-full rounded-full transition-all duration-500 relative`}
-                                style={{ width: `${percentage}%` }}
-                              >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                              </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">{total} problems</span>
                             </div>
-                          </Link>
+                          </div>
+                          <div className="relative w-full bg-muted/30 rounded-full h-2.5 overflow-hidden group-hover/plan:h-3 transition-all">
+                            <div
+                              className={`bg-gradient-to-r ${plan.color} h-full rounded-full transition-all duration-500 relative`}
+                              style={{ width: `${percentage}%` }}
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                            </div>
+                          </div>
                         </div>
                       );
                     })}
@@ -1129,6 +1134,17 @@ export default function DashboardPage() {
               onEventCreated={fetchUpcomingEvents}
               existingEvent={eventToEdit}
             />
+
+            {selectedStudyPlan && (
+              <StudyPlanDetailDialog
+                open={showStudyPlanDialog}
+                onOpenChange={setShowStudyPlanDialog}
+                listId={selectedStudyPlan.id}
+                listName={selectedStudyPlan.name}
+                listColor={selectedStudyPlan.color}
+                onListUpdated={fetchStudyPlans}
+              />
+            )}
           </div>
         </div>
       </main>
