@@ -107,7 +107,7 @@ export default function ProblemPage() {
         "name": "Python (3.11.2)",
         "value": "python"
     })
-    const [usersCode, setUsersCode] = useState('print(\'Hello, Codura!\')')
+    const [usersCode, setUsersCode] = useState<string | undefined>('# Write your code below')
 
     // State for AI Chatbot that maintains chat messages and input
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai', content: string }>>([])
@@ -186,6 +186,12 @@ export default function ProblemPage() {
             monaco.editor.setTheme('caffeine-dark')
         }
     }, [monaco])
+
+    const handleCodeSubmission = () => {
+        const data = {
+            // placeholder
+        }
+    }
 
     // Temporary function to simulate AI response
     const handleSendMessage = () => {
@@ -431,9 +437,9 @@ export default function ProblemPage() {
                                     <div className="h-full border rounded-lg bg-background/50 overflow-hidden">
                                         <Editor
                                             height={'100%'}
-                                            language={selectedLanguage}
+                                            defaultLanguage={userLang.value}
                                             value={getStarterCode()}
-                                            theme="caffeine-dark"
+                                            theme="vs-dark"
                                             options={{
                                                 fontSize: 14,
                                                 fontFamily: 'var(--font-mono)',
@@ -442,10 +448,10 @@ export default function ProblemPage() {
                                                 lineNumbers: 'on',
                                                 renderLineHighlight: 'all',
                                                 cursorBlinking: 'smooth',
-                                                cursorSmoothCaretAnimation: 'on',
                                                 smoothScrolling: true,
                                                 padding: { top: 16, bottom: 16 },
                                             }}
+                                            onChange={(value: string | undefined) => setUsersCode(value) }
                                         />
                                     </div>
                                 </div>
@@ -483,7 +489,7 @@ export default function ProblemPage() {
                                             </div>
                                         ))}
 
-                                        <Button variant="default" className="w-full">
+                                        <Button variant="default" className="w-full" onClick={handleCodeSubmission}>
                                             Submit Solution
                                         </Button>
                                     </TabsContent>
