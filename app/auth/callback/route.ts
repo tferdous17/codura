@@ -34,45 +34,52 @@ export async function GET(request: Request) {
 
   console.log("User authenticated:", user.id, user.email);
 
-  // First, check if user row already exists
+  // Check if user row already exists in unified users table
   const { data: existingUser, error: checkError } = await supabase
     .from("users")
     .select("user_id, federal_school_code, questionnaire_completed")
     .eq("user_id", user.id)
-    .maybeSingle(); // Use maybeSingle() instead of single() to avoid error if not found
+    .maybeSingle();
 
   console.log("Existing user:", existingUser);
   console.log("Check error:", checkError);
 
   let profile = existingUser;
 
-  // If user doesn't exist, create them
+  // If user doesn't exist, create them in unified users table
+  // The trigger will automatically create user_stats entry
   if (!existingUser) {
     console.log("Creating new user row...");
-    
-    const fullName = 
-      user.user_metadata?.full_name || 
-      user.user_metadata?.name || 
+
+    const fullName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
       user.user_metadata?.user_name ||
-      user.email?.split('@')[0] || 
+      user.email?.split('@')[0] ||
       "User";
 
+    const email = user.email || "";
+
+    // Create entry in unified users table
+    // Trigger will automatically create user_stats
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
         user_id: user.id,
         full_name: fullName,
+        email: email,
         federal_school_code: null,
         questionnaire_completed: false,
+        avatar_url: user.user_metadata?.avatar_url || null,
       })
       .select("user_id, federal_school_code, questionnaire_completed")
       .single();
 
     if (insertError) {
       console.error("Insert error:", insertError);
-      // Continue anyway - they'll get redirected properly
     } else {
       console.log("New user created:", newUser);
+      console.log("User stats auto-created by trigger");
       profile = newUser;
     }
   }

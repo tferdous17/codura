@@ -60,6 +60,7 @@ export async function middleware(req: NextRequest) {
       const onOnboardingPage   = pathname === "/onboarding";
       const onDashboardPage    = pathname === "/dashboard";
       const onProblemPage      = pathname === "/problem-page";
+      const onProfilePage      = pathname === "/profile";
       const onSignupPage       = pathname === "/signup"; // ← ADD THIS
       const onLoginPage        = pathname === "/login";  // ← ADD THIS
       const onAuth             = isAuthRoute || pathname === "/logout";
@@ -85,7 +86,20 @@ export async function middleware(req: NextRequest) {
       }
 
       if (completed) {
-        if (!onDashboardPage && !onAuth) {
+        // Allow access to app pages for completed users
+        const allowedAppPages = [
+          "/dashboard",
+          "/profile", 
+          "/settings",
+          "/problems",
+          "/mock-interview",
+          "/study-pods",
+          "/leaderboards",
+          "/discuss"
+        ];
+        const isAllowedAppPage = allowedAppPages.some(page => pathname.startsWith(page));
+        
+        if (!isAllowedAppPage && !onAuth) {
           return NextResponse.redirect(new URL("/dashboard", origin));
         }
         return response;

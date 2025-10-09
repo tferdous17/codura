@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:nightwatch.laravel.com)"
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
