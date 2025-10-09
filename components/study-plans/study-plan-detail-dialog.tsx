@@ -70,13 +70,18 @@ export function StudyPlanDetailDialog({
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'added_at' | 'difficulty' | 'title'>('added_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(listName);
+  const [currentListName, setCurrentListName] = useState(listName);
 
   useEffect(() => {
     if (open && listId) {
       fetchProblems();
       setSelectedProblems(new Set());
+      setCurrentListName(listName);
+      setEditedName(listName);
     }
-  }, [open, listId]);
+  }, [open, listId, listName]);
 
   const fetchProblems = async () => {
     setLoading(true);
@@ -177,6 +182,64 @@ export function StudyPlanDetailDialog({
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
   };
 
+  const handleEditName = async () => {
+    if (!editedName.trim() || editedName === currentListName) {
+      setIsEditingName(false);
+      setEditedName(currentListName);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/study-plans', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: listId, name: editedName.trim() }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update list name');
+      }
+
+      // Update local state immediately
+      setCurrentListName(editedName.trim());
+      setIsEditingName(false);
+      onListUpdated();
+    } catch (error) {
+      console.error('Error updating list name:', error);
+      alert('Failed to update list name');
+      setEditedName(currentListName);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteList = async () => {
+    if (!confirm(`Are you sure you want to delete "${currentListName}"? This will remove all problems from this list.`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/study-plans?id=${listId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete list');
+      }
+
+      onListUpdated();
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error deleting list:', error);
+      alert(error.message || 'Failed to delete list');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1000px] max-h-[90vh] bg-gradient-to-br from-card/60 via-card/40 to-card/60 backdrop-blur-2xl border-2 border-border/20 p-0 overflow-hidden shadow-2xl">
@@ -195,9 +258,49 @@ export function StudyPlanDetailDialog({
                 <Target className="w-7 h-7 text-white relative z-10" />
               </div>
               <div className="flex-1 min-w-0">
-                <DialogTitle className="text-2xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                  {listName}
-                </DialogTitle>
+                {isEditingName ? (
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={editedName}
+                      onChange={(e) => setEditedName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleEditName();
+                        if (e.key === 'Escape') {
+                          setIsEditingName(false);
+                          setEditedName(currentListName);
+                        }
+                      }}
+                      className="text-2xl font-bold bg-background/60 backdrop-blur-sm border border-brand/40 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-brand/50 w-full max-w-md"
+                      autoFocus
+                      disabled={loading}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleEditName}
+                      disabled={loading || !editedName.trim()}
+                      className="bg-brand hover:bg-brand/90 shrink-0"
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setIsEditingName(false);
+                        setEditedName(currentListName);
+                      }}
+                      disabled={loading}
+                      className="shrink-0"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <DialogTitle className="text-2xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                    {currentListName}
+                  </DialogTitle>
+                )}
                 <DialogDescription className="flex items-center gap-3 text-base">
                   <span className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
@@ -216,6 +319,8 @@ export function StudyPlanDetailDialog({
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setIsEditingName(true)}
+                disabled={loading || isEditingName}
                 className="gap-2 hover:bg-brand/10 hover:border-brand/50 transition-all hover:scale-105 border-border/40 bg-background/30 backdrop-blur-sm"
               >
                 <Edit2 className="w-4 h-4" />
@@ -224,6 +329,8 @@ export function StudyPlanDetailDialog({
               <Button
                 variant="outline"
                 size="sm"
+                onClick={handleDeleteList}
+                disabled={loading}
                 className="gap-2 text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all hover:scale-105 border-border/40 bg-background/30 backdrop-blur-sm"
               >
                 <Trash2 className="w-4 h-4" />
