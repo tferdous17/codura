@@ -73,12 +73,32 @@ export async function signup(formData: FormData) {
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirm-password') as string
   const fullName = formData.get('full_name') as string
+  const username = formData.get('username') as string
 
-  console.log('Signup data:', { email, fullName, hasPassword: !!password })
+  console.log('Signup data:', { email, fullName, username, hasPassword: !!password })
 
   // Validate inputs
-  if (!email || !password || !fullName) {
+  if (!email || !password || !fullName || !username) {
     console.error('Missing required fields')
+    redirect('/error')
+  }
+
+  // Validate username format
+  const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/
+  if (!usernameRegex.test(username)) {
+    console.error('Invalid username format')
+    redirect('/error')
+  }
+
+  // Check if username is already taken
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('username')
+    .eq('username', username.toLowerCase())
+    .maybeSingle()
+
+  if (existingUser) {
+    console.error('Username already taken')
     redirect('/error')
   }
 
@@ -98,6 +118,7 @@ export async function signup(formData: FormData) {
     options: {
       data: {
         full_name: fullName,
+        username: username.toLowerCase(),
       }
     }
   }
@@ -123,15 +144,15 @@ export async function signup(formData: FormData) {
 
       if (!signInError && signInData.user) {
         console.log('User exists in auth.users, creating profile manually...')
-        
-        // Create the profile manually
+
+        // Create the profile manually in unified users table
         const { error: profileError } = await supabase
           .from('users')
           .upsert({
             user_id: signInData.user.id,
             full_name: fullName,
-            federal_school_code: null,
-            questionnaire_completed: false,
+            username: username.toLowerCase(),
+            email: email,
           }, {
             onConflict: 'user_id',
             ignoreDuplicates: false
@@ -152,11 +173,11 @@ export async function signup(formData: FormData) {
 
   console.log('Signup successful:', signUpData.user?.id)
 
-  // Verify the profile was created by the trigger
+  // Verify the profile was created by the callback
   if (signUpData.user) {
-    // Wait a moment for the trigger to complete
+    // Wait a moment for the callback to complete
     await new Promise(resolve => setTimeout(resolve, 300))
-    
+
     const { data: profile, error: profileCheckError } = await supabase
       .from('users')
       .select('user_id')
@@ -170,14 +191,14 @@ export async function signup(formData: FormData) {
     // If profile doesn't exist, create it manually
     if (!profile) {
       console.log('Profile not found after signup, creating manually...')
-      
+
       const { error: profileError } = await supabase
         .from('users')
         .insert({
           user_id: signUpData.user.id,
           full_name: fullName,
-          federal_school_code: null,
-          questionnaire_completed: false,
+          username: username.toLowerCase(),
+          email: email,
         })
 
       if (profileError && profileError.code !== '23505') {

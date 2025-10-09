@@ -82,6 +82,22 @@ export function SignUpForm({
                   />
                 </div>
 
+                {/* Username Field */}
+                <div className="grid gap-3">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    name="username"
+                    type="text"
+                    placeholder="johndoe"
+                    pattern="[a-zA-Z0-9_-]{3,20}"
+                    title="Username must be 3-20 characters and can only contain letters, numbers, underscores, and hyphens"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    3-20 characters, letters, numbers, - and _ only
+                  </p>
+                </div>
+
                 {/* Email Field */}
                 <div className="grid gap-3">
                   <Label htmlFor="email">Email</Label>
