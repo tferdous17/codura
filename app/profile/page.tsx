@@ -31,6 +31,7 @@ import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { UserProfile, UserStats, Submission } from "@/types/database";
 import RecentSubmissions from "@/components/RecentSubmissions";
 import ActivityCalendar from "react-activity-calendar";
+import { StudyPlanDetailDialog } from "@/components/study-plans/study-plan-detail-dialog";
 
 interface Achievement {
   achievement_id: string;
@@ -121,6 +122,8 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'submissions' | 'lists'>('submissions');
   const [userLists, setUserLists] = useState<any[]>([]);
+  const [selectedList, setSelectedList] = useState<any | null>(null);
+  const [showListDialog, setShowListDialog] = useState(false);
 
   useEffect(() => {
     const evaluateScrollPosition = () => {
@@ -545,7 +548,11 @@ export default function ProfilePage() {
                       userLists.map((list) => (
                         <div
                           key={list.id}
-                          className="p-4 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/30 transition-all"
+                          onClick={() => {
+                            setSelectedList(list);
+                            setShowListDialog(true);
+                          }}
+                          className="p-4 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/30 transition-all cursor-pointer hover:border-brand/30"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
@@ -647,6 +654,19 @@ export default function ProfilePage() {
           </div>
         </div>
       </main>
+
+      {/* Study Plan Detail Dialog */}
+      {selectedList && (
+        <StudyPlanDetailDialog
+          open={showListDialog}
+          onOpenChange={setShowListDialog}
+          listId={selectedList.id}
+          listName={selectedList.name}
+          listColor={selectedList.color}
+          isPublic={selectedList.is_public}
+          onListUpdated={fetchUserLists}
+        />
+      )}
     </div>
   );
 }
