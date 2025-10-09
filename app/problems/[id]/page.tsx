@@ -24,6 +24,7 @@ import { Play, Send, RotateCcw, Loader2 } from 'lucide-react'
 import Editor, { useMonaco } from '@monaco-editor/react'
 import { createClient } from '@/utils/supabase/client'
 import { useParams, useRouter } from 'next/navigation'
+import { LANGUAGES } from '@/utils/languages'
 
 // Add custom styles for tab scrolling
 const tabScrollStyles = `
@@ -101,7 +102,12 @@ export default function ProblemPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-
+    const [userLang, setUserLang] = useState({
+        "id": 92,
+        "name": "Python (3.11.2)",
+        "value": "python"
+    })
+    const [usersCode, setUsersCode] = useState('print(\'Hello, Codura!\')')
 
     // State for AI Chatbot that maintains chat messages and input
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai', content: string }>>([])
@@ -223,7 +229,7 @@ export default function ProblemPage() {
         if (problem?.starter_code && problem.starter_code[selectedLanguage]) {
             return problem.starter_code[selectedLanguage]
         }
-        return '# Write your code here'
+        return usersCode
     }
 
 
@@ -394,16 +400,21 @@ export default function ProblemPage() {
                             <div className="h-full flex flex-col">
                                 {/* Top Section - Language Selector and Action Buttons */}
                                 <div className="border-b p-2 flex items-center justify-between">
-                                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                                    <Select value={userLang.value} onValueChange={(value) => {
+                                        const selectedLang = LANGUAGES.find(lang => lang.value == value);
+                                        if (selectedLang) {
+                                            setUserLang(selectedLang)
+                                        }
+                                    }}>
                                         <SelectTrigger className="w-[180px]">
                                             <SelectValue placeholder="Select Language" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="python">Python</SelectItem>
-                                            <SelectItem value="java">Java</SelectItem>
-                                            <SelectItem value="cpp">C++</SelectItem>
-                                            <SelectItem value="javascript">JavaScript</SelectItem>
-                                            <SelectItem value="typescript">TypeScript</SelectItem>
+                                            {LANGUAGES.map((lang) => {
+                                                return <SelectItem key={lang.id} value={lang.value}>
+                                                    {lang.name}
+                                                </SelectItem>
+                                            })}
                                         </SelectContent>
                                     </Select>
 
