@@ -148,6 +148,17 @@
     }
   }
 
+  @keyframes gradient-x {
+    0%, 100% {
+      background-size: 200% 200%;
+      background-position: left center;
+    }
+    50% {
+      background-size: 200% 200%;
+      background-position: right center;
+    }
+  }
+
   @keyframes pulse-slow {
     0%, 100% {
       opacity: 0.6;
@@ -168,6 +179,7 @@
 
   --animate-pulse-slow: pulse-slow 6s ease-in-out infinite;
   --animate-float-slow: float-slow 8s ease-in-out infinite;
+  --animate-gradient-x: gradient-x 8s ease infinite;
 }
 
 :root {

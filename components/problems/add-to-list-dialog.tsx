@@ -13,7 +13,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Check, Plus, Bookmark, X } from "lucide-react";
+import dynamic from 'next/dynamic';
+
+// @ts-ignore
+const Check: any = dynamic(() => import('lucide-react').then(mod => mod.Check), { ssr: false });
+// @ts-ignore
+const Plus: any = dynamic(() => import('lucide-react').then(mod => mod.Plus), { ssr: false });
+// @ts-ignore
+const Bookmark: any = dynamic(() => import('lucide-react').then(mod => mod.Bookmark), { ssr: false });
+// @ts-ignore
+const Trash2: any = dynamic(() => import('lucide-react').then(mod => mod.Trash2), { ssr: false });
 
 interface AddToListDialogProps {
   open: boolean;
@@ -73,8 +82,8 @@ export function AddToListDialog({ open, onOpenChange, problemId, problemTitle }:
       const data = await response.json();
 
       if (data.lists) {
-        const listIds = new Set(data.lists.map((l: any) => l.list_id));
-        const problemMap = new Map(data.lists.map((l: any) => [l.list_id, l.id]));
+        const listIds = new Set<string>(data.lists.map((l: any) => l.list_id));
+        const problemMap = new Map<string, string>(data.lists.map((l: any) => [l.list_id, l.id]));
         setSelectedLists(listIds);
         setListProblemIds(problemMap);
       }
@@ -225,17 +234,18 @@ export function AddToListDialog({ open, onOpenChange, problemId, problemTitle }:
           {defaultList && selectedLists.has(defaultList.id) && (
             <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/30">
               <div className="flex items-center gap-2">
-                <Check className="w-5 h-5 text-green-500" />
-                <span className="text-sm text-green-600">Saved to {defaultList.name}</span>
+                <Bookmark className="w-5 h-5 text-green-500" />
+                <span className="text-sm font-medium">Saved to {defaultList.name}</span>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 hover:bg-red-500/20"
+                className="h-7 w-7 hover:bg-red-500/20"
                 onClick={() => handleRemoveFromList(defaultList.id)}
                 disabled={loading}
+                title="Remove from list"
               >
-                <X className="h-4 w-4 text-red-500" />
+                <Trash2 className="h-4 w-4 text-red-500" />
               </Button>
             </div>
           )}
@@ -272,24 +282,23 @@ export function AddToListDialog({ open, onOpenChange, problemId, problemTitle }:
                   </div>
                   <div className="flex items-center gap-2">
                     {isSelected ? (
-                      <>
-                        <Check className="w-5 h-5 text-green-500" />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 hover:bg-red-500/20"
-                          onClick={() => handleRemoveFromList(list.id)}
-                          disabled={loading}
-                        >
-                          <X className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 hover:bg-red-500/20"
+                        onClick={() => handleRemoveFromList(list.id)}
+                        disabled={loading}
+                        title="Remove from list"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
                     ) : (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleAddToList(list.id)}
                         disabled={loading}
+                        title="Add to list"
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
