@@ -61,6 +61,8 @@ export default function ProblemsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [availableTopics, setAvailableTopics] = useState<Array<{ name: string; slug: string; count: number }>>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showAddToList, setShowAddToList] = useState(false);
@@ -78,7 +80,7 @@ export default function ProblemsPage() {
   useEffect(() => {
     fetchProblems();
     fetchStats();
-  }, [currentPage, selectedDifficulty, searchTerm]);
+  }, [currentPage, selectedDifficulty, searchTerm, selectedTopics]);
 
   const fetchProblems = async () => {
     setLoading(true);
@@ -94,6 +96,10 @@ export default function ProblemsPage() {
 
       if (searchTerm) {
         params.append('search', searchTerm);
+      }
+
+      if (selectedTopics.length > 0) {
+        params.append('tags', selectedTopics.join(','));
       }
 
       const response = await fetch(`/api/problems?${params}`);
@@ -118,6 +124,21 @@ export default function ProblemsPage() {
     }
   };
 
+  const fetchTopics = async () => {
+    try {
+      const response = await fetch('/api/problems/topics');
+      const data = await response.json();
+      setAvailableTopics(data);
+    } catch (error) {
+      console.error('Error fetching topics:', error);
+    }
+  };
+
+  // Fetch topics on initial load
+  useEffect(() => {
+    fetchTopics();
+  }, []);
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Easy':
@@ -129,6 +150,22 @@ export default function ProblemsPage() {
       default:
         return 'text-gray-500';
     }
+  };
+
+  const toggleTopic = (topicSlug: string) => {
+    setSelectedTopics(prev => {
+      if (prev.includes(topicSlug)) {
+        return prev.filter(slug => slug !== topicSlug);
+      } else {
+        return [...prev, topicSlug];
+      }
+    });
+    setCurrentPage(1);
+  };
+
+  const clearTopics = () => {
+    setSelectedTopics([]);
+    setCurrentPage(1);
   };
 
   return (
@@ -201,6 +238,7 @@ export default function ProblemsPage() {
               <Card className="bg-card/50 backdrop-blur border-border/40">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
+                    {/* @ts-ignore */}
                     <BarChart3 className="w-8 h-8 text-brand" />
                     <div>
                       <p className="text-2xl font-bold">{stats.total}</p>
@@ -258,68 +296,119 @@ export default function ProblemsPage() {
         {/* Filters */}
         <Card className="mb-6 border-border/40 bg-card/50 backdrop-blur">
           <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Search */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search problems..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-10 bg-background/50"
-                />
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Search */}
+                <div className="flex-1 relative">
+                  {/* @ts-ignore */}
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search problems..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-10 bg-background/50"
+                  />
+                </div>
+
+                {/* Difficulty Filter */}
+                <div className="flex gap-2">
+                  <Button
+                    variant={selectedDifficulty === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setSelectedDifficulty('all');
+                      setCurrentPage(1);
+                    }}
+                    className={selectedDifficulty === 'all' ? 'bg-brand' : ''}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    variant={selectedDifficulty === 'Easy' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setSelectedDifficulty('Easy');
+                      setCurrentPage(1);
+                    }}
+                    className={selectedDifficulty === 'Easy' ? 'bg-green-500 hover:bg-green-600' : ''}
+                  >
+                    Easy
+                  </Button>
+                  <Button
+                    variant={selectedDifficulty === 'Medium' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setSelectedDifficulty('Medium');
+                      setCurrentPage(1);
+                    }}
+                    className={selectedDifficulty === 'Medium' ? 'bg-yellow-500 hover:bg-yellow-600' : ''}
+                  >
+                    Medium
+                  </Button>
+                  <Button
+                    variant={selectedDifficulty === 'Hard' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setSelectedDifficulty('Hard');
+                      setCurrentPage(1);
+                    }}
+                    className={selectedDifficulty === 'Hard' ? 'bg-red-500 hover:bg-red-600' : ''}
+                  >
+                    Hard
+                  </Button>
+                </div>
               </div>
 
-              {/* Difficulty Filter */}
-              <div className="flex gap-2">
-                <Button
-                  variant={selectedDifficulty === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedDifficulty('all');
-                    setCurrentPage(1);
-                  }}
-                  className={selectedDifficulty === 'all' ? 'bg-brand' : ''}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={selectedDifficulty === 'Easy' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedDifficulty('Easy');
-                    setCurrentPage(1);
-                  }}
-                  className={selectedDifficulty === 'Easy' ? 'bg-green-500 hover:bg-green-600' : ''}
-                >
-                  Easy
-                </Button>
-                <Button
-                  variant={selectedDifficulty === 'Medium' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedDifficulty('Medium');
-                    setCurrentPage(1);
-                  }}
-                  className={selectedDifficulty === 'Medium' ? 'bg-yellow-500 hover:bg-yellow-600' : ''}
-                >
-                  Medium
-                </Button>
-                <Button
-                  variant={selectedDifficulty === 'Hard' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedDifficulty('Hard');
-                    setCurrentPage(1);
-                  }}
-                  className={selectedDifficulty === 'Hard' ? 'bg-red-500 hover:bg-red-600' : ''}
-                >
-                  Hard
-                </Button>
-              </div>
+              {/* Topic Filter */}
+              {availableTopics.length > 0 && (
+                <div className="border-t border-border/40 pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      {/* @ts-ignore */}
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">Topics</span>
+                      {selectedTopics.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {selectedTopics.length} selected
+                        </Badge>
+                      )}
+                    </div>
+                    {selectedTopics.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearTopics}
+                        className="text-xs h-7"
+                      >
+                        Clear all
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {availableTopics.map((topic) => {
+                      const isSelected = selectedTopics.includes(topic.slug);
+                      return (
+                        <Badge
+                          key={topic.slug}
+                          variant="outline"
+                          className={cn(
+                            "cursor-pointer transition-colors hover:bg-muted",
+                            isSelected
+                              ? "bg-brand text-white border-brand hover:bg-brand/90"
+                              : "border-border/40"
+                          )}
+                          onClick={() => toggleTopic(topic.slug)}
+                        >
+                          {topic.name} ({topic.count})
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -345,6 +434,7 @@ export default function ProblemsPage() {
                     <div className="p-4 flex items-center gap-4">
                       {/* Status Icon */}
                       <div className="flex-shrink-0">
+                        {/* @ts-ignore */}
                         <Circle className="w-4 h-4 text-muted-foreground" />
                       </div>
 
@@ -361,7 +451,10 @@ export default function ProblemsPage() {
                             {problem.title}
                           </h3>
                           {problem.is_premium && (
-                            <Lock className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                            <>
+                              {/* @ts-ignore */}
+                              <Lock className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                            </>
                           )}
                         </div>
                       </Link>
@@ -410,6 +503,7 @@ export default function ProblemsPage() {
                           setShowAddToList(true);
                         }}
                       >
+                        {/* @ts-ignore */}
                         <BookmarkPlus className="w-4 h-4" />
                       </Button>
                     </div>
