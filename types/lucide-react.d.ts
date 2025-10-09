@@ -46,4 +46,5 @@ declare module 'lucide-react' {
   export const Play: Icon;
   export const Send: Icon;
   export const RotateCcw: Icon;
+  export const Loader2: Icon;
 }

@@ -1,5 +1,16 @@
 'use client'
-
+/**
+ * This is the main problem page component that displays the problem description,
+ * code editor, test cases, and an AI chatbot for assistance.
+ * It uses a three-panel layout with resizable panels.
+ * 
+ * The left panel contains tabs for problem description, solution, discussion, community solutions, and submissions.
+ * The middle panel contains a code editor with language selection and test case management.
+ * The right panel contains an AI chatbot that can assist with problem understanding and coding help.
+ * 
+ * The component fetches problem data from Supabase based on the problem ID from the URL parameters.
+ * It also defines a custom Monaco theme to match the Caffeine theme used in the app.
+ */
 import React, { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
@@ -9,8 +20,10 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Play, Send, RotateCcw } from 'lucide-react'
-import Editor, { useMonaco } from '@monaco-editor/react';
+import { Play, Send, RotateCcw, Loader2 } from 'lucide-react'
+import Editor, { useMonaco } from '@monaco-editor/react'
+import { createClient } from '@/utils/supabase/client'
+import { useParams, useRouter } from 'next/navigation'
 
 // Add custom styles for tab scrolling
 const tabScrollStyles = `
@@ -51,13 +64,87 @@ const tabScrollStyles = `
   }
 `
 
+/**
+ * ProblemData interface defines the structure of the problem data fetched from Supabase.
+ * In other words, it's an object that contains all the relevant information about a coding problem,
+ * including its ID, title, difficulty, description, examples, constraints, topic tags, acceptance rate,
+ * and optional starter code in various programming languages.
+ */
+interface ProblemData {
+    id: number
+    leetcode_id: number
+    title: string
+    title_slug: string
+    difficulty: 'Easy' | 'Medium' | 'Hard'
+    description: string
+    examples: Array<{
+        input: string
+        output: string
+        explanation?: string
+    }>
+    constraints: string[]
+    topic_tags: Array<{ name: string; slug: string }>
+    acceptance_rate: number
+    starter_code?: {
+        [language: string]: string
+    }
+}
+
 export default function ProblemPage() {
+    const params = useParams()
+    const router = useRouter()
     const monaco = useMonaco()
+    const supabase = createClient()
+
+    // problem state will be used to store the fetched problem data from Supabase
+    const [problem, setProblem] = useState<ProblemData | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+
 
     // State for AI Chatbot that maintains chat messages and input
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai', content: string }>>([])
     const [chatInput, setChatInput] = useState('')
+    const [selectedLanguage, setSelectedLanguage] = useState('python')
 
+
+
+    // Fetch problem data from Supabase
+    useEffect(() => {
+        const fetchProblem = async () => {
+            try {
+                setLoading(true)
+
+                // fetch problem data from Supabase using the problem ID from URL params
+                const { data, error } = await supabase
+                    .from('problems')
+                    .select('*')
+                    .eq('id', params.id)
+                    .single()
+
+                if (error) throw error
+
+                if (!data) {
+                    setError('Problem not found')
+                    return
+                }
+
+                // After fetching the problem data, this line sets the problem state
+                setProblem(data as ProblemData)
+            } catch (err) {
+                console.error('Error fetching problem:', err)
+                setError('Failed to load problem')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        // Only fetch if params.id is available
+        if (params.id) {
+            fetchProblem()
+        }
+    }, [params.id])
 
     // Define custom Monaco theme matching Caffeine theme
     useEffect(() => {
@@ -94,19 +181,13 @@ export default function ProblemPage() {
         }
     }, [monaco])
 
-
-
-
-    
     // Temporary function to simulate AI response
     const handleSendMessage = () => {
         if (chatInput.trim()) {
-
             // Add user message to setChatMessages array
             setChatMessages([...chatMessages, { role: 'user', content: chatInput }])
             setChatInput('')
 
-            
             // Simulate AI response
             setTimeout(() => {
                 setChatMessages(prev => [...prev, { role: 'ai', content: 'I can help you solve this problem. What would you like to know?' }])
@@ -114,20 +195,72 @@ export default function ProblemPage() {
         }
     }
 
+    /**
+     * Get the background color for the problem difficulty level.
+     * @param difficulty - The difficulty level of the problem (Easy, Medium, Hard)
+     * @returns 
+     */
+    const getDifficultyColor = (difficulty: string) => {
+        switch (difficulty) {
+            case 'Easy':
+                return 'bg-green-500'
+            case 'Medium':
+                return 'bg-yellow-500'
+            case 'Hard':
+                return 'bg-red-500'
+            default:
+                return 'bg-gray-500'
+        }
+    }
 
 
+    /**
+     * Get the starter code for the selected programming language.
+     * @returns The getStarterCode function returns the starter code for the selected programming language.
+     * If no starter code is available for the selected language, it returns a default comment.
+     */
+    const getStarterCode = () => {
+        if (problem?.starter_code && problem.starter_code[selectedLanguage]) {
+            return problem.starter_code[selectedLanguage]
+        }
+        return '# Write your code here'
+    }
 
+
+    // Render loading, error, or main content based on state
+    if (loading) {
+        return (
+            <div className="h-screen w-full bg-background flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                    <p className="text-muted-foreground">Loading problem...</p>
+                </div>
+            </div>
+        )
+    }
+
+    // Render error message if there's an error or problem not found
+    if (error || !problem) {
+        return (
+            <div className="h-screen w-full bg-background flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <p className="text-xl text-destructive">{error || 'Problem not found'}</p>
+                    <Button onClick={() => router.push('/problems')}>Back to Problems</Button>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="caffeine-theme h-screen w-full bg-background">
             <style jsx global>{tabScrollStyles}</style>
             <ResizablePanelGroup direction="horizontal" className="h-full">
+                
                 {/* Left Panel - Problem Description with Tabs */}
                 <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
                     <div className="h-full flex flex-col">
                         <Tabs defaultValue="description" className="flex-1 flex flex-col">
                             <div className="border-b overflow-x-auto tab-scroll-container">
-
                                 {/* Tab Lists */}
                                 <TabsList className="inline-flex w-auto min-w-full justify-start h-12 px-2 bg-transparent">
                                     <TabsTrigger value="description" className="flex-shrink-0">Description</TabsTrigger>
@@ -136,67 +269,76 @@ export default function ProblemPage() {
                                     <TabsTrigger value="community" className="flex-shrink-0">Community</TabsTrigger>
                                     <TabsTrigger value="submissions" className="flex-shrink-0">Submissions</TabsTrigger>
                                 </TabsList>
-
                             </div>
 
                             <ScrollArea className="flex-1">
-
                                 {/* Description Tab */}
                                 <TabsContent value="description" className="p-4 mt-0">
                                     <div className="space-y-4">
                                         <div>
-                                            <h1 className="text-2xl font-bold mb-2">1. Two Sum</h1>
-                                            <Badge variant="default" className="bg-green-500">Easy</Badge>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <p className="text-sm text-muted-foreground">
-                                                Given an array of integers <code className="bg-muted px-1 rounded">nums</code> and an integer{' '}
-                                                <code className="bg-muted px-1 rounded">target</code>, return indices of the two numbers such that they add up to{' '}
-                                                <code className="bg-muted px-1 rounded">target</code>.
-                                            </p>
-                                            <p className="text-sm text-muted-foreground">
-                                                You may assume that each input would have exactly one solution, and you may not use the same element twice.
-                                            </p>
-                                            <p className="text-sm text-muted-foreground">
-                                                You can return the answer in any order.
-                                            </p>
-                                        </div>
-
-                                        {/* Example 1 Preview */}
-                                        <div className="space-y-2">
-                                            <h3 className="font-semibold">Example 1:</h3>
-                                            <div className="bg-muted p-3 rounded text-sm font-mono">
-                                                <p><strong>Input:</strong> nums = [2,7,11,15], target = 9</p>
-                                                <p><strong>Output:</strong> [0,1]</p>
-                                                <p><strong>Explanation:</strong> Because nums[0] + nums[1] == 9, we return [0, 1].</p>
+                                            <h1 className="text-2xl font-bold mb-2">
+                                                {problem.leetcode_id}. {problem.title}
+                                            </h1>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="default" className={getDifficultyColor(problem.difficulty)}>
+                                                    {problem.difficulty}
+                                                </Badge>
+                                                <span className="text-sm text-muted-foreground">
+                                                    Acceptance: {problem.acceptance_rate.toFixed(1)}%
+                                                </span>
                                             </div>
                                         </div>
 
-
-                                        {/* Example 2 Preview */}
-                                        <div className="space-y-2">
-                                            <h3 className="font-semibold">Example 2:</h3>
-                                            <div className="bg-muted p-3 rounded text-sm font-mono">
-                                                <p><strong>Input:</strong> nums = [3,2,4], target = 6</p>
-                                                <p><strong>Output:</strong> [1,2]</p>
+                                        {/* Topics */}
+                                        {problem.topic_tags && problem.topic_tags.length > 0 && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {problem.topic_tags.map((tag) => (
+                                                    <Badge key={tag.slug} variant="secondary" className="text-xs">
+                                                        {tag.name}
+                                                    </Badge>
+                                                ))}
                                             </div>
-                                        </div>
+                                        )}
 
-
-                                        {/* Constraints Preview */}
+                                        {/* Description */}
                                         <div className="space-y-2">
-                                            <h3 className="font-semibold">Constraints:</h3>
-                                            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                                <li>2 ≤ nums.length ≤ 10⁴</li>
-                                                <li>-10⁹ ≤ nums[i] ≤ 10⁹</li>
-                                                <li>-10⁹ ≤ target ≤ 10⁹</li>
-                                                <li>Only one valid answer exists.</li>
-                                            </ul>
+                                            <div
+                                                className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none"
+                                                dangerouslySetInnerHTML={{ __html: problem.description }}
+                                            />
                                         </div>
+
+                                        {/* Examples */}
+                                        {problem.examples && problem.examples.length > 0 && (
+                                            <div className="space-y-4">
+                                                {problem.examples.map((example, index) => (
+                                                    <div key={index} className="space-y-2">
+                                                        <h3 className="font-semibold">Example {index + 1}:</h3>
+                                                        <div className="bg-muted p-3 rounded text-sm font-mono space-y-1">
+                                                            <p><strong>Input:</strong> {example.input}</p>
+                                                            <p><strong>Output:</strong> {example.output}</p>
+                                                            {example.explanation && (
+                                                                <p><strong>Explanation:</strong> {example.explanation}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Constraints */}
+                                        {problem.constraints && problem.constraints.length > 0 && (
+                                            <div className="space-y-2">
+                                                <h3 className="font-semibold">Constraints:</h3>
+                                                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                                    {problem.constraints.map((constraint, index) => (
+                                                        <li key={index}>{constraint}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                     </div>
                                 </TabsContent>
-
 
                                 {/* Solution Tab */}
                                 <TabsContent value="solution" className="p-4 mt-0">
@@ -208,7 +350,6 @@ export default function ProblemPage() {
                                     </div>
                                 </TabsContent>
 
-
                                 {/* Community Discussions Tab */}
                                 <TabsContent value="discussion" className="p-4 mt-0">
                                     <div className="space-y-4">
@@ -219,7 +360,6 @@ export default function ProblemPage() {
                                     </div>
                                 </TabsContent>
 
-
                                 {/* Community Solutions Tab */}
                                 <TabsContent value="community" className="p-4 mt-0">
                                     <div className="space-y-4">
@@ -229,7 +369,6 @@ export default function ProblemPage() {
                                         </p>
                                     </div>
                                 </TabsContent>
-
 
                                 {/* User's Submissions Tab*/}
                                 <TabsContent value="submissions" className="p-4 mt-0">
@@ -255,7 +394,7 @@ export default function ProblemPage() {
                             <div className="h-full flex flex-col">
                                 {/* Top Section - Language Selector and Action Buttons */}
                                 <div className="border-b p-2 flex items-center justify-between">
-                                    <Select defaultValue="python">
+                                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
                                         <SelectTrigger className="w-[180px]">
                                             <SelectValue placeholder="Select Language" />
                                         </SelectTrigger>
@@ -281,8 +420,8 @@ export default function ProblemPage() {
                                     <div className="h-full border rounded-lg bg-background/50 overflow-hidden">
                                         <Editor
                                             height={'100%'}
-                                            defaultLanguage='python'
-                                            defaultValue={'# Write your code here'}
+                                            language={selectedLanguage}
+                                            value={getStarterCode()}
                                             theme="caffeine-dark"
                                             options={{
                                                 fontSize: 14,
@@ -316,19 +455,22 @@ export default function ProblemPage() {
                                     </div>
 
                                     <TabsContent value="testcases" className="p-4 space-y-3 flex-1 overflow-auto">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm font-medium">Test Case 1</span>
-                                                <Button size="sm" variant="default">
-                                                    <Play className="w-4 h-4 mr-2" />
-                                                    Run Code
-                                                </Button>
+                                        {problem.examples && problem.examples.map((example, index) => (
+                                            <div key={index} className="space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm font-medium">Test Case {index + 1}</span>
+                                                    {index === 0 && (
+                                                        <Button size="sm" variant="default">
+                                                            <Play className="w-4 h-4 mr-2" />
+                                                            Run Code
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                                <div className="bg-muted p-3 rounded text-sm font-mono">
+                                                    <p>{example.input}</p>
+                                                </div>
                                             </div>
-                                            <div className="bg-muted p-3 rounded text-sm font-mono">
-                                                <p>nums = [2,7,11,15]</p>
-                                                <p>target = 9</p>
-                                            </div>
-                                        </div>
+                                        ))}
 
                                         <Button variant="default" className="w-full">
                                             Submit Solution
@@ -351,12 +493,10 @@ export default function ProblemPage() {
                 {/* Right Panel - AI Chatbot */}
                 <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
                     <Card className="h-full rounded-none border-0 flex flex-col">
-
                         {/* Codura A.I Card Header */}
                         <CardHeader className="border-b">
                             <CardTitle className="text-lg">Codura A.I</CardTitle>
                         </CardHeader>
-
 
                         {/* A.I Chat Bot Container */}
                         <CardContent className="flex-1 p-0 flex flex-col">
@@ -414,7 +554,6 @@ export default function ProblemPage() {
                                     </Button>
                                 </div>
                             </div>
-                            
                         </CardContent>
                     </Card>
                 </ResizablePanel>
