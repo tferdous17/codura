@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EventDialog } from "@/components/calendar/event-dialog";
 import { PlanDialog } from "@/components/study-plans/plan-dialog";
+import { StudyPlanDetailDialog } from "@/components/study-plans/study-plan-detail-dialog";
 
 // User data type
 interface UserData {
@@ -58,18 +59,8 @@ interface UserData {
   easy: number;
   medium: number;
   hard: number;
+  createdAt?: string;
 }
-
-// Chart data for activity
-const activityChartData = [
-  { month: "Apr", problems: 12 },
-  { month: "May", problems: 25 },
-  { month: "Jun", problems: 18 },
-  { month: "Jul", problems: 32 },
-  { month: "Aug", problems: 28 },
-  { month: "Sep", problems: 35 },
-  { month: "Oct", problems: 47 },
-];
 
 const chartConfig = {
   problems: {
@@ -221,7 +212,7 @@ function Calendar({ streak }: { streak: number }) {
           <div>
             <CardTitle className="text-lg font-semibold">Activity Calendar</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              <span className="text-brand font-semibold">{streak} day</span> streak 🔥
+              <span className="text-brand font-semibold">Current Streak: {streak} {streak === 1 ? 'day' : 'days'}</span> 🔥
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -364,6 +355,10 @@ export default function DashboardPage() {
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
   const [showUpcomingEventDialog, setShowUpcomingEventDialog] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<any>(null);
+  const [activityChartData, setActivityChartData] = useState<any[]>([]);
+  const [selectedTimeframe, setSelectedTimeframe] = useState<string>('1M');
+  const [selectedStudyPlan, setSelectedStudyPlan] = useState<{ id: string; name: string; color: string } | null>(null);
+  const [showStudyPlanDialog, setShowStudyPlanDialog] = useState(false);
 
   // Fetch user data from Supabase
   useEffect(() => {
@@ -390,10 +385,11 @@ export default function DashboardPage() {
           email: data.user?.email || '',
           avatar: data.profile?.avatar_url || initials,
           streak: data.stats?.current_streak || 0,
-          problemsSolved: data.stats?.total_problems_solved || 0,
+          problemsSolved: data.stats?.total_solved || 0,
           easy: data.stats?.easy_solved || 0,
           medium: data.stats?.medium_solved || 0,
           hard: data.stats?.hard_solved || 0,
+          createdAt: data.user?.created_at || null,
         });
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -407,7 +403,13 @@ export default function DashboardPage() {
     fetchRecentActivity();
     fetchUpcomingEvents();
     fetchDailyChallenge();
+    fetchActivityChart();
   }, []);
+
+  // Fetch activity chart when timeframe changes
+  useEffect(() => {
+    fetchActivityChart();
+  }, [selectedTimeframe]);
 
   // Fetch study plans
   const fetchStudyPlans = async () => {
@@ -450,6 +452,17 @@ export default function DashboardPage() {
       setDailyChallenge(data.challenge || null);
     } catch (error) {
       console.error('Error fetching daily challenge:', error);
+    }
+  };
+
+  // Fetch activity chart
+  const fetchActivityChart = async () => {
+    try {
+      const response = await fetch(`/api/dashboard/activity-chart?timeframe=${selectedTimeframe}`);
+      const data = await response.json();
+      setActivityChartData(data.data || []);
+    } catch (error) {
+      console.error('Error fetching activity chart:', error);
     }
   };
 
@@ -657,13 +670,28 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-24 pb-16">
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
-            Welcome to Codura
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Continue your interview preparation journey
-          </p>
+        <div className="mb-12 relative">
+          {/* Decorative gradient orb behind text */}
+          <div className="absolute -top-8 -left-8 w-64 h-64 bg-gradient-to-br from-brand/10 via-purple-500/5 to-transparent rounded-full blur-[120px] opacity-40 animate-pulse-slow pointer-events-none" />
+
+          <div className="relative">
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 relative">
+              <span className="bg-gradient-to-r from-foreground via-brand to-purple-400 bg-clip-text text-transparent animate-gradient-x">
+                {(() => {
+                  const firstName = user.name.split(' ')[0];
+                  const isNewUser = user.createdAt ?
+                    new Date().getTime() - new Date(user.createdAt).getTime() < 24 * 60 * 60 * 1000 :
+                    false;
+                  return isNewUser
+                    ? `Welcome to Codura, ${firstName}`
+                    : `Welcome back, ${firstName}`;
+                })()}
+              </span>
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Continue your interview preparation journey
+            </p>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
@@ -750,8 +778,8 @@ export default function DashboardPage() {
 
               <div className="pt-4 border-t border-border/20">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Streak</span>
-                  <span className="text-xl font-bold text-brand">{user.streak} days 🔥</span>
+                  <span className="text-sm text-muted-foreground">Current Streak</span>
+                  <span className="text-xl font-bold text-brand">{user.streak} {user.streak === 1 ? 'day' : 'days'} 🔥</span>
                 </div>
               </div>
             </CardContent>
@@ -767,32 +795,57 @@ export default function DashboardPage() {
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
 
               <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-cyan-500" />
-                  Problem Solving Activity
-                </CardTitle>
-                <CardDescription>
-                  Your progress over the last 7 months
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-cyan-500" />
+                      Problem Solving Activity
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      Track your coding progress
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-1">
+                    {['1D', '1W', '1M', '3M', 'YTD', 'ALL'].map((timeframe) => (
+                      <Button
+                        key={timeframe}
+                        variant={selectedTimeframe === timeframe ? 'default' : 'ghost'}
+                        size="sm"
+                        className={cn(
+                          "h-7 px-2 text-xs",
+                          selectedTimeframe === timeframe
+                            ? "bg-brand text-white hover:bg-brand/90"
+                            : "hover:bg-muted"
+                        )}
+                        onClick={() => setSelectedTimeframe(timeframe)}
+                      >
+                        {timeframe}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </CardHeader>
 
-              <CardContent>
-                <ChartContainer config={chartConfig}>
+              <CardContent className="h-[300px]">
+                <ChartContainer config={chartConfig} className="h-full w-full">
                   <AreaChart
                     accessibilityLayer
                     data={activityChartData}
                     margin={{
-                      left: 12,
-                      right: 12,
+                      left: 0,
+                      right: 0,
+                      top: 10,
+                      bottom: 0,
                     }}
                   >
                     <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
                     <XAxis
-                      dataKey="month"
+                      dataKey="label"
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
-                      tick={{ fill: 'var(--muted-foreground)' }}
+                      tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                      interval="preserveStartEnd"
                     />
                     <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
                     <defs>
@@ -811,7 +864,7 @@ export default function DashboardPage() {
                     </defs>
                     <Area
                       dataKey="problems"
-                      type="natural"
+                      type="monotone"
                       fill="url(#fillProblems)"
                       fillOpacity={0.4}
                       stroke="var(--brand)"
@@ -820,19 +873,6 @@ export default function DashboardPage() {
                   </AreaChart>
                 </ChartContainer>
               </CardContent>
-
-              <CardFooter>
-                <div className="flex w-full items-start gap-2 text-sm">
-                  <div className="grid gap-2">
-                    <div className="flex items-center gap-2 leading-none font-medium text-brand">
-                      Trending up by 34% this month <TrendingUp className="h-4 w-4" />
-                    </div>
-                    <div className="text-muted-foreground flex items-center gap-2 leading-none">
-                      April - October 2025
-                    </div>
-                  </div>
-                </div>
-              </CardFooter>
             </Card>
 
             {/* Recent Activity */}
@@ -1028,31 +1068,33 @@ export default function DashboardPage() {
                       return (
                         <div
                           key={plan.id}
-                          className="group/plan"
+                          className="group/plan cursor-pointer"
+                          onClick={() => {
+                            setSelectedStudyPlan({ id: plan.id, name: plan.name, color: plan.color });
+                            setShowStudyPlanDialog(true);
+                          }}
                         >
-                          <Link href={`/study-plans/${plan.id}`} className="block">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium hover:text-brand transition-colors">{plan.name}</span>
-                                {plan.is_default && (
-                                  <Badge variant="outline" className="text-xs h-5 border-brand/30">
-                                    Default
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">{total} problems</span>
-                              </div>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium hover:text-brand transition-colors">{plan.name}</span>
+                              {plan.is_default && (
+                                <Badge variant="outline" className="text-xs h-5 border-brand/30">
+                                  Default
+                                </Badge>
+                              )}
                             </div>
-                            <div className="relative w-full bg-muted/30 rounded-full h-2.5 overflow-hidden group-hover/plan:h-3 transition-all">
-                              <div
-                                className={`bg-gradient-to-r ${plan.color} h-full rounded-full transition-all duration-500 relative`}
-                                style={{ width: `${percentage}%` }}
-                              >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                              </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">{total} problems</span>
                             </div>
-                          </Link>
+                          </div>
+                          <div className="relative w-full bg-muted/30 rounded-full h-2.5 overflow-hidden group-hover/plan:h-3 transition-all">
+                            <div
+                              className={`bg-gradient-to-r ${plan.color} h-full rounded-full transition-all duration-500 relative`}
+                              style={{ width: `${percentage}%` }}
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                            </div>
+                          </div>
                         </div>
                       );
                     })}
@@ -1092,6 +1134,17 @@ export default function DashboardPage() {
               onEventCreated={fetchUpcomingEvents}
               existingEvent={eventToEdit}
             />
+
+            {selectedStudyPlan && (
+              <StudyPlanDetailDialog
+                open={showStudyPlanDialog}
+                onOpenChange={setShowStudyPlanDialog}
+                listId={selectedStudyPlan.id}
+                listName={selectedStudyPlan.name}
+                listColor={selectedStudyPlan.color}
+                onListUpdated={fetchStudyPlans}
+              />
+            )}
           </div>
         </div>
       </main>
