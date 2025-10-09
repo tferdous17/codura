@@ -25,6 +25,7 @@ import Editor, { useMonaco } from '@monaco-editor/react'
 import { createClient } from '@/utils/supabase/client'
 import { useParams, useRouter } from 'next/navigation'
 import { LANGUAGES } from '@/utils/languages'
+import { CloudUploadIcon } from 'lucide-react'
 
 // Add custom styles for tab scrolling
 const tabScrollStyles = `
@@ -235,7 +236,7 @@ export default function ProblemPage() {
         if (problem?.starter_code && problem.starter_code[selectedLanguage]) {
             return problem.starter_code[selectedLanguage]
         }
-        return usersCode
+        return userLang.value === 'python' ? '# Write your code here' : '// Write your code here';
     }
 
 
@@ -404,54 +405,96 @@ export default function ProblemPage() {
                         {/* Code Editor Section */}
                         <ResizablePanel defaultSize={65} minSize={30}>
                             <div className="h-full flex flex-col">
-                                {/* Top Section - Language Selector and Action Buttons */}
-                                <div className="border-b p-2 flex items-center justify-between">
-                                    <Select value={userLang.value} onValueChange={(value) => {
-                                        const selectedLang = LANGUAGES.find(lang => lang.value == value);
-                                        if (selectedLang) {
-                                            setUserLang(selectedLang)
-                                        }
-                                    }}>
-                                        <SelectTrigger className="w-[180px]">
-                                            <SelectValue placeholder="Select Language" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {LANGUAGES.map((lang) => {
-                                                return <SelectItem key={lang.id} value={lang.value}>
-                                                    {lang.name}
-                                                </SelectItem>
-                                            })}
-                                        </SelectContent>
-                                    </Select>
+                                <div className="flex justify-between">
+                                    {/* Top Section - Language Selector and Action Buttons */}
+                                    <div className="border-b p-2 flex items-center gap-3">
+                                        <Select value={userLang.value} onValueChange={(value) => {
+                                            const selectedLang = LANGUAGES.find(lang => lang.value == value);
+                                            if (selectedLang) {
+                                                setUserLang(selectedLang)
+                                            }
+                                        }}>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Select Language" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {LANGUAGES.map((lang) => {
+                                                    return <SelectItem key={lang.id} value={lang.value}>
+                                                        {lang.name}
+                                                    </SelectItem>
+                                                })}
+                                            </SelectContent>
+                                        </Select>
 
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm">
+                                        <Button size="sm" className="cursor-pointer font-weight-300 text-sm text-zinc-300 bg-zinc-700 hover:bg-zinc-600">
+                                            <Play className="w-4 h-4" />
+                                            Run
+                                        </Button>
+                                        <Button size="sm" className="cursor-pointer font-weight-300 text-sm bg-green-500 hover:bg-green-400" onClick={handleCodeSubmission}>
+                                            <CloudUploadIcon className="w-5 h-5" />
+                                            Submit
+                                        </Button>
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <Button variant="outline" size="sm" className='cursor-pointer h-[70%]'>
                                             <RotateCcw className="w-4 h-4 mr-2" />
                                             Reset
                                         </Button>
                                     </div>
                                 </div>
 
+
                                 {/* Code Editor Area */}
                                 <div className="flex-1 bg-muted/30 p-4">
                                     <div className="h-full border rounded-lg bg-background/50 overflow-hidden">
                                         <Editor
-                                            height={'100%'}
-                                            defaultLanguage={userLang.value}
-                                            value={getStarterCode()}
-                                            theme="vs-dark"
-                                            options={{
-                                                fontSize: 14,
-                                                fontFamily: 'var(--font-mono)',
-                                                minimap: { enabled: false },
-                                                scrollBeyondLastLine: false,
-                                                lineNumbers: 'on',
-                                                renderLineHighlight: 'all',
-                                                cursorBlinking: 'smooth',
-                                                smoothScrolling: true,
-                                                padding: { top: 16, bottom: 16 },
-                                            }}
-                                            onChange={(value: string | undefined) => setUsersCode(value) }
+                                        height={'100%'}
+                                        language={userLang.value}
+                                        value={getStarterCode()}
+                                        theme="vs-dark"
+                                        options={{
+                                            fontSize: 14,
+                                            fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace",
+                                            minimap: { enabled: false },
+                                            scrollBeyondLastLine: false,
+                                            lineNumbers: 'on',
+                                            renderLineHighlight: 'line',
+                                            cursorBlinking: 'blink',
+                                            cursorStyle: 'line',
+                                            smoothScrolling: true,
+                                            padding: { top: 12, bottom: 12 },
+                                            automaticLayout: true,
+                                            wordWrap: 'off',
+                                            lineDecorationsWidth: 8,
+                                            lineNumbersMinChars: 3,
+                                            glyphMargin: false,
+                                            folding: true,
+                                            renderWhitespace: 'none',
+                                            scrollbar: {
+                                                vertical: 'visible',
+                                                horizontal: 'visible',
+                                                useShadows: false,
+                                                verticalScrollbarSize: 10,
+                                                horizontalScrollbarSize: 10,
+                                            },
+                                            suggest: {
+                                                showKeywords: true,
+                                                showSnippets: true,
+                                            },
+                                            quickSuggestions: {
+                                                other: true,
+                                                comments: false,
+                                                strings: false,
+                                            },
+                                            tabSize: 4,
+                                            insertSpaces: true,
+                                            detectIndentation: false,
+                                            bracketPairColorization: {
+                                                enabled: true,
+                                            },
+                                        }}
+                                        onChange={(value: string | undefined) => setUsersCode(value || '')}
                                         />
                                     </div>
                                 </div>
@@ -488,10 +531,6 @@ export default function ProblemPage() {
                                                 </div>
                                             </div>
                                         ))}
-
-                                        <Button variant="default" className="w-full" onClick={handleCodeSubmission}>
-                                            Submit Solution
-                                        </Button>
                                     </TabsContent>
 
                                     <TabsContent value="result" className="p-4 flex-1 overflow-auto">
