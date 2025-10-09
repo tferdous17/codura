@@ -29,6 +29,10 @@ const ArrowUpDown: any = dynamic(() => import('lucide-react').then(mod => mod.Ar
 const ExternalLink: any = dynamic(() => import('lucide-react').then(mod => mod.ExternalLink), { ssr: false });
 // @ts-ignore
 const Sparkles: any = dynamic(() => import('lucide-react').then(mod => mod.Sparkles), { ssr: false });
+// @ts-ignore
+const Globe: any = dynamic(() => import('lucide-react').then(mod => mod.Globe), { ssr: false });
+// @ts-ignore
+const Lock: any = dynamic(() => import('lucide-react').then(mod => mod.Lock), { ssr: false });
 
 interface Problem {
   id: string;
@@ -53,6 +57,7 @@ interface StudyPlanDetailDialogProps {
   listId: string;
   listName: string;
   listColor: string;
+  isPublic?: boolean;
   onListUpdated: () => void;
 }
 
@@ -62,6 +67,7 @@ export function StudyPlanDetailDialog({
   listId,
   listName,
   listColor,
+  isPublic = false,
   onListUpdated,
 }: StudyPlanDetailDialogProps) {
   const [loading, setLoading] = useState(false);
@@ -73,6 +79,7 @@ export function StudyPlanDetailDialog({
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(listName);
   const [currentListName, setCurrentListName] = useState(listName);
+  const [isListPublic, setIsListPublic] = useState(isPublic);
 
   useEffect(() => {
     if (open && listId) {
@@ -80,8 +87,9 @@ export function StudyPlanDetailDialog({
       setSelectedProblems(new Set());
       setCurrentListName(listName);
       setEditedName(listName);
+      setIsListPublic(isPublic);
     }
-  }, [open, listId, listName]);
+  }, [open, listId, listName, isPublic]);
 
   const fetchProblems = async () => {
     setLoading(true);
@@ -214,6 +222,29 @@ export function StudyPlanDetailDialog({
     }
   };
 
+  const handleTogglePublic = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/study-plans', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: listId, is_public: !isListPublic }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update list visibility');
+      }
+
+      setIsListPublic(!isListPublic);
+      onListUpdated();
+    } catch (error) {
+      console.error('Error updating list visibility:', error);
+      alert('Failed to update list visibility');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteList = async () => {
     if (!confirm(`Are you sure you want to delete "${currentListName}"? This will remove all problems from this list.`)) {
       return;
@@ -316,6 +347,26 @@ export function StudyPlanDetailDialog({
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleTogglePublic}
+                disabled={loading}
+                className="gap-2 hover:bg-brand/10 hover:border-brand/50 transition-all hover:scale-105 border-border/40 bg-background/30 backdrop-blur-sm"
+                title={isListPublic ? "Make list private" : "Make list public"}
+              >
+                {isListPublic ? (
+                  <>
+                    <Globe className="w-4 h-4" />
+                    <span className="hidden sm:inline">Public</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    <span className="hidden sm:inline">Private</span>
+                  </>
+                )}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
