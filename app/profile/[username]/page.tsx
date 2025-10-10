@@ -326,8 +326,17 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
             <div className="flex flex-col md:flex-row gap-8">
               {/* Avatar & Basic Info */}
               <div className="flex flex-col items-center md:items-start gap-4">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-bold text-4xl shadow-xl shadow-brand/20">
-                  {getInitials()}
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-bold text-4xl shadow-xl shadow-brand/20 overflow-hidden relative">
+                  {profile?.avatar_url ? (
+                    <Image
+                      src={profile.avatar_url}
+                      alt={profile.full_name || 'User avatar'}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    getInitials()
+                  )}
                 </div>
                 <div className="text-center md:text-left">
                   <h1 className="text-3xl font-bold mb-1">{profile?.full_name || 'Anonymous User'}</h1>

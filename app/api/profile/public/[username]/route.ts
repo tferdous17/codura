@@ -3,16 +3,16 @@ import { NextResponse } from 'next/server';
 
 export async function GET(
   request: Request,
-  { params }: { params: { username: string } }
+  { params }: { params: Promise<{ username: string }> }
 ) {
   try {
     const supabase = await createClient();
-    const { username } = params;
+    const { username } = await params;
 
     // Get user by username
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('user_id, username, full_name, avatar_url, bio, location, current_role, education, github_username, linkedin_username, personal_website')
+      .select('user_id, username, full_name, avatar_url, bio, location, job_title, university, graduation_year, github_username, linkedin_username, website')
       .eq('username', username)
       .single();
 
@@ -35,7 +35,7 @@ export async function GET(
 
     // Fetch recent submissions (limit to 50 for public view)
     const { data: submissions, error: submissionsError } = await supabase
-      .from('user_submissions')
+      .from('submissions')
       .select(`
         id,
         user_id,
@@ -86,10 +86,10 @@ export async function GET(
         // Get solved count for the list owner
         const { data: solvedProblems } = await supabase
           .from('user_list_problems')
-          .select('problem_id, user_problem_progress!inner(is_solved)')
+          .select('problem_id, user_problem_progress!inner(status)')
           .eq('list_id', list.id)
           .eq('user_problem_progress.user_id', userId)
-          .eq('user_problem_progress.is_solved', true);
+          .eq('user_problem_progress.status', 'Solved');
 
         return {
           ...list,

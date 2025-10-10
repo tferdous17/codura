@@ -626,8 +626,16 @@ export default function DashboardPage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/5">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-semibold text-sm">
-                    {user.avatar}
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative">
+                    {user.avatar && user.avatar.startsWith('http') ? (
+                      <img
+                        src={user.avatar}
+                        alt="Avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-sm">{user.avatar}</span>
+                    )}
                   </div>
                   <span className="hidden sm:inline text-sm text-neutral-400">
                     {user.name.split(' ')[0]}
