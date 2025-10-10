@@ -87,9 +87,11 @@ interface ProblemData {
     constraints: string[]
     topic_tags: Array<{ name: string; slug: string }>
     acceptance_rate: number
-    starter_code?: {
-        [language: string]: string
-    }
+    code_snippets: Array<{
+        code: string
+        lang: string 
+        langSlug: string
+    }>
 }
 
 export default function ProblemPage() {
@@ -258,10 +260,13 @@ export default function ProblemPage() {
      * If no starter code is available for the selected language, it returns a default comment.
      */
     const getStarterCode = () => {
-        if (problem?.starter_code && problem.starter_code[selectedLanguage]) {
-            return problem.starter_code[selectedLanguage]
+        if (problem?.code_snippets) {
+            // look through each code snipet and match up w/ current selected lang
+            return problem.code_snippets.find(snippet => {
+                return snippet.langSlug === userLang.value
+            })?.code
         }
-        return userLang.value === 'python' ? '# Write your code here' : '// Write your code here';
+        return ''
     }
 
 
@@ -368,12 +373,14 @@ export default function ProblemPage() {
                                         {problem.constraints && problem.constraints.length > 0 && (
                                             <div className="space-y-2">
                                                 <h3 className="font-semibold">Constraints:</h3>
-                                                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                                    {problem.constraints.map((constraint, index) => (
-                                                        <li key={index}>{constraint}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
+                                                <div className="bg-green-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+                                                    <ul className="space-y-1 text-sm font-mono text-slate-700 dark:text-slate-300">
+                                                        {problem.constraints.map((constraint, index) => (
+                                                            <li key={index}>{constraint}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                        </div>
                                         )}
                                     </div>
                                 </TabsContent>

@@ -14,7 +14,7 @@ export const LANGUAGES = [
     {
         "id": 107,
         "name": "Go (1.23.5)",
-        "value": "go"
+        "value": "golang"
     },
     {
         "id": 91,
