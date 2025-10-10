@@ -38,7 +38,8 @@ app.post('/api/problems/submit', async (req: any, res: any) => {
     const token = data.token
 
     const submissionResult = await pollSubmissionStatus(token)
-    console.log(submissionResult)
+    
+    res.status(200).json( { submissionResult: submissionResult })
   
    } catch (error) {
     res.status(500).json({ error: error })
@@ -80,7 +81,7 @@ async function pollSubmissionStatus(token: string) {
                 return data
             }
 
-            if (status === 'Wrong Answer' || status == 'Runtime Error' || status == 'Compilation Error' || status == 'Time Limit Exceeded') {
+            if (status === 'Wrong Answer' || status == 'Runtime Error (NZEC)' || status == 'Compilation Error' || status == 'Time Limit Exceeded') {
                 console.log(`Submission failed with status: ${status}`)
                 return data
             }
