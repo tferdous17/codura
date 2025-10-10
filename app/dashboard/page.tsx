@@ -76,7 +76,9 @@ interface StudyPlan {
   description?: string;
   color: string;
   is_default?: boolean;
+  is_public?: boolean;
   problem_count: number;
+  solved_count?: number;
 }
 
 // Activity and event interfaces
@@ -357,7 +359,7 @@ export default function DashboardPage() {
   const [eventToEdit, setEventToEdit] = useState<any>(null);
   const [activityChartData, setActivityChartData] = useState<any[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('1M');
-  const [selectedStudyPlan, setSelectedStudyPlan] = useState<{ id: string; name: string; color: string } | null>(null);
+  const [selectedStudyPlan, setSelectedStudyPlan] = useState<{ id: string; name: string; color: string; is_public?: boolean } | null>(null);
   const [showStudyPlanDialog, setShowStudyPlanDialog] = useState(false);
 
   // Fetch user data from Supabase

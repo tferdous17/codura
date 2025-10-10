@@ -1,0 +1,12 @@
+
+> codura@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use by process 24860, using available port 3005 instead.
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3005
+   - Network:      http://192.168.1.181:3005
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 2.6s

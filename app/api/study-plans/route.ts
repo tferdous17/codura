@@ -13,15 +13,44 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's lists with problem count using the function
-    const { data: lists, error } = await supabase.rpc('get_user_problem_lists', {
-      p_user_id: user.id
-    });
+    // Get user's lists
+    const { data: userLists, error: listsError } = await supabase
+      .from('user_problem_lists')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching user problem lists:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (listsError) {
+      console.error('Error fetching user problem lists:', listsError);
+      return NextResponse.json({ error: listsError.message }, { status: 500 });
     }
+
+    // Get problem counts and solved counts for each list
+    const listsWithCounts = await Promise.all(
+      (userLists || []).map(async (list) => {
+        // Get total problem count
+        const { count: problemCount } = await supabase
+          .from('user_list_problems')
+          .select('*', { count: 'exact', head: true })
+          .eq('list_id', list.id);
+
+        // Get solved count
+        const { data: solvedProblems } = await supabase
+          .from('user_list_problems')
+          .select('problem_id, user_problem_progress!inner(is_solved)')
+          .eq('list_id', list.id)
+          .eq('user_problem_progress.user_id', user.id)
+          .eq('user_problem_progress.is_solved', true);
+
+        return {
+          ...list,
+          problem_count: problemCount || 0,
+          solved_count: solvedProblems?.length || 0
+        };
+      })
+    );
+
+    const lists = listsWithCounts;
 
     // Also get official problem lists for reference
     const { data: officialLists, error: officialError } = await supabase
