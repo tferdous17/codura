@@ -109,6 +109,8 @@ export default function ProblemPage() {
         "value": "python"
     })
     const [usersCode, setUsersCode] = useState<string | undefined>('# Write your code below')
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [submissionResult, setSubmissionResult] = useState('')
 
     // State for AI Chatbot that maintains chat messages and input
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai', content: string }>>([])
@@ -189,19 +191,32 @@ export default function ProblemPage() {
     }, [monaco])
 
     const handleCodeSubmission = async () => {
-        const data = {
-            "language_id": userLang.id,
-            "source_code": usersCode,
-            "stdin": "test",
-        }
+        setIsSubmitting(true)
+        
+        // commit: wrapped in try catch now and now btn as loading state
+        try {
+            const body = {
+                "language_id": userLang.id,
+                "source_code": usersCode,
+                "stdin": "test",
+            }
 
-        const response = await fetch('http://localhost:8080/api/problems/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
+            const response = await fetch('http://localhost:8080/api/problems/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            })
+
+            const data = await response.json()
+
+            setSubmissionResult(data.submissionResult.status.description)
+        } catch (error) {
+            throw error
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     // Temporary function to simulate AI response
@@ -440,9 +455,23 @@ export default function ProblemPage() {
                                             <Play className="w-4 h-4" />
                                             Run
                                         </Button>
-                                        <Button size="sm" className="cursor-pointer font-weight-300 text-sm bg-green-500 hover:bg-green-400" onClick={handleCodeSubmission}>
-                                            <CloudUploadIcon className="w-5 h-5" />
-                                            Submit
+                                        <Button 
+                                        size="sm" 
+                                        className="cursor-pointer font-weight-300 text-sm bg-green-500 hover:bg-green-400" 
+                                        onClick={handleCodeSubmission}
+                                        disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                    Submitting...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CloudUploadIcon className="w-5 h-5" />
+                                                    Submit
+                                                </>
+                                            )}
                                         </Button>
                                     </div>
 
@@ -546,6 +575,9 @@ export default function ProblemPage() {
                                     <TabsContent value="result" className="p-4 flex-1 overflow-auto">
                                         <div className="bg-muted p-3 rounded text-sm">
                                             <p className="text-muted-foreground">Run your code to see results here</p>
+                                        </div>
+                                        <div>
+                                            <p>{submissionResult}</p>
                                         </div>
                                     </TabsContent>
                                 </Tabs>
