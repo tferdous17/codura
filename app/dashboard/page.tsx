@@ -54,6 +54,7 @@ interface UserData {
   name: string;
   email: string;
   avatar: string;
+  username?: string;
   streak: number;
   problemsSolved: number;
   easy: number;
@@ -386,6 +387,7 @@ export default function DashboardPage() {
           name: fullName,
           email: data.user?.email || '',
           avatar: data.profile?.avatar_url || initials,
+          username: data.profile?.username || '',
           streak: data.stats?.current_streak || 0,
           problemsSolved: data.stats?.total_solved || 0,
           easy: data.stats?.easy_solved || 0,
@@ -642,7 +644,7 @@ export default function DashboardPage() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-border/40" />
                 <DropdownMenuItem asChild>
-                  <Link href="/profile" className="cursor-pointer">
+                  <Link href={`/profile/${user?.username || ''}`} className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>

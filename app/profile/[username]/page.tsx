@@ -12,11 +12,8 @@ import {
   Trophy,
   Calendar,
   Code,
-  Video,
-  Users,
   Award,
   Flame,
-  Star,
   TrendingUp,
   Share2,
   MapPin,
@@ -52,7 +49,7 @@ interface AchievementSummary {
 }
 
 interface ProfileData {
-  user: {
+  user?: {
     id: string;
     email: string | undefined;
   };
@@ -61,22 +58,20 @@ interface ProfileData {
   submissions: Submission[];
   achievements: Achievement[];
   achievementSummary: AchievementSummary;
+  publicLists?: any[];
 }
 
-// Convert submissions to format expected by react-activity-calendar
 const generateContributionData = (submissions: Submission[]) => {
   const today = new Date();
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(today.getFullYear() - 1);
 
-  // Create a map of dates to submission counts
   const submissionsByDate = new Map<string, number>();
   submissions.forEach(sub => {
     const date = new Date(sub.submitted_at).toISOString().split('T')[0];
     submissionsByDate.set(date, (submissionsByDate.get(date) || 0) + 1);
   });
 
-  // Generate array of all days with submission counts
   const data: Array<{ date: string; count: number; level: number }> = [];
   const currentDate = new Date(oneYearAgo);
 
@@ -96,7 +91,6 @@ const generateContributionData = (submissions: Submission[]) => {
   return data;
 };
 
-// Icon mapping for achievements - emoji fallback
 const iconMap: Record<string, string> = {
   'Code': '💻',
   'CheckCircle': '✅',
@@ -115,7 +109,10 @@ const iconMap: Record<string, string> = {
   'Users': '👥',
 };
 
-export default function ProfilePage() {
+export default function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {
+  const resolvedParams = React.use(params);
+  const username = resolvedParams.username;
+
   const [showBorder, setShowBorder] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -124,6 +121,8 @@ export default function ProfilePage() {
   const [userLists, setUserLists] = useState<any[]>([]);
   const [selectedList, setSelectedList] = useState<any | null>(null);
   const [showListDialog, setShowListDialog] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   useEffect(() => {
     const evaluateScrollPosition = () => {
@@ -135,21 +134,58 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    fetchProfileData();
-    fetchUserLists();
-  }, []);
+    fetchProfile();
+  }, [username]);
 
-  const fetchProfileData = async () => {
+  const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/profile');
+
+      // Check if viewing own profile
+      const currentUserResponse = await fetch('/api/profile');
+      let isOwn = false;
+
+      if (currentUserResponse.ok) {
+        const currentUserData = await currentUserResponse.json();
+        isOwn = currentUserData?.profile?.username === username;
+        setIsOwnProfile(isOwn);
+
+        if (isOwn) {
+          // Viewing own profile - get all lists
+          const listsResponse = await fetch('/api/study-plans');
+          let userListsData = [];
+          if (listsResponse.ok) {
+            const listsData = await listsResponse.json();
+            userListsData = listsData.userLists || [];
+          }
+
+          setProfileData({
+            user: currentUserData.user,
+            profile: currentUserData.profile,
+            stats: currentUserData.stats,
+            submissions: currentUserData.submissions,
+            achievements: currentUserData.achievements,
+            achievementSummary: currentUserData.achievementSummary,
+          });
+          setUserLists(userListsData);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Viewing someone else's profile - get public data only
+      const response = await fetch(`/api/profile/public/${username}`);
 
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('User not found');
+        }
         throw new Error('Failed to fetch profile data');
       }
 
       const data = await response.json();
       setProfileData(data);
+      setUserLists(data.publicLists || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -157,18 +193,11 @@ export default function ProfilePage() {
     }
   };
 
-  const fetchUserLists = async () => {
-    try {
-      const response = await fetch('/api/study-plans');
-      if (!response.ok) return;
-
-      const data = await response.json();
-      // Filter to only show public lists on profile page
-      const publicLists = (data.userLists || []).filter((list: any) => list.is_public);
-      setUserLists(publicLists);
-    } catch (err) {
-      console.error('Error fetching user lists:', err);
-    }
+  const handleCopyProfileLink = () => {
+    const profileUrl = `${window.location.origin}/profile/${username}`;
+    navigator.clipboard.writeText(profileUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleProfileUpdate = (updatedProfile: UserProfile) => {
@@ -198,25 +227,24 @@ export default function ProfilePage() {
           <Trophy className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Failed to load profile</h2>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={fetchProfileData}>Try Again</Button>
+          <Link href="/dashboard">
+            <Button>Back to Dashboard</Button>
+          </Link>
         </div>
       </div>
     );
   }
 
-  const { user, profile, stats, submissions, achievements, achievementSummary } = profileData;
-
-  // Generate contribution data from submissions
+  const { profile, stats, submissions, achievements, achievementSummary } = profileData;
   const contributionData = generateContributionData(submissions);
   const totalContributions = submissions.length;
 
-  // Get user's initials for avatar
   const getInitials = () => {
     if (profile?.full_name) {
       const names = profile.full_name.split(' ');
       return names.map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
-    return user.email?.[0]?.toUpperCase() || 'U';
+    return profile?.username?.[0]?.toUpperCase() || 'U';
   };
 
   return (
@@ -306,11 +334,11 @@ export default function ProfilePage() {
                   <p className="text-muted-foreground">@{profile?.username || 'user'}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="gap-2">
+                  <Button size="sm" variant="outline" className="gap-2" onClick={handleCopyProfileLink}>
                     <Share2 className="w-4 h-4" />
-                    Share
+                    {copied ? 'Copied!' : 'Share'}
                   </Button>
-                  <EditProfileDialog profile={profile} onProfileUpdate={handleProfileUpdate} />
+                  {isOwnProfile && <EditProfileDialog profile={profile} onProfileUpdate={handleProfileUpdate} />}
                 </div>
               </div>
 
@@ -543,12 +571,11 @@ export default function ProfilePage() {
                     {userLists.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground">
                         <Code className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">No study plan lists yet</p>
-                        <p className="text-xs mt-1">Create a list from your dashboard!</p>
+                        <p className="text-sm">No {isOwnProfile ? '' : 'public '}study plan lists yet</p>
+                        {isOwnProfile && <p className="text-xs mt-1">Create a list from your dashboard!</p>}
                       </div>
                     ) : (
                       userLists.map((list) => {
-                        // Calculate progress stats (placeholder - will be real data later)
                         const totalProblems = list.problem_count || 0;
                         const solvedProblems = list.solved_count || 0;
                         const progressPercent = totalProblems > 0 ? Math.round((solvedProblems / totalProblems) * 100) : 0;
@@ -562,7 +589,6 @@ export default function ProfilePage() {
                             }}
                             className="group p-4 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/30 transition-all cursor-pointer hover:border-brand/30 relative overflow-hidden"
                           >
-                            {/* Hover gradient effect */}
                             <div className="absolute inset-0 bg-gradient-to-r from-brand/5 via-purple-500/5 to-brand/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
                             <div className="relative flex items-start justify-between gap-3">
@@ -574,12 +600,16 @@ export default function ProfilePage() {
                                       Public
                                     </Badge>
                                   )}
+                                  {!list.is_public && isOwnProfile && (
+                                    <Badge variant="outline" className="text-xs bg-gray-500/10 text-gray-500 border-gray-500/30">
+                                      Private
+                                    </Badge>
+                                  )}
                                 </div>
                                 {list.description && (
                                   <p className="text-sm text-muted-foreground mb-3">{list.description}</p>
                                 )}
 
-                                {/* Progress Stats */}
                                 <div className="space-y-2">
                                   <div className="flex items-center justify-between text-xs">
                                     <span className="text-muted-foreground">Progress</span>
@@ -588,7 +618,6 @@ export default function ProfilePage() {
                                     </span>
                                   </div>
 
-                                  {/* Progress Bar */}
                                   <div className="w-full bg-muted/30 rounded-full h-2">
                                     <div
                                       className="bg-gradient-to-r from-brand to-purple-500 h-2 rounded-full transition-all"
@@ -596,7 +625,6 @@ export default function ProfilePage() {
                                     />
                                   </div>
 
-                                  {/* Additional Stats */}
                                   <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
                                     <span>{totalProblems} problems</span>
                                     <span>•</span>
@@ -696,7 +724,7 @@ export default function ProfilePage() {
           listName={selectedList.name}
           listColor={selectedList.color}
           isPublic={selectedList.is_public}
-          onListUpdated={fetchUserLists}
+          onListUpdated={fetchProfile}
         />
       )}
     </div>
