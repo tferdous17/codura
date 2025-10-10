@@ -20,12 +20,12 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Play, Send, RotateCcw, Loader2 } from 'lucide-react'
+import { Play, Send, RotateCcw, Loader2, CopyCheck, CloudUploadIcon, ListChecks } from 'lucide-react'
 import Editor, { useMonaco } from '@monaco-editor/react'
 import { createClient } from '@/utils/supabase/client'
 import { useParams, useRouter } from 'next/navigation'
 import { LANGUAGES } from '@/utils/languages'
-import { CloudUploadIcon } from 'lucide-react'
+
 
 // Add custom styles for tab scrolling
 const tabScrollStyles = `
@@ -80,9 +80,8 @@ interface ProblemData {
     difficulty: 'Easy' | 'Medium' | 'Hard'
     description: string
     examples: Array<{
-        input: string
-        output: string
-        explanation?: string
+        id: number
+        content: string
     }>
     constraints: string[]
     topic_tags: Array<{ name: string; slug: string }>
@@ -94,6 +93,17 @@ interface ProblemData {
     }>
 }
 
+interface Example {
+    id: number
+    content: string
+}
+
+interface TestCase {
+    input: string
+    expectedOutput: string
+    explanation?: string
+}
+
 export default function ProblemPage() {
     const params = useParams()
     const router = useRouter()
@@ -102,6 +112,7 @@ export default function ProblemPage() {
 
     // problem state will be used to store the fetched problem data from Supabase
     const [problem, setProblem] = useState<ProblemData | null>(null)
+    const [testcases, setTestcases] = useState<TestCase[]| undefined>()
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -143,6 +154,8 @@ export default function ProblemPage() {
 
                 // After fetching the problem data, this line sets the problem state
                 setProblem(data as ProblemData)
+                setTestcases(parseExamplesToTestCases(data.examples))
+
             } catch (err) {
                 console.error('Error fetching problem:', err)
                 setError('Failed to load problem')
@@ -191,6 +204,36 @@ export default function ProblemPage() {
             monaco.editor.setTheme('caffeine-dark')
         }
     }, [monaco])
+
+    const parseExamplesToTestCases = (examples: Example[] | undefined): TestCase[] => {
+        if (!examples) {
+            return []
+        }
+
+        return examples.map(example => {
+            const content = example.content
+                .replace(/&nbsp;/g, '')
+                .trim();
+            
+            // Extract input
+            const inputMatch = content.match(/Input:\s*(.+?)(?=\nOutput:|$)/s);
+            const input = inputMatch ? inputMatch[1].trim() : '';
+            
+            // Extract output
+            const outputMatch = content.match(/Output:\s*(.+?)(?=\nExplanation:|$)/s);
+            const expectedOutput = outputMatch ? outputMatch[1].trim() : '';
+            
+            // Extract explanation (optional)
+            const explanationMatch = content.match(/Explanation:\s*(.+?)$/s);
+            const explanation = explanationMatch ? explanationMatch[1].trim() : undefined;
+            
+            return {
+                input,
+                expectedOutput,
+                explanation
+            };
+        });
+    }
 
     const handleCodeSubmission = async () => {
         setIsSubmitting(true)
@@ -243,13 +286,13 @@ export default function ProblemPage() {
     const getDifficultyColor = (difficulty: string) => {
         switch (difficulty) {
             case 'Easy':
-                return 'bg-green-500'
+                return 'bg-green-950 text-green-400 !border-green-900'
             case 'Medium':
-                return 'bg-yellow-500'
+                return 'bg-yellow-950 text-yellow-400 !border-yellow-900'
             case 'Hard':
-                return 'bg-red-500'
+                return 'bg-red-950 text-red-400 !border-red-900'
             default:
-                return 'bg-gray-500'
+                return 'bg-zinc-900 text-zinc-400 !border-zinc-900'
         }
     }
 
@@ -323,7 +366,7 @@ export default function ProblemPage() {
                                                 {problem.leetcode_id}. {problem.title}
                                             </h1>
                                             <div className="flex items-center gap-2">
-                                                <Badge variant="default" className={getDifficultyColor(problem.difficulty)}>
+                                                <Badge variant="default" className={`${getDifficultyColor(problem.difficulty)} border-1`}>
                                                     {problem.difficulty}
                                                 </Badge>
                                                 <span className="text-sm text-muted-foreground">
@@ -354,7 +397,7 @@ export default function ProblemPage() {
                                         {/* Examples */}
                                         {problem.examples && problem.examples.length > 0 && (
                                             <div className="space-y-4">
-                                                {problem.examples.map((example, index) => (
+                                                {/* {problem.examples.map((example, index) => (
                                                     <div key={index} className="space-y-2">
                                                         <h3 className="font-semibold">Example {index + 1}:</h3>
                                                         <div className="bg-muted p-3 rounded text-sm font-mono space-y-1">
@@ -365,7 +408,7 @@ export default function ProblemPage() {
                                                             )}
                                                         </div>
                                                     </div>
-                                                ))}
+                                                ))} */}
                                             </div>
                                         )}
 
@@ -554,30 +597,52 @@ export default function ProblemPage() {
                             <div className="h-full border-t">
                                 <Tabs defaultValue="testcases" className="w-full h-full flex flex-col">
                                     <div className="border-b overflow-x-auto tab-scroll-container">
-                                        <TabsList className="inline-flex w-auto min-w-full justify-start h-12 px-2 bg-transparent">
-                                            <TabsTrigger value="testcases" className="flex-shrink-0">Test Cases</TabsTrigger>
-                                            <TabsTrigger value="result" className="flex-shrink-0">Result</TabsTrigger>
+                                        <TabsList className="inline-flex w-auto justify-start h-10">
+                                            <TabsTrigger value="testcases" className="px-4 flex-shrink-0 cursor-pointer !text-zinc-500 data-[state=active]:!text-white"><CopyCheck className="text-green-600"></CopyCheck>Testcases</TabsTrigger>
+                                            <TabsTrigger value="result" className="px-4 flex-shrink-0 cursor-pointer !text-zinc-500 data-[state=active]:!text-white"><ListChecks className="text-green-600"></ListChecks>Results</TabsTrigger>
                                         </TabsList>
                                     </div>
 
-                                    <TabsContent value="testcases" className="p-4 space-y-3 flex-1 overflow-auto">
-                                        {problem.examples && problem.examples.map((example, index) => (
-                                            <div key={index} className="space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-sm font-medium">Test Case {index + 1}</span>
-                                                    {index === 0 && (
-                                                        <Button size="sm" variant="default">
-                                                            <Play className="w-4 h-4 mr-2" />
-                                                            Run Code
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                                <div className="bg-muted p-3 rounded text-sm font-mono">
-                                                    <p>{example.input}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </TabsContent>
+                                    <TabsContent value="testcases" className="flex-1 overflow-auto flex flex-col">
+                                        {testcases && testcases.length > 0 && (
+                                            <Tabs defaultValue="case-0" className="flex-1 flex flex-col">
+                                            {/* Test case tabs */}
+                                            <TabsList className="justify-start rounded-none bg-transparent px-1 h-auto">
+                                                {testcases.map((_, index) => (
+                                                <TabsTrigger
+                                                    key={index}
+                                                    value={`case-${index}`}
+                                                    className="cursor-pointer rounded-xl border-none border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2"
+                                                >
+                                                    Case {index + 1}
+                                                </TabsTrigger>
+                                                ))}
+                                            </TabsList>
+
+                                            {/* Test case content */}
+                                            {testcases.map((tc, index) => (
+                                                <TabsContent 
+                                                key={index} 
+                                                value={`case-${index}`} 
+                                                className="flex-1 overflow-auto p-4 space-y-3"
+                                                >
+                                                {/* Each parameter in its own box */}
+                                                {tc.input.split(', ').map((param, i) => {
+                                                    const [name, value] = param.split(' = ');
+                                                    return (
+                                                    <div key={i} className="space-y-1">
+                                                        <div className="text-sm text-zinc-400">{name}</div>
+                                                        <div className="bg-zinc-950 border border-zinc-800 rounded-md px-3 py-2.5 font-mono text-[15px] text-white">
+                                                        {value}
+                                                        </div>
+                                                    </div>
+                                                    );
+                                                })}
+                                                </TabsContent>
+                                            ))}
+                                            </Tabs>
+                                        )}
+                                        </TabsContent>
 
                                     <TabsContent value="result" className="p-4 flex-1 overflow-auto">
                                         <div className="bg-muted p-3 rounded text-sm">
