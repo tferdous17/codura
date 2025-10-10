@@ -90,6 +90,18 @@ export async function signup(formData: FormData) {
     redirect('/error')
   }
 
+  // Check if email is already registered
+  const { data: existingEmailUser } = await supabase
+    .from('users')
+    .select('email, user_id')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (existingEmailUser) {
+    console.error('Email already registered:', email)
+    redirect('/error?message=email_exists')
+  }
+
   // Check if username is already taken
   const { data: existingUser } = await supabase
     .from('users')
@@ -99,7 +111,7 @@ export async function signup(formData: FormData) {
 
   if (existingUser) {
     console.error('Username already taken')
-    redirect('/error')
+    redirect('/error?message=username_exists')
   }
 
   if (password !== confirmPassword) {

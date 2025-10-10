@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,6 +19,75 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [fullName, setFullName] = useState("")
+  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [errors, setErrors] = useState<{ username?: string; email?: string }>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setErrors({})
+
+    // Validate username format before making API call
+    if (!usernameRegex.test(username)) {
+      setErrors({
+        username: "Username must be 3-20 characters long and can only contain letters, numbers, hyphens (-), and underscores (_). No spaces allowed."
+      })
+      setUsername("") // Clear the username field
+      setIsSubmitting(false)
+      return
+    }
+
+    try {
+      // Check if username and email are available
+      const response = await fetch('/api/check-availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email })
+      })
+
+      const data = await response.json()
+
+      if (!data.available) {
+        const newErrors: { username?: string; email?: string } = {}
+
+        if (!data.usernameAvailable) {
+          newErrors.username = "This username is already taken. Please choose another."
+          setUsername("") // Clear username field
+        }
+
+        if (!data.emailAvailable) {
+          newErrors.email = "This email is already registered. Please use another email or log in."
+          setEmail("") // Clear email field
+        }
+
+        setErrors(newErrors)
+        setIsSubmitting(false)
+        return
+      }
+
+      // If available, proceed with signup
+      const formData = new FormData()
+      formData.append('full_name', fullName)
+      formData.append('username', username)
+      formData.append('email', email)
+      formData.append('password', password)
+      formData.append('confirm-password', confirmPassword)
+
+      await signup(formData)
+    } catch (error) {
+      console.error('Signup error:', error)
+      setErrors({ email: "An error occurred during signup. Please try again." })
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -69,7 +141,7 @@ export function SignUpForm({
             </div>
 
             {/* Email/Password Form - Separate form */}
-            <form action={signup}>
+            <form onSubmit={handleSubmit}>
               <div className="grid gap-6">
                 {/* Full Name Field */}
                 <div className="grid gap-3">
@@ -78,6 +150,8 @@ export function SignUpForm({
                     name="full_name"
                     type="text"
                     placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     required
                   />
                 </div>
@@ -89,13 +163,14 @@ export function SignUpForm({
                     name="username"
                     type="text"
                     placeholder="johndoe"
-                    pattern="[a-zA-Z0-9_-]{3,20}"
-                    title="Username must be 3-20 characters and can only contain letters, numbers, underscores, and hyphens"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className={errors.username ? "border-red-500" : ""}
                     required
                   />
-                  <p className="text-xs text-muted-foreground">
-                    3-20 characters, letters, numbers, - and _ only
-                  </p>
+                  {errors.username && (
+                    <p className="text-xs text-red-500">{errors.username}</p>
+                  )}
                 </div>
 
                 {/* Email Field */}
@@ -105,25 +180,43 @@ export function SignUpForm({
                     name="email"
                     type="email"
                     placeholder="m@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={errors.email ? "border-red-500" : ""}
                     required
                   />
+                  {errors.email && (
+                    <p className="text-xs text-red-500">{errors.email}</p>
+                  )}
                 </div>
 
                 {/* Password Field */}
                 <div className="grid gap-3">
                   <Label htmlFor="password">Password</Label>
-                  <Input name="password" type="password" required />
+                  <Input
+                    name="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
                 </div>
 
                 {/* Confirm Password Field */}
                 <div className="grid gap-3">
                   <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input name="confirm-password" type="password" required />
+                  <Input
+                    name="confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
                 </div>
 
                 {/* Sign Up Button */}
-                <Button type="submit" className="w-full">
-                  Create Account
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Creating Account..." : "Create Account"}
                 </Button>
               </div>
             </form>

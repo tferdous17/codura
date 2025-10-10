@@ -34,10 +34,14 @@ export async function GET(request: Request) {
 
   console.log("User authenticated:", user.id, user.email);
 
+  // Get the OAuth provider from the user's app_metadata
+  const provider = user.app_metadata?.provider || user.app_metadata?.providers?.[0];
+  console.log("OAuth provider:", provider);
+
   // Check if user row already exists in unified users table
   const { data: existingUser, error: checkError } = await supabase
     .from("users")
-    .select("user_id, federal_school_code, questionnaire_completed")
+    .select("user_id, federal_school_code, questionnaire_completed, email")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -60,19 +64,84 @@ export async function GET(request: Request) {
 
     const email = user.email || "";
 
+    // Check if a user with this email already exists (signed up with different method)
+    if (email) {
+      const { data: emailUser, error: emailCheckError } = await supabase
+        .from("users")
+        .select("user_id, email")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (emailUser) {
+        console.error(`User with email ${email} already exists with user_id: ${emailUser.user_id}`);
+        console.error(`Attempted ${provider} OAuth signup with existing email`);
+        return NextResponse.redirect(`${origin}/error?message=account_exists`);
+      }
+
+      if (emailCheckError) {
+        console.error("Email check error:", emailCheckError);
+      }
+    }
+
+    // For GitHub OAuth, verify no existing GitHub user
+    if (provider === 'github' && user.user_metadata?.provider_id) {
+      const { data: githubUser, error: githubCheckError } = await supabase
+        .from("users")
+        .select("user_id")
+        .eq("github_id", user.user_metadata.provider_id)
+        .maybeSingle();
+
+      if (githubUser) {
+        console.error(`GitHub user already exists: ${user.user_metadata.provider_id}`);
+        return NextResponse.redirect(`${origin}/error?message=github_account_exists`);
+      }
+
+      if (githubCheckError) {
+        console.error("GitHub check error:", githubCheckError);
+      }
+    }
+
+    // For Google OAuth, verify no existing Google user
+    if (provider === 'google' && user.user_metadata?.provider_id) {
+      const { data: googleUser, error: googleCheckError } = await supabase
+        .from("users")
+        .select("user_id")
+        .eq("google_id", user.user_metadata.provider_id)
+        .maybeSingle();
+
+      if (googleUser) {
+        console.error(`Google user already exists: ${user.user_metadata.provider_id}`);
+        return NextResponse.redirect(`${origin}/error?message=google_account_exists`);
+      }
+
+      if (googleCheckError) {
+        console.error("Google check error:", googleCheckError);
+      }
+    }
+
     // Create entry in unified users table
     // Trigger will automatically create user_stats
+    const insertData: any = {
+      user_id: user.id,
+      full_name: fullName,
+      email: email,
+      federal_school_code: null,
+      questionnaire_completed: false,
+      avatar_url: user.user_metadata?.avatar_url || null,
+    };
+
+    // Store provider IDs if available
+    if (provider === 'github' && user.user_metadata?.provider_id) {
+      insertData.github_id = user.user_metadata.provider_id;
+    }
+    if (provider === 'google' && user.user_metadata?.provider_id) {
+      insertData.google_id = user.user_metadata.provider_id;
+    }
+
     const { data: newUser, error: insertError } = await supabase
       .from("users")
-      .insert({
-        user_id: user.id,
-        full_name: fullName,
-        email: email,
-        federal_school_code: null,
-        questionnaire_completed: false,
-        avatar_url: user.user_metadata?.avatar_url || null,
-      })
-      .select("user_id, federal_school_code, questionnaire_completed")
+      .insert(insertData)
+      .select("user_id, federal_school_code, questionnaire_completed, email")
       .single();
 
     if (insertError) {

@@ -235,7 +235,7 @@ export default function SchoolSearchStep() {
                       aria-selected={selected?.code === s.code}
                       onClick={() => {
                         setSelected(s);
-                        setQuery(`${s.name}${s.city ? ` — ${s.city}, ${s.state ?? ""}` : ""}`);
+                        setQuery(s.name); // Only set the school name, not the full display text
                         setOpen(false);
                       }}
                       className={`
