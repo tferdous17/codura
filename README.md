@@ -34,3 +34,21 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Scripts
+
+### Populate LeetCode problem details
+
+Use the enrichment script to backfill descriptions and sample test cases in Supabase:
+
+```bash
+# Update every problem missing description/test cases
+npm run leetcode:scrape
+
+# Update specific slugs or limit the batch size
+npm run leetcode:scrape -- --slug=two-sum
+npm run leetcode:scrape -- --slugs=two-sum,add-two-numbers
+npm run leetcode:scrape -- --limit=25
+```
+
+The script relies on `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` being present in your environment.

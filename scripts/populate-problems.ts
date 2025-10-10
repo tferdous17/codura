@@ -1,132 +1,167 @@
 /**
  * Script to populate Supabase database with LeetCode problems
- * Run this script to fetch problems from LeetCode and store them in your database
+ * Run this script to fetch problems and insert descriptions
  *
  * Usage: npx tsx scripts/populate-problems.ts
  */
 
-// Load environment variables from .env file
-import 'dotenv/config';
+import { config } from 'dotenv';
+import { resolve } from 'path';
 
+// Load .env.local file explicitly
+config({ path: resolve(process.cwd(), '.env.local') });
 import { createClient } from '@supabase/supabase-js';
 import {
   fetchProblemsInBatches,
+  fetchProblemDetail,
   transformProblemForDB,
+  transformProblemDetailForDB,
 } from '../lib/leetcode-fetcher';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing Supabase credentials!');
-  console.error('Make sure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env');
+if (!supabaseUrl) {
+  console.error('❌ Missing NEXT_PUBLIC_SUPABASE_URL');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+if (!supabaseServiceKey) {
+  console.error('❌ Missing SUPABASE_SERVICE_ROLE_KEY - this is required to bypass RLS policies.');
+  console.error('Please add it to your .env.local file.');
+  process.exit(1);
+}
+
+console.log('🔑 Using service role key to bypass RLS...\n');
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 async function main() {
   console.log('🚀 Starting LeetCode problems import...\n');
 
   try {
-    // Step 1: Fetch all problems from LeetCode
-    console.log('📥 Fetching problems from LeetCode GraphQL API...');
+    // STEP 1: Fetch problem summaries
     const problems = await fetchProblemsInBatches(100);
-    console.log(`✅ Fetched ${problems.length} problems\n`);
+    console.log(`✅ Retrieved ${problems.length} problems.`);
 
-    // Step 2: Transform problems to database format
-    console.log('🔄 Transforming problems for database...');
-    const transformedProblems = problems.map(transformProblemForDB);
-    console.log(`✅ Transformed ${transformedProblems.length} problems\n`);
+    // STEP 2: Insert or upsert basic problem info in batches
+    console.log(`\n📝 Inserting ${problems.length} problems in batches...\n`);
 
-    // Step 3: Insert problems in batches (Supabase has a limit)
-    console.log('💾 Inserting problems into database...');
-    const batchSize = 100;
-    let inserted = 0;
-    let updated = 0;
-    let errors = 0;
+    const BATCH_SIZE = 500; // Supabase can handle large batches
+    const dbRows = problems.map(transformProblemForDB);
 
-    for (let i = 0; i < transformedProblems.length; i += batchSize) {
-      const batch = transformedProblems.slice(i, i + batchSize);
+    for (let i = 0; i < dbRows.length; i += BATCH_SIZE) {
+      const batch = dbRows.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(dbRows.length / BATCH_SIZE);
 
-      console.log(
-        `   Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(transformedProblems.length / batchSize)}...`
-      );
+      console.log(`📦 Inserting batch ${batchNum}/${totalBatches} (${batch.length} problems)...`);
 
-      const { data, error } = await supabase
+      const { error, count } = await supabase
         .from('problems')
         .upsert(batch, {
           onConflict: 'leetcode_id',
-          ignoreDuplicates: false,
-        })
-        .select();
+          count: 'exact'
+        });
 
       if (error) {
-        console.error(`   ❌ Error in batch ${Math.floor(i / batchSize) + 1}:`, error.message);
-        errors += batch.length;
+        console.error(`❌ Error inserting batch ${batchNum}:`, error);
+        // Continue with next batch instead of failing completely
       } else {
-        const count = data?.length || 0;
-        inserted += count;
-        console.log(`   ✅ Processed ${count} problems`);
+        console.log(`✅ Batch ${batchNum} inserted successfully (${count} rows affected)`);
       }
-
-      // Small delay to avoid overwhelming Supabase
-      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
-    console.log('\n📊 Import Summary:');
-    console.log(`   Total problems fetched: ${problems.length}`);
-    console.log(`   Successfully inserted/updated: ${inserted}`);
-    console.log(`   Errors: ${errors}`);
+    console.log('\n✅ Basic problem data inserted.\n');
 
-    // Step 4: Verify the data
-    console.log('\n🔍 Verifying database...');
-    const { count, error: countError } = await supabase
-      .from('problems')
-      .select('*', { count: 'exact', head: true });
+    // STEP 3: Fetch and insert full descriptions
+    // NOTE: This step is VERY slow due to rate limiting (1 request per second)
+    // Set SKIP_DETAILS=true to skip this step
+    const skipDetails = process.env.SKIP_DETAILS === 'true';
 
-    if (countError) {
-      console.error('   ❌ Error counting problems:', countError);
-    } else {
-      console.log(`   ✅ Database now contains ${count} problems`);
+    if (skipDetails) {
+      console.log('⏭️  Skipping detailed descriptions (SKIP_DETAILS=true)\n');
+      console.log('🎯 Basic problem data import complete!');
+      return;
     }
 
-    // Step 5: Show breakdown by difficulty
-    const { data: easyCount } = await supabase
-      .from('problems')
-      .select('id', { count: 'exact', head: true })
-      .eq('difficulty', 'Easy');
+    console.log('📖 Fetching detailed descriptions for all problems...');
+    console.log(`⏱️  This will take approximately ${Math.ceil(problems.length / 60)} minutes (rate limited to 1 req/sec)\n`);
 
-    const { data: mediumCount } = await supabase
-      .from('problems')
-      .select('id', { count: 'exact', head: true })
-      .eq('difficulty', 'Medium');
+    let successCount = 0;
+    let errorCount = 0;
 
-    const { data: hardCount } = await supabase
-      .from('problems')
-      .select('id', { count: 'exact', head: true })
-      .eq('difficulty', 'Hard');
+    for (let i = 0; i < problems.length; i++) {
+      const problem = problems[i];
+      const progress = `[${i + 1}/${problems.length}]`;
 
-    console.log('\n📈 Breakdown by difficulty:');
-    console.log(`   🟢 Easy: ${easyCount?.length || 0}`);
-    console.log(`   🟡 Medium: ${mediumCount?.length || 0}`);
-    console.log(`   🔴 Hard: ${hardCount?.length || 0}`);
+      try {
+        console.log(`${progress} 📘 Fetching ${problem.titleSlug}...`);
+        const detail = await fetchProblemDetail(problem.titleSlug);
+        const detailedRow = transformProblemDetailForDB(detail);
 
-    console.log('\n✨ Import completed successfully!\n');
-  } catch (error) {
-    console.error('\n❌ Fatal error during import:', error);
-    process.exit(1);
+        // First, fetch the existing row to get all current data
+        const { data: existingRow, error: fetchError } = await supabase
+          .from('problems')
+          .select('*')
+          .eq('leetcode_id', parseInt(problem.frontendQuestionId))
+          .single();
+
+        if (fetchError || !existingRow) {
+          console.error(`${progress} ⚠️  Could not find existing problem:`, fetchError);
+          errorCount++;
+          continue;
+        }
+
+        // Use UPSERT with the complete existing row plus new fields
+        const { error: upsertError } = await supabase
+          .from('problems')
+          .upsert({
+            ...existingRow,  // All existing fields
+            description: detailedRow.description,
+            examples: detailedRow.examples,
+            total_submissions: detailedRow.total_submissions,
+            total_accepted: detailedRow.total_accepted,
+            hints: detailedRow.hints,
+            code_snippets: detailedRow.code_snippets,
+          }, {
+            onConflict: 'leetcode_id',
+            ignoreDuplicates: false
+          });
+
+        if (upsertError) {
+          console.error(`${progress} ⚠️  Failed updating ${problem.titleSlug}:`, upsertError);
+          errorCount++;
+        } else {
+          successCount++;
+          // Only log success every 10 problems to reduce noise
+          if (successCount % 10 === 0) {
+            console.log(`${progress} ✅ Updated ${successCount} problems so far...`);
+          }
+        }
+
+        // avoid rate limits
+        await new Promise((r) => setTimeout(r, 1000));
+      } catch (err) {
+        console.error(`${progress} ❌ Error on ${problem.titleSlug}:`, err);
+        errorCount++;
+      }
+    }
+
+    console.log('\n' + '='.repeat(50));
+    console.log('🎯 Import complete!');
+    console.log(`✅ Successfully updated: ${successCount} problems`);
+    console.log(`❌ Errors: ${errorCount} problems`);
+    console.log('='.repeat(50));
+  } catch (err) {
+    console.error('❌ Fatal error:', err);
   }
 }
 
-// Run the script
-main()
-  .then(() => {
-    console.log('👋 Done!');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('💥 Unhandled error:', error);
-    process.exit(1);
-  });
+main();

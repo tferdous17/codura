@@ -287,15 +287,17 @@ export function transformProblemForDB(problem: LeetCodeProblem) {
 export function transformProblemDetailForDB(detail: LeetCodeProblemDetail) {
   let examples: any[] = [];
   try {
-    // Parse examples from content (simplified - you may need better parsing)
-    const exampleMatches = detail.content.match(
-      /<strong[^>]*>Example \d+:<\/strong>[\s\S]*?(?=<strong[^>]*>Example \d+:<\/strong>|<p><strong[^>]*>Constraints:|$)/g
-    );
-    if (exampleMatches) {
-      examples = exampleMatches.map((ex, i) => ({
-        id: i + 1,
-        content: ex.replace(/<[^>]*>/g, '').trim(),
-      }));
+    // Parse examples from content (only if content exists)
+    if (detail.content) {
+      const exampleMatches = detail.content.match(
+        /<strong[^>]*>Example \d+:<\/strong>[\s\S]*?(?=<strong[^>]*>Example \d+:<\/strong>|<p><strong[^>]*>Constraints:|$)/g
+      );
+      if (exampleMatches) {
+        examples = exampleMatches.map((ex, i) => ({
+          id: i + 1,
+          content: ex.replace(/<[^>]*>/g, '').trim(),
+        }));
+      }
     }
   } catch (e) {
     console.error('Error parsing examples:', e);
@@ -308,6 +310,20 @@ export function transformProblemDetailForDB(detail: LeetCodeProblemDetail) {
     console.error('Error parsing stats:', e);
   }
 
+  // Helper function to convert strings like "19.1M" to integers
+  const parseNumberWithSuffix = (value: any): number => {
+    if (typeof value === 'number') return value;
+    if (!value || typeof value !== 'string') return 0;
+
+    const str = value.toString().toUpperCase();
+    const num = parseFloat(str);
+
+    if (str.includes('M')) return Math.round(num * 1000000);
+    if (str.includes('K')) return Math.round(num * 1000);
+
+    return Math.round(num) || 0;
+  };
+
   return {
     leetcode_id: parseInt(detail.questionFrontendId),
     title: detail.title,
@@ -318,8 +334,8 @@ export function transformProblemDetailForDB(detail: LeetCodeProblemDetail) {
     hints: detail.hints,
     code_snippets: detail.codeSnippets,
     examples,
-    total_submissions: stats.totalSubmission || 0,
-    total_accepted: stats.totalAccepted || 0,
+    total_submissions: parseNumberWithSuffix(stats.totalSubmission),
+    total_accepted: parseNumberWithSuffix(stats.totalAccepted),
     acceptance_rate: stats.acRate
       ? parseFloat(stats.acRate)
       : null,

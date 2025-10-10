@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(psql:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(SKIP_DETAILS=true npx tsx scripts/populate-problems.ts)",
+      "Bash(pkill:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []
