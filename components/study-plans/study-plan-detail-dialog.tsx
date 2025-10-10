@@ -58,6 +58,7 @@ interface StudyPlanDetailDialogProps {
   listName: string;
   listColor: string;
   isPublic?: boolean;
+  isReadOnly?: boolean;
   onListUpdated: () => void;
 }
 
@@ -68,6 +69,7 @@ export function StudyPlanDetailDialog({
   listName,
   listColor,
   isPublic = false,
+  isReadOnly = false,
   onListUpdated,
 }: StudyPlanDetailDialogProps) {
   const [loading, setLoading] = useState(false);
@@ -346,48 +348,50 @@ export function StudyPlanDetailDialog({
                 </DialogDescription>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleTogglePublic}
-                disabled={loading}
-                className="gap-2 hover:bg-brand/10 hover:border-brand/50 transition-all hover:scale-105 border-border/40 bg-background/30 backdrop-blur-sm"
-                title={isListPublic ? "Make list private" : "Make list public"}
-              >
-                {isListPublic ? (
-                  <>
-                    <Globe className="w-4 h-4" />
-                    <span className="hidden sm:inline">Public</span>
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-4 h-4" />
-                    <span className="hidden sm:inline">Private</span>
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditingName(true)}
-                disabled={loading || isEditingName}
-                className="gap-2 hover:bg-brand/10 hover:border-brand/50 transition-all hover:scale-105 border-border/40 bg-background/30 backdrop-blur-sm"
-              >
-                <Edit2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Edit</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDeleteList}
-                disabled={loading}
-                className="gap-2 text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all hover:scale-105 border-border/40 bg-background/30 backdrop-blur-sm"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Delete</span>
-              </Button>
-            </div>
+            {!isReadOnly && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTogglePublic}
+                  disabled={loading}
+                  className="gap-2 hover:bg-brand/10 hover:border-brand/50 transition-all hover:scale-105 border-border/40 bg-background/30 backdrop-blur-sm"
+                  title={isListPublic ? "Make list private" : "Make list public"}
+                >
+                  {isListPublic ? (
+                    <>
+                      <Globe className="w-4 h-4" />
+                      <span className="hidden sm:inline">Public</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4" />
+                      <span className="hidden sm:inline">Private</span>
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditingName(true)}
+                  disabled={loading || isEditingName}
+                  className="gap-2 hover:bg-brand/10 hover:border-brand/50 transition-all hover:scale-105 border-border/40 bg-background/30 backdrop-blur-sm"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Edit</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteList}
+                  disabled={loading}
+                  className="gap-2 text-red-500 hover:bg-red-500/10 hover:border-red-500/50 transition-all hover:scale-105 border-border/40 bg-background/30 backdrop-blur-sm"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Delete</span>
+                </Button>
+              </div>
+            )}
           </div>
         </DialogHeader>
 
@@ -425,7 +429,7 @@ export function StudyPlanDetailDialog({
           </div>
 
           {/* Multi-select actions */}
-          {selectedProblems.size > 0 && (
+          {!isReadOnly && selectedProblems.size > 0 && (
             <div className="relative group/delete-bar animate-appear">
               <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-red-500/10 to-red-500/20 rounded-2xl blur-xl opacity-60" />
               <div className="relative flex items-center justify-between p-4 bg-gradient-to-r from-red-500/10 via-red-500/5 to-red-500/10 backdrop-blur-md rounded-2xl border border-red-500/20">
@@ -476,22 +480,24 @@ export function StudyPlanDetailDialog({
           ) : (
             <div className="space-y-3">
               {/* Select All */}
-              <div className="relative group/select-all">
-                <div className="absolute inset-0 bg-gradient-to-r from-brand/5 via-purple-500/5 to-brand/5 rounded-2xl blur-xl opacity-0 group-hover/select-all:opacity-100 transition-opacity" />
-                <div className="relative flex items-center gap-4 p-4 rounded-2xl border border-border/10 bg-gradient-to-br from-muted/20 via-background/30 to-muted/20 backdrop-blur-md hover:border-brand/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
-                  onClick={toggleSelectAll}
-                >
-                  <Checkbox
-                    checked={selectedProblems.size === filteredAndSortedProblems.length && filteredAndSortedProblems.length > 0}
-                    onCheckedChange={toggleSelectAll}
-                    className="data-[state=checked]:bg-brand data-[state=checked]:border-brand h-5 w-5"
-                  />
-                  <div className="flex-1">
-                    <span className="text-sm font-semibold">Select All</span>
-                    <span className="text-xs text-muted-foreground ml-2">({filteredAndSortedProblems.length} problems)</span>
+              {!isReadOnly && (
+                <div className="relative group/select-all">
+                  <div className="absolute inset-0 bg-gradient-to-r from-brand/5 via-purple-500/5 to-brand/5 rounded-2xl blur-xl opacity-0 group-hover/select-all:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center gap-4 p-4 rounded-2xl border border-border/10 bg-gradient-to-br from-muted/20 via-background/30 to-muted/20 backdrop-blur-md hover:border-brand/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                    onClick={toggleSelectAll}
+                  >
+                    <Checkbox
+                      checked={selectedProblems.size === filteredAndSortedProblems.length && filteredAndSortedProblems.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                      className="data-[state=checked]:bg-brand data-[state=checked]:border-brand h-5 w-5"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-semibold">Select All</span>
+                      <span className="text-xs text-muted-foreground ml-2">({filteredAndSortedProblems.length} problems)</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Problem Items */}
               <div className="space-y-2">
@@ -506,12 +512,14 @@ export function StudyPlanDetailDialog({
 
                     <div className="relative flex items-center gap-4 p-4 rounded-2xl border border-border/10 bg-gradient-to-br from-background/60 via-background/40 to-background/60 backdrop-blur-md hover:border-brand/30 hover:shadow-xl hover:shadow-brand/5 transition-all duration-300 hover:-translate-y-0.5">
                       {/* Checkbox */}
-                      <Checkbox
-                        checked={selectedProblems.has(problem.id)}
-                        onCheckedChange={() => toggleSelectProblem(problem.id)}
-                        className="data-[state=checked]:bg-brand data-[state=checked]:border-brand h-5 w-5 shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                      />
+                      {!isReadOnly && (
+                        <Checkbox
+                          checked={selectedProblems.has(problem.id)}
+                          onCheckedChange={() => toggleSelectProblem(problem.id)}
+                          className="data-[state=checked]:bg-brand data-[state=checked]:border-brand h-5 w-5 shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
 
                       {/* Problem Number Badge */}
                       <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 backdrop-blur-sm flex items-center justify-center border border-border/10 group-hover/problem:border-brand/30 transition-all">
@@ -551,30 +559,32 @@ export function StudyPlanDetailDialog({
                       </Link>
 
                       {/* Delete Button */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 rounded-xl opacity-0 group-hover/problem:opacity-100 hover:bg-red-500/10 hover:text-red-500 hover:border hover:border-red-500/30 transition-all shrink-0"
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (confirm('Remove this problem from the list?')) {
-                            try {
-                              await fetch(`/api/study-plans/problems?id=${problem.id}`, {
-                                method: 'DELETE',
-                              });
-                              await fetchProblems();
-                              onListUpdated();
-                            } catch (error) {
-                              console.error('Error removing problem:', error);
-                              alert('Failed to remove problem');
+                      {!isReadOnly && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-xl opacity-0 group-hover/problem:opacity-100 hover:bg-red-500/10 hover:text-red-500 hover:border hover:border-red-500/30 transition-all shrink-0"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (confirm('Remove this problem from the list?')) {
+                              try {
+                                await fetch(`/api/study-plans/problems?id=${problem.id}`, {
+                                  method: 'DELETE',
+                                });
+                                await fetchProblems();
+                                onListUpdated();
+                              } catch (error) {
+                                console.error('Error removing problem:', error);
+                                alert('Failed to remove problem');
+                              }
                             }
-                          }
-                        }}
-                        title="Remove from list"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                          }}
+                          title="Remove from list"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}

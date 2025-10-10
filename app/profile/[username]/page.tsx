@@ -724,6 +724,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
           listName={selectedList.name}
           listColor={selectedList.color}
           isPublic={selectedList.is_public}
+          isReadOnly={!isOwnProfile}
           onListUpdated={fetchProfile}
         />
       )}
