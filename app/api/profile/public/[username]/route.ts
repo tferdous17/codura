@@ -1,8 +1,9 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
+import { calculateStreaks } from '@/utils/streak-calculator';
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ username: string }> }
 ) {
   try {
@@ -59,43 +60,8 @@ export async function GET(
     console.log('===========================');
 
     // Calculate actual streak based on submissions
-    let actualCurrentStreak = 0;
-    let actualLongestStreak = 0;
-
-    if (submissions && submissions.length > 0) {
-      // Sort submissions by date
-      const sortedSubs = [...submissions].sort((a, b) =>
-        new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
-      );
-
-      // Calculate current streak
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      let currentStreak = 0;
-      let currentDate = new Date(today);
-
-      for (const sub of sortedSubs) {
-        const subDate = new Date(sub.submitted_at);
-        subDate.setHours(0, 0, 0, 0);
-
-        const daysDiff = Math.floor((currentDate.getTime() - subDate.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (daysDiff === currentStreak) {
-          currentStreak++;
-          currentDate = new Date(subDate);
-          currentDate.setDate(currentDate.getDate() - 1);
-        } else if (daysDiff > currentStreak + 1) {
-          break;
-        }
-      }
-
-      actualCurrentStreak = currentStreak;
-
-      // For longest streak, we can use the database value or calculate it
-      // For now, let's use current streak as longest if it's the only data we have
-      actualLongestStreak = Math.max(stats?.longest_streak || 0, actualCurrentStreak);
-    }
+    const { currentStreak: actualCurrentStreak, longestStreak: calculatedLongestStreak } = calculateStreaks(submissions || []);
+    const actualLongestStreak = Math.max(calculatedLongestStreak, stats?.longest_streak || 0);
 
     // Fetch public lists only
     const { data: userLists, error: listsError } = await supabase

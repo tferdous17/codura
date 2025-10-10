@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
+import { calculateStreaks } from '@/utils/streak-calculator';
 
 export async function GET() {
   try {
@@ -87,6 +88,24 @@ export async function GET() {
 
     if (submissionsError) {
       return NextResponse.json({ error: submissionsError.message }, { status: 500 });
+    }
+
+    // Calculate current streak dynamically
+    const { currentStreak, longestStreak } = calculateStreaks(submissions || []);
+
+    // Update stats with calculated streaks
+    if (stats) {
+      stats.current_streak = currentStreak;
+      stats.longest_streak = Math.max(longestStreak, stats.longest_streak || 0);
+
+      // Update the database with the new streak values
+      await supabase
+        .from('user_stats')
+        .update({
+          current_streak: currentStreak,
+          longest_streak: Math.max(longestStreak, stats.longest_streak || 0)
+        })
+        .eq('user_id', user.id);
     }
 
     // Get user achievements with achievement details (using optimized view)

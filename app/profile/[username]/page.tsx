@@ -462,6 +462,19 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
               labels={{
                 totalCount: '{{count}} submissions in {{year}}',
               }}
+              renderBlock={(block, activity) => (
+                <>
+                  {block}
+                  <title>
+                    {activity.count} {activity.count === 1 ? 'submission' : 'submissions'} on {new Date(activity.date).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </title>
+                </>
+              )}
               style={{
                 color: 'hsl(var(--muted-foreground))',
               }}
