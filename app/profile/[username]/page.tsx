@@ -574,7 +574,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
 
               <CardContent>
                 {activeTab === 'submissions' ? (
-                  <RecentSubmissions submissions={submissions} />
+                  <RecentSubmissions submissions={submissions} isOwnProfile={isOwnProfile} />
                 ) : (
                   <div className="space-y-3">
                     {userLists.length === 0 ? (

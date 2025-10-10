@@ -36,30 +36,65 @@ export async function GET(
     // Fetch recent submissions (limit to 50 for public view)
     const { data: submissions, error: submissionsError } = await supabase
       .from('submissions')
-      .select(`
-        id,
-        user_id,
-        problem_id,
-        status,
-        language,
-        runtime,
-        memory,
-        submitted_at,
-        problems (
-          id,
-          leetcode_id,
-          title,
-          title_slug,
-          difficulty,
-          acceptance_rate
-        )
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('submitted_at', { ascending: false })
       .limit(50);
 
     if (submissionsError) {
       console.error('Error fetching submissions:', submissionsError);
+    }
+
+    console.log('=== Public Profile Debug ===');
+    console.log('Username:', username);
+    console.log('User ID:', userId);
+    console.log('Submissions count:', submissions?.length || 0);
+    if (submissions && submissions.length > 0) {
+      console.log('Sample submission:', {
+        problem: submissions[0].problem_title,
+        status: submissions[0].status,
+        date: submissions[0].submitted_at
+      });
+    }
+    console.log('===========================');
+
+    // Calculate actual streak based on submissions
+    let actualCurrentStreak = 0;
+    let actualLongestStreak = 0;
+
+    if (submissions && submissions.length > 0) {
+      // Sort submissions by date
+      const sortedSubs = [...submissions].sort((a, b) =>
+        new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+      );
+
+      // Calculate current streak
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let currentStreak = 0;
+      let currentDate = new Date(today);
+
+      for (const sub of sortedSubs) {
+        const subDate = new Date(sub.submitted_at);
+        subDate.setHours(0, 0, 0, 0);
+
+        const daysDiff = Math.floor((currentDate.getTime() - subDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (daysDiff === currentStreak) {
+          currentStreak++;
+          currentDate = new Date(subDate);
+          currentDate.setDate(currentDate.getDate() - 1);
+        } else if (daysDiff > currentStreak + 1) {
+          break;
+        }
+      }
+
+      actualCurrentStreak = currentStreak;
+
+      // For longest streak, we can use the database value or calculate it
+      // For now, let's use current streak as longest if it's the only data we have
+      actualLongestStreak = Math.max(stats?.longest_streak || 0, actualCurrentStreak);
     }
 
     // Fetch public lists only
@@ -143,14 +178,18 @@ export async function GET(
 
     return NextResponse.json({
       profile: userData,
-      stats: stats || {
+      stats: stats ? {
+        ...stats,
+        current_streak: actualCurrentStreak,
+        longest_streak: actualLongestStreak,
+      } : {
         user_id: userId,
         total_solved: 0,
         easy_solved: 0,
         medium_solved: 0,
         hard_solved: 0,
-        current_streak: 0,
-        longest_streak: 0,
+        current_streak: actualCurrentStreak,
+        longest_streak: actualLongestStreak,
         total_submissions: 0,
       },
       submissions: submissions || [],
