@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import Image from "next/image";
 import CoduraLogo from "@/components/logos/codura-logo.svg";
+import CoduraLogoDark from "@/components/logos/codura-logo-dark.svg";
 import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 import { AddToListDialog } from "@/components/problems/add-to-list-dialog";
 import dynamic from 'next/dynamic';
 import {
@@ -75,6 +77,7 @@ interface UserData {
 }
 
 export default function ProblemsPage() {
+  const { theme: currentTheme } = useTheme();
   const [showBorder, setShowBorder] = useState(false);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [stats, setStats] = useState<ProblemStats | null>(null);
@@ -216,12 +219,12 @@ export default function ProblemsPage() {
   };
 
   return (
-    <div className="caffeine-theme min-h-screen bg-zinc-950 relative">
+    <div className="caffeine-theme min-h-screen bg-background relative">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-zinc-950" />
-        <div className="absolute top-[-10%] right-[20%] w-[500px] h-[500px] bg-brand/8 rounded-full blur-[100px] animate-pulse-slow" />
-        <div className="absolute bottom-[10%] left-[15%] w-[400px] h-[400px] bg-purple-500/6 rounded-full blur-[80px] animate-float-slow" style={{ animationDelay: '2s' }} />
+        <div className="absolute inset-0 bg-background" />
+        <div className="absolute top-[-10%] right-[20%] w-[500px] h-[500px] bg-brand/5 dark:bg-brand/8 rounded-full blur-[100px] animate-pulse-slow" />
+        <div className="absolute bottom-[10%] left-[15%] w-[400px] h-[400px] bg-purple-500/3 dark:bg-purple-500/6 rounded-full blur-[80px] animate-float-slow" style={{ animationDelay: '2s' }} />
       </div>
 
       {/* Navbar */}
@@ -229,14 +232,14 @@ export default function ProblemsPage() {
         className={cn(
           "fixed inset-x-0 top-0 z-50 border-b border-b-transparent bg-gradient-to-b shadow-none backdrop-blur-none transition-all duration-500",
           showBorder
-            ? "border-b-white/10 shadow-[0_4px_60px_0_rgba(0,0,0,0.90)] backdrop-blur-md from-neutral-950/80 to-neutral-950/50"
+            ? "border-b-border/50 shadow-xl backdrop-blur-md from-background/80 to-background/50"
             : ""
         )}
       >
         <div className="flex items-center justify-between py-4 max-w-7xl mx-auto px-6">
           <Link href="/" aria-label="Codura homepage" className="flex items-center group">
             <Image
-              src={CoduraLogo}
+              src={currentTheme === 'light' ? CoduraLogoDark : CoduraLogo}
               alt="Codura logo"
               width={90}
               height={40}
@@ -485,8 +488,8 @@ export default function ProblemsPage() {
                 className={cn(
                   "rounded-full px-6 h-10 font-medium transition-all duration-300",
                   selectedDifficulty === 'all'
-                    ? 'bg-gradient-to-r from-brand to-orange-300 hover:from-brand/90 hover:to-orange-300/90 text-white shadow-lg shadow-brand/30 scale-105'
-                    : 'border-2 hover:border-brand/50 hover:bg-brand/5'
+                    ? 'bg-gradient-to-r from-brand to-orange-300 hover:from-brand/90 hover:to-orange-300/90 text-brand-foreground shadow-lg shadow-brand/30 scale-105'
+                    : 'border-2 hover:border-brand/50 hover:bg-brand/5 text-foreground'
                 )}
               >
                 All
@@ -501,8 +504,8 @@ export default function ProblemsPage() {
                 className={cn(
                   "rounded-full px-6 h-10 font-medium transition-all duration-300",
                   selectedDifficulty === 'Easy'
-                    ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/30 scale-105'
-                    : 'border-2 hover:border-green-500/50 hover:bg-green-500/5'
+                    ? 'bg-green-500 hover:bg-green-600 text-white dark:text-white shadow-lg shadow-green-500/30 scale-105'
+                    : 'border-2 hover:border-green-500/50 hover:bg-green-500/5 text-foreground'
                 )}
               >
                 Easy
@@ -517,8 +520,8 @@ export default function ProblemsPage() {
                 className={cn(
                   "rounded-full px-6 h-10 font-medium transition-all duration-300",
                   selectedDifficulty === 'Medium'
-                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg shadow-yellow-500/30 scale-105'
-                    : 'border-2 hover:border-yellow-500/50 hover:bg-yellow-500/5'
+                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white dark:text-white shadow-lg shadow-yellow-500/30 scale-105'
+                    : 'border-2 hover:border-yellow-500/50 hover:bg-yellow-500/5 text-foreground'
                 )}
               >
                 Medium
@@ -533,8 +536,8 @@ export default function ProblemsPage() {
                 className={cn(
                   "rounded-full px-6 h-10 font-medium transition-all duration-300",
                   selectedDifficulty === 'Hard'
-                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 scale-105'
-                    : 'border-2 hover:border-red-500/50 hover:bg-red-500/5'
+                    ? 'bg-red-500 hover:bg-red-600 text-white dark:text-white shadow-lg shadow-red-500/30 scale-105'
+                    : 'border-2 hover:border-red-500/50 hover:bg-red-500/5 text-foreground'
                 )}
               >
                 Hard

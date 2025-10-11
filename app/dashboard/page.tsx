@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import CoduraLogo from "@/components/logos/codura-logo.svg";
+import CoduraLogoDark from "@/components/logos/codura-logo-dark.svg";
 import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -259,7 +261,7 @@ function Calendar({ streak }: { streak: number }) {
                 onMouseLeave={() => setHoveredDay(null)}
                 className={cn(
                   "relative aspect-square flex items-center justify-center text-sm rounded-lg transition-all duration-300 cursor-pointer",
-                  isToday && "bg-brand text-white font-semibold shadow-lg shadow-brand/30",
+                  isToday && "bg-brand text-brand-foreground font-semibold shadow-lg shadow-brand/30",
                   !isToday && hasActivity && !isSelected && "bg-green-500/20 text-green-600 hover:bg-green-500/40",
                   !isToday && !hasActivity && "hover:bg-muted/50",
                   isSelected && "bg-brand/20 ring-2 ring-brand text-brand font-semibold",
@@ -344,6 +346,7 @@ function Calendar({ streak }: { streak: number }) {
 }
 
 export default function DashboardPage() {
+  const { theme: currentTheme } = useTheme();
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showBorder, setShowBorder] = useState(false);
@@ -474,7 +477,7 @@ export default function DashboardPage() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="caffeine-theme min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="caffeine-theme min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Loading your dashboard...</p>
@@ -486,7 +489,7 @@ export default function DashboardPage() {
   // Show error state if user data failed to load
   if (!user) {
     return (
-      <div className="caffeine-theme min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="caffeine-theme min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 mb-4">Failed to load user data</p>
           <Button onClick={() => window.location.reload()}>Retry</Button>
@@ -496,21 +499,21 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="caffeine-theme min-h-screen bg-zinc-950 relative">
+    <div className="caffeine-theme min-h-screen bg-background relative">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-zinc-950" />
+        <div className="absolute inset-0 bg-background" />
 
         {/* Floating orbs */}
         <div
-          className="absolute top-[-10%] right-[20%] w-[500px] h-[500px] bg-brand/8 rounded-full blur-[100px] animate-pulse-slow"
+          className="absolute top-[-10%] right-[20%] w-[500px] h-[500px] bg-brand/5 dark:bg-brand/8 rounded-full blur-[100px] animate-pulse-slow"
         />
         <div
-          className="absolute bottom-[10%] left-[15%] w-[400px] h-[400px] bg-purple-500/6 rounded-full blur-[80px] animate-float-slow"
+          className="absolute bottom-[10%] left-[15%] w-[400px] h-[400px] bg-purple-500/3 dark:bg-purple-500/6 rounded-full blur-[80px] animate-float-slow"
           style={{ animationDelay: '2s' }}
         />
         <div
-          className="absolute top-[40%] right-[60%] w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[70px] animate-float"
+          className="absolute top-[40%] right-[60%] w-[300px] h-[300px] bg-blue-500/3 dark:bg-blue-500/5 rounded-full blur-[70px] animate-float"
           style={{ animationDelay: '4s' }}
         />
 
@@ -536,14 +539,14 @@ export default function DashboardPage() {
         className={cn(
           "fixed inset-x-0 top-0 z-50 border-b border-b-transparent bg-gradient-to-b shadow-none backdrop-blur-none transition-all duration-500",
           showBorder
-            ? "border-b-white/10 shadow-[0_4px_60px_0_rgba(0,0,0,0.90)] backdrop-blur-md from-neutral-950/80 to-neutral-950/50"
+            ? "border-b-border/50 shadow-xl backdrop-blur-md from-background/80 to-background/50"
             : ""
         )}
       >
         <div className="flex items-center justify-between py-4 max-w-7xl mx-auto px-6">
           <Link href="/" aria-label="Codura homepage" className="flex items-center group">
             <Image
-              src={CoduraLogo}
+              src={currentTheme === 'light' ? CoduraLogoDark : CoduraLogo}
               alt="Codura logo"
               width={90}
               height={40}
@@ -552,20 +555,20 @@ export default function DashboardPage() {
             />
           </Link>
 
-          <nav className="hidden items-center gap-6 text-base leading-7 font-light text-neutral-400 lg:flex">
-            <Link className="hover:text-neutral-200 transition-colors" href="/problems">
+          <nav className="hidden items-center gap-6 text-base leading-7 font-light text-muted-foreground lg:flex">
+            <Link className="hover:text-foreground transition-colors" href="/problems">
               Problems
             </Link>
-            <Link className="hover:text-neutral-200 transition-colors" href="/mock-interview">
+            <Link className="hover:text-foreground transition-colors" href="/mock-interview">
               Interview
             </Link>
-            <Link className="hover:text-neutral-200 transition-colors" href="/study-pods">
+            <Link className="hover:text-foreground transition-colors" href="/study-pods">
               Study Pods
             </Link>
-            <Link className="hover:text-neutral-200 transition-colors" href="/leaderboards">
+            <Link className="hover:text-foreground transition-colors" href="/leaderboards">
               Leaderboards
             </Link>
-            <Link className="hover:text-neutral-200 transition-colors" href="/discuss">
+            <Link className="hover:text-foreground transition-colors" href="/discuss">
               Discuss
             </Link>
           </nav>
@@ -575,7 +578,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/5">
+                <Button variant="ghost" className="flex items-center gap-2 hover:bg-accent">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative">
                     {user.avatar && user.avatar.startsWith('http') ? (
                       <img
@@ -587,10 +590,10 @@ export default function DashboardPage() {
                       <span className="text-sm">{user.avatar}</span>
                     )}
                   </div>
-                  <span className="hidden sm:inline text-sm text-neutral-400">
+                  <span className="hidden sm:inline text-sm text-muted-foreground">
                     {user.name.split(' ')[0]}
                   </span>
-                  <ChevronDown className="h-4 w-4 text-neutral-400" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -740,7 +743,7 @@ export default function DashboardPage() {
                     ))}
                   </div>
                   <Link href={dailyChallenge.slug ? `/problems/${dailyChallenge.slug}` : '/problems'}>
-                    <Button className="bg-gradient-to-r from-brand to-orange-300 hover:from-brand/90 hover:to-orange-300/90 text-white hover:scale-105 transition-transform">
+                    <Button className="bg-gradient-to-r from-brand to-orange-300 hover:from-brand/90 hover:to-orange-300/90 text-brand-foreground hover:scale-105 transition-transform">
                       Start Challenge
                     </Button>
                   </Link>
@@ -823,7 +826,7 @@ export default function DashboardPage() {
                         className={cn(
                           "h-7 px-2 text-xs",
                           selectedTimeframe === timeframe
-                            ? "bg-brand text-white hover:bg-brand/90"
+                            ? "bg-brand text-brand-foreground hover:bg-brand/90"
                             : "hover:bg-muted"
                         )}
                         onClick={() => setSelectedTimeframe(timeframe)}

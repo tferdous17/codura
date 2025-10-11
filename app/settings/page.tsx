@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
 import Image from "next/image";
 import CoduraLogo from "@/components/logos/codura-logo.svg";
+import CoduraLogoDark from "@/components/logos/codura-logo-dark.svg";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -221,12 +222,12 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="caffeine-theme min-h-screen bg-zinc-950 relative">
+    <div className="caffeine-theme min-h-screen bg-background relative">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-zinc-950" />
-        <div className="absolute top-[-10%] right-[20%] w-[500px] h-[500px] bg-brand/8 rounded-full blur-[100px] animate-pulse-slow" />
-        <div className="absolute bottom-[10%] left-[15%] w-[400px] h-[400px] bg-purple-500/6 rounded-full blur-[80px] animate-float-slow" style={{ animationDelay: '2s' }} />
+        <div className="absolute inset-0 bg-background" />
+        <div className="absolute top-[-10%] right-[20%] w-[500px] h-[500px] bg-brand/5 dark:bg-brand/8 rounded-full blur-[100px] animate-pulse-slow" />
+        <div className="absolute bottom-[10%] left-[15%] w-[400px] h-[400px] bg-purple-500/3 dark:bg-purple-500/6 rounded-full blur-[80px] animate-float-slow" style={{ animationDelay: '2s' }} />
       </div>
 
       {/* Navbar */}
@@ -234,14 +235,14 @@ export default function SettingsPage() {
         className={cn(
           "fixed inset-x-0 top-0 z-50 border-b border-b-transparent bg-gradient-to-b shadow-none backdrop-blur-none transition-all duration-500",
           showBorder
-            ? "border-b-white/10 shadow-[0_4px_60px_0_rgba(0,0,0,0.90)] backdrop-blur-md from-neutral-950/80 to-neutral-950/50"
+            ? "border-b-border/50 shadow-xl backdrop-blur-md from-background/80 to-background/50"
             : ""
         )}
       >
         <div className="flex items-center justify-between py-4 max-w-7xl mx-auto px-6">
           <Link href="/" aria-label="Codura homepage" className="flex items-center group">
             <Image
-              src={CoduraLogo}
+              src={currentTheme === 'light' ? CoduraLogoDark : CoduraLogo}
               alt="Codura logo"
               width={90}
               height={40}
@@ -250,17 +251,17 @@ export default function SettingsPage() {
             />
           </Link>
 
-          <nav className="hidden items-center gap-6 text-base leading-7 font-light text-neutral-400 lg:flex">
-            <Link className="hover:text-neutral-200 transition-colors" href="/dashboard">
+          <nav className="hidden items-center gap-6 text-base leading-7 font-light text-muted-foreground lg:flex">
+            <Link className="hover:text-foreground transition-colors" href="/dashboard">
               Dashboard
             </Link>
-            <Link className="hover:text-neutral-200 transition-colors" href="/problems">
+            <Link className="hover:text-foreground transition-colors" href="/problems">
               Problems
             </Link>
-            <Link className="hover:text-neutral-200 transition-colors" href="/mock-interview">
+            <Link className="hover:text-foreground transition-colors" href="/mock-interview">
               Interview
             </Link>
-            <Link className="hover:text-neutral-200 transition-colors" href="/leaderboards">
+            <Link className="hover:text-foreground transition-colors" href="/leaderboards">
               Leaderboards
             </Link>
           </nav>
@@ -270,7 +271,7 @@ export default function SettingsPage() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/5">
+                  <Button variant="ghost" className="flex items-center gap-2 hover:bg-accent">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative">
                       {user.avatar && user.avatar.startsWith('http') ? (
                         <img
@@ -282,10 +283,10 @@ export default function SettingsPage() {
                         <span className="text-sm">{user.avatar}</span>
                       )}
                     </div>
-                    <span className="hidden sm:inline text-sm text-neutral-400">
+                    <span className="hidden sm:inline text-sm text-muted-foreground">
                       {user.name.split(' ')[0]}
                     </span>
-                    <ChevronDown className="h-4 w-4 text-neutral-400" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -401,7 +402,7 @@ export default function SettingsPage() {
                     className={cn(
                       "w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                       activeTab === 'appearance'
-                        ? "bg-brand text-white shadow-lg shadow-brand/30"
+                        ? "bg-brand text-brand-foreground shadow-lg shadow-brand/30"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
@@ -412,7 +413,7 @@ export default function SettingsPage() {
                     className={cn(
                       "w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                       activeTab === 'profile'
-                        ? "bg-brand text-white shadow-lg shadow-brand/30"
+                        ? "bg-brand text-brand-foreground shadow-lg shadow-brand/30"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
@@ -423,7 +424,7 @@ export default function SettingsPage() {
                     className={cn(
                       "w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                       activeTab === 'account'
-                        ? "bg-brand text-white shadow-lg shadow-brand/30"
+                        ? "bg-brand text-brand-foreground shadow-lg shadow-brand/30"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
@@ -486,15 +487,15 @@ export default function SettingsPage() {
                             : "border-border/30 hover:border-border/50"
                         )}
                       >
-                        <div className="aspect-video rounded-md bg-white mb-3 p-3 flex flex-col gap-2">
-                          <div className="h-2 bg-gray-200 rounded w-1/2" />
-                          <div className="h-2 bg-gray-100 rounded w-3/4" />
-                          <div className="h-2 bg-gray-100 rounded w-2/3" />
+                        <div className="aspect-video rounded-md bg-white mb-3 p-3 flex flex-col gap-2 border border-gray-300">
+                          <div className="h-2 bg-gray-300 rounded w-1/2" />
+                          <div className="h-2 bg-gray-200 rounded w-3/4" />
+                          <div className="h-2 bg-gray-200 rounded w-2/3" />
                         </div>
                         <p className="text-sm font-medium">Light</p>
                         {currentTheme === 'light' && (
                           <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-brand flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                           </div>
@@ -506,7 +507,7 @@ export default function SettingsPage() {
                   <div className="pt-4 border-t border-border/20">
                     <Button
                       onClick={() => toast.success('Theme preference saved')}
-                      className="bg-brand hover:bg-brand/90 text-white"
+                      className="bg-brand hover:bg-brand/90 text-brand-foreground"
                     >
                       Save Changes
                     </Button>
@@ -588,7 +589,7 @@ export default function SettingsPage() {
                     <Button
                       onClick={handleSaveProfile}
                       disabled={isSavingProfile}
-                      className="bg-brand hover:bg-brand/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-brand hover:bg-brand/90 text-brand-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSavingProfile ? 'Saving...' : 'Save Changes'}
                     </Button>
@@ -673,7 +674,7 @@ export default function SettingsPage() {
                     <Button
                       onClick={handleChangePassword}
                       disabled={isChangingPassword}
-                      className="bg-brand hover:bg-brand/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-brand hover:bg-brand/90 text-brand-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isChangingPassword ? 'Updating...' : 'Update Password'}
                     </Button>
@@ -694,7 +695,7 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted-foreground mb-4">
                         Once you delete your account, there is no going back. All your data will be permanently removed.
                       </p>
-                      <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white">
+                      <Button variant="destructive" className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
                         Delete Account
                       </Button>
                     </div>
