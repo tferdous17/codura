@@ -2,6 +2,10 @@ import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { calculateStreaks } from '@/utils/streak-calculator';
 
+// Add caching for better performance
+export const revalidate = 60; // Revalidate every 60 seconds
+export const dynamic = 'force-dynamic'; // Ensure fresh data for authenticated users
+
 export async function GET() {
   try {
     const supabase = await createClient();

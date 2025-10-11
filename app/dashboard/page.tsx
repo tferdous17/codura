@@ -24,9 +24,7 @@ import {
   X,
   Plus,
   MoreVertical,
-  User,
   Settings,
-  LogOut,
   ChevronDown,
   BarChart3
 } from "lucide-react";
@@ -41,8 +39,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EventDialog } from "@/components/calendar/event-dialog";
@@ -363,110 +359,64 @@ export default function DashboardPage() {
   const [selectedStudyPlan, setSelectedStudyPlan] = useState<{ id: string; name: string; color: string; is_public?: boolean } | null>(null);
   const [showStudyPlanDialog, setShowStudyPlanDialog] = useState(false);
 
-  // Fetch user data from Supabase
+  // OPTIMIZED: Fetch ALL dashboard data in ONE API call
   useEffect(() => {
-    async function fetchUserData() {
+    async function fetchAllDashboardData() {
       try {
-        const response = await fetch('/api/profile');
-        if (!response.ok) throw new Error('Failed to fetch profile');
+        setIsLoading(true);
+
+        // Single unified API call instead of 6 separate calls!
+        const response = await fetch('/api/dashboard');
+        if (!response.ok) throw new Error('Failed to fetch dashboard data');
 
         const data = await response.json();
 
-        // Map API response to UserData format
-        const fullName = data.profile?.full_name || data.user?.email?.split('@')[0] || 'User';
-        const initials = fullName
-          .split(' ')
-          .map((n: string) => n[0])
-          .join('')
-          .toUpperCase()
-          .slice(0, 2);
-
-
-          // Set user data
-        setUser({
-          name: fullName,
-          email: data.user?.email || '',
-          avatar: data.profile?.avatar_url || initials,
-          username: data.profile?.username || '',
-          streak: data.stats?.current_streak || 0,
-          problemsSolved: data.stats?.total_solved || 0,
-          easy: data.stats?.easy_solved || 0,
-          medium: data.stats?.medium_solved || 0,
-          hard: data.stats?.hard_solved || 0,
-          createdAt: data.user?.created_at || null,
-        });
+        // Set all state at once
+        setUser(data.user);
+        setStudyPlans(data.studyPlans || []);
+        setRecentActivity(data.recentActivity || []);
+        setUpcomingEvents(data.upcomingEvents || []);
+        setDailyChallenge(data.dailyChallenge);
+        setActivityChartData(data.activityChartData || []);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Error fetching dashboard data:', error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchUserData();
-    fetchStudyPlans();
-    fetchRecentActivity();
-    fetchUpcomingEvents();
-    fetchDailyChallenge();
-    fetchActivityChart();
+    fetchAllDashboardData();
   }, []);
 
   // Fetch activity chart when timeframe changes
   useEffect(() => {
+    async function fetchActivityChart() {
+      try {
+        const response = await fetch(`/api/dashboard/activity-chart?timeframe=${selectedTimeframe}`);
+        const data = await response.json();
+        setActivityChartData(data.data || []);
+      } catch (error) {
+        console.error('Error fetching activity chart:', error);
+      }
+    }
+
     fetchActivityChart();
   }, [selectedTimeframe]);
 
-  // Fetch study plans
-  const fetchStudyPlans = async () => {
+  // Refetch function for when data needs to be refreshed
+  const refetchDashboard = async () => {
     try {
-      const response = await fetch('/api/study-plans');
+      const response = await fetch('/api/dashboard');
+      if (!response.ok) throw new Error('Failed to fetch dashboard data');
       const data = await response.json();
-      setStudyPlans(data.userLists || []);
+      setUser(data.user);
+      setStudyPlans(data.studyPlans || []);
+      setRecentActivity(data.recentActivity || []);
+      setUpcomingEvents(data.upcomingEvents || []);
+      setDailyChallenge(data.dailyChallenge);
+      setActivityChartData(data.activityChartData || []);
     } catch (error) {
-      console.error('Error fetching study plans:', error);
-    }
-  };
-
-  // Fetch recent activity
-  const fetchRecentActivity = async () => {
-    try {
-      const response = await fetch('/api/dashboard/recent-activity');
-      const data = await response.json();
-      setRecentActivity(data.activity || []);
-    } catch (error) {
-      console.error('Error fetching recent activity:', error);
-    }
-  };
-
-  // Fetch upcoming events
-  const fetchUpcomingEvents = async () => {
-    try {
-      const response = await fetch('/api/dashboard/upcoming-events');
-      const data = await response.json();
-      setUpcomingEvents(data.events || []);
-    } catch (error) {
-      console.error('Error fetching upcoming events:', error);
-    }
-  };
-
-  // Fetch daily challenge
-  const fetchDailyChallenge = async () => {
-    try {
-      const response = await fetch('/api/dashboard/daily-challenge');
-      const data = await response.json();
-      setDailyChallenge(data.challenge || null);
-    } catch (error) {
-      console.error('Error fetching daily challenge:', error);
-    }
-  };
-
-  // Fetch activity chart
-  const fetchActivityChart = async () => {
-    try {
-      const response = await fetch(`/api/dashboard/activity-chart?timeframe=${selectedTimeframe}`);
-      const data = await response.json();
-      setActivityChartData(data.data || []);
-    } catch (error) {
-      console.error('Error fetching activity chart:', error);
+      console.error('Error refetching dashboard:', error);
     }
   };
 
@@ -481,7 +431,7 @@ export default function DashboardPage() {
 
       if (!response.ok) throw new Error('Failed to delete event');
 
-      await fetchUpcomingEvents();
+      await refetchDashboard(); // OPTIMIZED: Use unified refetch
     } catch (error) {
       console.error('Error deleting event:', error);
       alert('Failed to delete event');
@@ -643,37 +593,84 @@ export default function DashboardPage() {
                   <ChevronDown className="h-4 w-4 text-neutral-400" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-card/95 backdrop-blur-xl border-border/40">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
+              <DropdownMenuContent
+                align="end"
+                className="w-[280px] p-2 bg-gradient-to-b from-card/95 to-card/98 backdrop-blur-xl border border-border/50 shadow-2xl rounded-lg"
+              >
+                {/* Profile Header - Modern & Elegant */}
+                <div className="px-3 py-3.5 mb-1">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-semibold overflow-hidden ring-1 ring-border/50">
+                        {user.avatar && user.avatar.startsWith('http') ? (
+                          <img
+                            src={user.avatar}
+                            alt="Avatar"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-sm">{user.avatar}</span>
+                        )}
+                      </div>
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full ring-2 ring-card" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
                   </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-border/40" />
-                <DropdownMenuItem asChild>
-                  <Link href={`/profile/${user?.username || ''}`} className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-border/40" />
-                <DropdownMenuItem
-                  className="cursor-pointer text-red-500 focus:text-red-500"
-                  onClick={async () => {
-                    await fetch('/auth/signout', { method: 'POST' });
-                    window.location.href = '/';
-                  }}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign Out</span>
-                </DropdownMenuItem>
+                </div>
+
+                {/* Divider */}
+                <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent my-1.5" />
+
+                {/* Menu Items - Balanced Design */}
+                <div className="py-1 space-y-0.5">
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={`/profile/${user?.username || ''}`}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-md cursor-pointer text-sm font-medium transition-all hover:bg-brand/8 focus:bg-brand/8 group"
+                    >
+                      <div className="w-5 h-5 rounded-md bg-brand/10 flex items-center justify-center group-hover:bg-brand/20 transition-colors">
+                        <Settings className="w-3.5 h-3.5 text-brand" />
+                      </div>
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/settings"
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-md cursor-pointer text-sm font-medium transition-all hover:bg-muted focus:bg-muted group"
+                    >
+                      <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center group-hover:bg-muted-foreground/20 transition-colors">
+                        <Settings className="w-3.5 h-3.5 text-muted-foreground" />
+                      </div>
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </div>
+
+                {/* Divider */}
+                <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent my-1.5" />
+
+                {/* Sign Out - Professional Emphasis */}
+                <div className="py-1">
+                  <DropdownMenuItem
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-md cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 transition-all hover:bg-red-500/10 focus:bg-red-500/10 group"
+                    onClick={async () => {
+                      await fetch('/auth/signout', { method: 'POST' });
+                      window.location.href = '/';
+                    }}
+                  >
+                    <div className="w-5 h-5 rounded-md bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                    </div>
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -736,9 +733,9 @@ export default function DashboardPage() {
                 <>
                   <h3 className="font-semibold text-xl mb-3 group-hover:text-brand transition-colors">{dailyChallenge.title}</h3>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {dailyChallenge.topics.map((topic, i) => (
+                    {Array.isArray(dailyChallenge.topics) && dailyChallenge.topics.map((topic, i) => (
                       <Badge key={i} variant="outline" className="bg-muted/50 hover:bg-brand/10 transition-colors">
-                        {topic}
+                        {typeof topic === 'string' ? topic : topic.name || topic.slug}
                       </Badge>
                     ))}
                   </div>
@@ -1143,14 +1140,14 @@ export default function DashboardPage() {
             <PlanDialog
               open={showPlanDialog}
               onOpenChange={setShowPlanDialog}
-              onPlanCreated={fetchStudyPlans}
+              onPlanCreated={refetchDashboard}
             />
 
             <EventDialog
               open={showUpcomingEventDialog}
               onOpenChange={setShowUpcomingEventDialog}
               selectedDate={eventToEdit?.event_date ? new Date(eventToEdit.event_date) : new Date()}
-              onEventCreated={fetchUpcomingEvents}
+              onEventCreated={refetchDashboard}
               existingEvent={eventToEdit}
             />
 
@@ -1162,7 +1159,7 @@ export default function DashboardPage() {
                 listName={selectedStudyPlan.name}
                 listColor={selectedStudyPlan.color}
                 isPublic={selectedStudyPlan.is_public}
-                onListUpdated={fetchStudyPlans}
+                onListUpdated={refetchDashboard}
               />
             )}
           </div>

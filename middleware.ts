@@ -33,7 +33,19 @@ export async function middleware(req: NextRequest) {
 
   // ✅ Never touch API or static
   if (isAssetPath(pathname) || isApiPath(pathname)) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+
+    // Add performance headers for static assets
+    if (isAssetPath(pathname)) {
+      response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+
+    // Add caching headers for API routes
+    if (isApiPath(pathname)) {
+      response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    }
+
+    return response;
   }
 
   // Keep session fresh for app routes only

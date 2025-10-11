@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LoadingProvider } from "@/components/providers/loading-provider";
+import { LoadingBar } from "@/components/loading-bar";
+import { FaviconAnimation } from "@/components/favicon-animation";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,14 +38,20 @@ export default function RootLayout({
     <>
       <html lang="en" suppressHydrationWarning>
         <head />
-        <body>
+        <body className={`${geistSans.variable} ${geistMono.variable}`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"  // Default to dark but allow switching
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <Suspense fallback={null}>
+              <LoadingProvider>
+                <LoadingBar />
+                <FaviconAnimation />
+                {children}
+              </LoadingProvider>
+            </Suspense>
           </ThemeProvider>
         </body>
       </html>
