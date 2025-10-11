@@ -20,11 +20,14 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Play, Send, RotateCcw, Loader2, CopyCheck, CloudUploadIcon, ListChecks } from 'lucide-react'
+import { Play, Send, RotateCcw, Loader2, CopyCheck, CloudUploadIcon, ListChecks, ChevronDown } from 'lucide-react'
 import Editor, { useMonaco } from '@monaco-editor/react'
 import { createClient } from '@/utils/supabase/client'
 import { useParams, useRouter } from 'next/navigation'
 import { LANGUAGES } from '@/utils/languages'
+import { ChevronUp } from 'lucide-react'
+import { Tag } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 
 
 // Add custom styles for tab scrolling
@@ -115,6 +118,8 @@ export default function ProblemPage() {
     const [testcases, setTestcases] = useState<TestCase[]| undefined>()
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [showTags, setShowTags] = useState(false)
+    const [showAcceptanceRate, setShowAcceptanceRate] = useState(false)
 
     const [userLang, setUserLang] = useState({
         "id": 92,
@@ -338,7 +343,7 @@ export default function ProblemPage() {
     }
 
     return (
-        <div className="caffeine-theme h-screen w-full bg-background">
+        <div className="caffeine-theme h-screen w-full bg-background p-2">
             <style jsx global>{tabScrollStyles}</style>
             <ResizablePanelGroup direction="horizontal" className="h-full">
                 
@@ -369,21 +374,48 @@ export default function ProblemPage() {
                                                 <Badge variant="default" className={`${getDifficultyColor(problem.difficulty)} border-1`}>
                                                     {problem.difficulty}
                                                 </Badge>
-                                                <span className="text-sm text-muted-foreground">
-                                                    Acceptance: {problem.acceptance_rate.toFixed(1)}%
-                                                </span>
+                                                
+                                                <div 
+                                                className="relative cursor-pointer group ml-2"
+                                                onClick={() => setShowAcceptanceRate(true)}
+                                                >
+                                                <div className={`text-sm transition-all ${showAcceptanceRate ? '' : 'blur-sm select-none'}`}>
+                                                    <span className="text-zinc-400">Acceptance: </span>
+                                                    <span className="text-sm text-muted-foreground">
+                                                    {problem.acceptance_rate.toFixed(1)}%
+                                                    </span>
+                                                </div>
+                                                {!showAcceptanceRate && (
+                                                    <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-500 group-hover:text-zinc-300">
+                                                    Reveal Acceptance %
+                                                    </div>
+                                                )}
+                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Topics */}
                                         {problem.topic_tags && problem.topic_tags.length > 0 && (
+                                        <div className="space-y-2">
+                                            <button
+                                            onClick={() => setShowTags(!showTags)}
+                                            className="cursor-pointer text-sm text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-1 border-1 px-2 py-1 rounded-lg"
+                                            >
+                                            <Tag className="w-3 h-3 mr-1 text-primary" />
+                                            {showTags ? 'Hide Topics' : 'View Topics'}
+                                            {showTags ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                            </button>
+                                            
+                                            {showTags && (
                                             <div className="flex flex-wrap gap-2">
                                                 {problem.topic_tags.map((tag) => (
-                                                    <Badge key={tag.slug} variant="secondary" className="text-xs">
-                                                        {tag.name}
-                                                    </Badge>
+                                                <Badge key={tag.slug} variant="secondary" className="text-xs">
+                                                    {tag.name}
+                                                </Badge>
                                                 ))}
                                             </div>
+                                            )}
+                                        </div>
                                         )}
 
                                         {/* Description */}
@@ -593,7 +625,7 @@ export default function ProblemPage() {
                         <ResizableHandle withHandle />
 
                         {/* Bottom Section - Test Cases */}
-                        <ResizablePanel defaultSize={35} minSize={20}>
+                        <ResizablePanel defaultSize={30} minSize={20}>
                             <div className="h-full border-t">
                                 <Tabs defaultValue="testcases" className="w-full h-full flex flex-col">
                                     <div className="border-b overflow-x-auto tab-scroll-container">
@@ -661,71 +693,93 @@ export default function ProblemPage() {
                 <ResizableHandle withHandle />
 
                 {/* Right Panel - AI Chatbot */}
-                <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
-                    <Card className="h-full rounded-none border-0 flex flex-col">
-                        {/* Codura A.I Card Header */}
-                        <CardHeader className="border-b">
-                            <CardTitle className="text-lg">Codura A.I</CardTitle>
-                        </CardHeader>
-
-                        {/* A.I Chat Bot Container */}
-                        <CardContent className="flex-1 p-0 flex flex-col">
-                            {/* Chat Messages */}
-                            <ScrollArea className="flex-1 p-4">
-                                <div className="space-y-4">
-                                    {chatMessages.length === 0 ? (
-                                        <div className="text-center text-muted-foreground text-sm py-8">
-                                            <p>Ask me anything about this problem!</p>
-                                            <p className="mt-2">I can help with:</p>
-                                            <ul className="mt-2 space-y-1 text-xs">
-                                                <li>• Understanding the problem</li>
-                                                <li>• Approach suggestions</li>
-                                                <li>• Code explanations</li>
-                                                <li>• Debugging help</li>
-                                            </ul>
-                                        </div>
-                                    ) : (
-                                        chatMessages.map((message, index) => (
-                                            <div
-                                                key={index}
-                                                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                                            >
-                                                <div
-                                                    className={`max-w-[80%] rounded-lg p-3 text-sm ${message.role === 'user'
-                                                        ? 'bg-primary text-primary-foreground'
-                                                        : 'bg-muted'
-                                                        }`}
-                                                >
-                                                    {message.content}
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </ScrollArea>
-
-                            {/* Chat Input */}
-                            <div className="border-t p-4">
-                                <div className="flex gap-2">
-                                    <Textarea
-                                        placeholder="Ask me anything..."
-                                        value={chatInput}
-                                        onChange={(e) => setChatInput(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
-                                                e.preventDefault()
-                                                handleSendMessage()
-                                            }
-                                        }}
-                                        className="min-h-[60px] resize-none"
-                                    />
-                                    <Button onClick={handleSendMessage} size="icon" className="self-end">
-                                        <Send className="w-4 h-4" />
-                                    </Button>
-                                </div>
+                <ResizablePanel defaultSize={20} minSize={20} maxSize={35}>
+                    <div className="h-full flex flex-col bg-zinc-950 border-l border-zinc-800">
+                        {/* Codura A.I Header */}
+                        <div className="border-b border-zinc-800 px-4 py-3 bg-zinc-900/50">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                <h3 className="text-sm font-semibold text-zinc-100">Codura AI</h3>
                             </div>
-                        </CardContent>
-                    </Card>
+                            <p className="text-xs text-zinc-500 mt-0.5">Your coding assistant</p>
+                        </div>
+
+                        {/* Chat Messages */}
+                        <ScrollArea className="flex-1 p-4">
+                            <div className="space-y-4">
+                                {chatMessages.length === 0 ? (
+                                    <div className="text-center py-12 px-4">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mx-auto mb-4">
+                                            <MessageCircle className="w-6 h-6 text-blue-400" />
+                                        </div>
+                                        <p className="text-zinc-300 text-sm font-medium mb-3">
+                                            Ask me anything about this problem!
+                                        </p>
+                                        <div className="space-y-2 text-xs text-zinc-500">
+                                            <div className="flex items-center gap-2 justify-center">
+                                                <div className="w-1 h-1 rounded-full bg-zinc-600"></div>
+                                                <span>Understanding the problem</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 justify-center">
+                                                <div className="w-1 h-1 rounded-full bg-zinc-600"></div>
+                                                <span>Approach suggestions</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 justify-center">
+                                                <div className="w-1 h-1 rounded-full bg-zinc-600"></div>
+                                                <span>Code explanations</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 justify-center">
+                                                <div className="w-1 h-1 rounded-full bg-zinc-600"></div>
+                                                <span>Debugging help</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    chatMessages.map((message, index) => (
+                                        <div
+                                            key={index}
+                                            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                        >
+                                            <div
+                                                className={`max-w-[85%] rounded-lg px-4 py-2.5 text-sm ${
+                                                    message.role === 'user'
+                                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                                                        : 'bg-zinc-900 text-zinc-100 border border-zinc-800'
+                                                }`}
+                                            >
+                                                <div className="whitespace-pre-wrap">{message.content}</div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </ScrollArea>
+
+                        {/* Chat Input */}
+                        <div className="border-t border-zinc-800 p-4 bg-zinc-900/30">
+                            <div className="flex gap-2">
+                                <Textarea
+                                    placeholder="Ask me anything..."
+                                    value={chatInput}
+                                    onChange={(e) => setChatInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault()
+                                            handleSendMessage()
+                                        }
+                                    }}
+                                    className="min-h-[80px] resize-none bg-zinc-950 border-zinc-800 focus:border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-600"
+                                />
+                                <Button 
+                                    onClick={handleSendMessage} 
+                                    size="icon" 
+                                    className="cursor-pointer self-end bg-primary shadow-lg shadow-primary/20"
+                                >
+                                    <Send className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
                 </ResizablePanel>
             </ResizablePanelGroup>
         </div>
