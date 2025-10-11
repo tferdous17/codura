@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { LoadingProvider } from "@/components/providers/loading-provider";
 import { LoadingBar } from "@/components/loading-bar";
 import { FaviconAnimation } from "@/components/favicon-animation";
+import { Toaster } from "@/components/ui/sonner";
 import { Suspense } from "react";
 
 const geistSans = Geist({
@@ -50,6 +51,7 @@ export default function RootLayout({
                 <LoadingBar />
                 <FaviconAnimation />
                 {children}
+                <Toaster position="top-right" richColors />
               </LoadingProvider>
             </Suspense>
           </ThemeProvider>

@@ -17,14 +17,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, ArrowLeft } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import dynamic from 'next/dynamic';
+import { toast } from "sonner";
+import { useTheme } from "next-themes";
 
 // Dynamic imports for icons
 // @ts-ignore
 const User: any = dynamic(() => import('lucide-react').then(mod => mod.User), { ssr: false });
 // @ts-ignore
 const Settings: any = dynamic(() => import('lucide-react').then(mod => mod.Settings), { ssr: false });
+// @ts-ignore
+const ArrowLeft: any = dynamic(() => import('lucide-react').then(mod => mod.ArrowLeft), { ssr: false });
 
 interface UserData {
   name: string;
@@ -37,6 +41,7 @@ interface UserData {
 type TabType = 'appearance' | 'profile' | 'account';
 
 export default function SettingsPage() {
+  const { theme: currentTheme, setTheme: setAppTheme } = useTheme();
   const [showBorder, setShowBorder] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('appearance');
   const [user, setUser] = useState<UserData | null>(null);
@@ -47,9 +52,6 @@ export default function SettingsPage() {
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [isPublic, setIsPublic] = useState(true);
-
-  // Appearance state
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   // Account state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -103,14 +105,119 @@ export default function SettingsPage() {
     }
   };
 
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const handleSaveProfile = async () => {
-    // TODO: Implement profile save API call
-    console.log('Saving profile:', { fullName, username, bio, isPublic });
+    try {
+      setIsSavingProfile(true);
+
+      // Validate username
+      if (username && username.length < 3) {
+        toast.error('Username must be at least 3 characters long');
+        return;
+      }
+
+      // Validate bio length
+      if (bio && bio.length > 160) {
+        toast.error('Bio must be 160 characters or less');
+        return;
+      }
+
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          full_name: fullName,
+          username: username || null,
+          bio: bio || null,
+          is_public: isPublic,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to update profile');
+        return;
+      }
+
+      // Update local user state
+      if (user) {
+        setUser({
+          ...user,
+          name: fullName,
+          username: username,
+          bio: bio,
+        });
+      }
+
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handleChangePassword = async () => {
-    // TODO: Implement password change API call
-    console.log('Changing password');
+    try {
+      setIsChangingPassword(true);
+
+      // Validate passwords
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        toast.error('Please fill in all password fields');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        toast.error('New passwords do not match');
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        toast.error('New password must be at least 8 characters long');
+        return;
+      }
+
+      if (currentPassword === newPassword) {
+        toast.error('New password must be different from current password');
+        return;
+      }
+
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to change password');
+        return;
+      }
+
+      // Clear password fields
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+
+      toast.success('Password changed successfully');
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   return (
@@ -274,7 +381,7 @@ export default function SettingsPage() {
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to Dashboard
           </Link>
-          <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent leading-relaxed">
             Settings
           </h1>
           <p className="text-muted-foreground text-lg">
@@ -347,10 +454,10 @@ export default function SettingsPage() {
                     </p>
                     <div className="grid grid-cols-2 gap-4">
                       <button
-                        onClick={() => setTheme('dark')}
+                        onClick={() => setAppTheme('dark')}
                         className={cn(
                           "relative p-4 rounded-lg border-2 transition-all duration-200",
-                          theme === 'dark'
+                          currentTheme === 'dark'
                             ? "border-brand bg-brand/5 shadow-lg shadow-brand/20"
                             : "border-border/30 hover:border-border/50"
                         )}
@@ -361,7 +468,7 @@ export default function SettingsPage() {
                           <div className="h-2 bg-zinc-800 rounded w-2/3" />
                         </div>
                         <p className="text-sm font-medium">Dark</p>
-                        {theme === 'dark' && (
+                        {currentTheme === 'dark' && (
                           <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-brand flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -371,10 +478,10 @@ export default function SettingsPage() {
                       </button>
 
                       <button
-                        onClick={() => setTheme('light')}
+                        onClick={() => setAppTheme('light')}
                         className={cn(
                           "relative p-4 rounded-lg border-2 transition-all duration-200",
-                          theme === 'light'
+                          currentTheme === 'light'
                             ? "border-brand bg-brand/5 shadow-lg shadow-brand/20"
                             : "border-border/30 hover:border-border/50"
                         )}
@@ -385,7 +492,7 @@ export default function SettingsPage() {
                           <div className="h-2 bg-gray-100 rounded w-2/3" />
                         </div>
                         <p className="text-sm font-medium">Light</p>
-                        {theme === 'light' && (
+                        {currentTheme === 'light' && (
                           <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-brand flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -397,7 +504,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="pt-4 border-t border-border/20">
-                    <Button className="bg-brand hover:bg-brand/90 text-white">
+                    <Button
+                      onClick={() => toast.success('Theme preference saved')}
+                      className="bg-brand hover:bg-brand/90 text-white"
+                    >
                       Save Changes
                     </Button>
                   </div>
@@ -477,9 +587,10 @@ export default function SettingsPage() {
                   <div className="pt-4 border-t border-border/20">
                     <Button
                       onClick={handleSaveProfile}
-                      className="bg-brand hover:bg-brand/90 text-white"
+                      disabled={isSavingProfile}
+                      className="bg-brand hover:bg-brand/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Save Changes
+                      {isSavingProfile ? 'Saving...' : 'Save Changes'}
                     </Button>
                   </div>
                 </CardContent>
@@ -561,9 +672,10 @@ export default function SettingsPage() {
 
                     <Button
                       onClick={handleChangePassword}
-                      className="bg-brand hover:bg-brand/90 text-white"
+                      disabled={isChangingPassword}
+                      className="bg-brand hover:bg-brand/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Update Password
+                      {isChangingPassword ? 'Updating...' : 'Update Password'}
                     </Button>
                   </CardContent>
                 </Card>

@@ -181,6 +181,7 @@ export async function PUT(request: Request) {
       website,
       github_username,
       linkedin_username,
+      is_public,
     } = body;
 
     // Check if username is already taken (if changed)
@@ -212,6 +213,7 @@ export async function PUT(request: Request) {
         website,
         github_username,
         linkedin_username,
+        is_public,
       })
       .eq('user_id', user.id)
       .select()
