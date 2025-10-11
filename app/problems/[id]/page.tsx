@@ -107,6 +107,15 @@ interface TestCase {
     explanation?: string
 }
 
+interface TestcaseResult {
+    actual: any
+    expected: any 
+    input: any
+    message: string
+    status: string
+    testNumber: number
+}
+
 export default function ProblemPage() {
     const params = useParams()
     const router = useRouter()
@@ -120,6 +129,7 @@ export default function ProblemPage() {
     const [error, setError] = useState<string | null>(null)
     const [showTags, setShowTags] = useState(false)
     const [showAcceptanceRate, setShowAcceptanceRate] = useState(false)
+    const [activeTab, setActiveTab] = useState('testcases')
 
     const [userLang, setUserLang] = useState({
         "id": 92,
@@ -128,7 +138,9 @@ export default function ProblemPage() {
     })
     const [usersCode, setUsersCode] = useState<string | undefined>('# Write your code below')
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [submissionResult, setSubmissionResult] = useState('')
+    const [isRunning, setIsRunning] = useState(false)
+    const [submissionResultLabel, setSubmissionResultLabel] = useState('')
+    const [testcaseResults, setTestcaseResults] = useState<TestcaseResult[] | undefined>(undefined)
 
     // State for AI Chatbot that maintains chat messages and input
     const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'ai', content: string }>>([])
@@ -240,12 +252,13 @@ export default function ProblemPage() {
         });
     }
 
-    const handleCodeSubmission = async () => {
-        setIsSubmitting(true)
-        
-        // commit: wrapped in try catch now and now btn as loading state
+    const handleCodeRunning = async () => {
+        setIsRunning(true)
+        setActiveTab('result')
+
         try {
             const body = {
+                "problem_title_slug": problem?.title_slug,
                 "language_id": userLang.id,
                 "source_code": usersCode,
                 "stdin": "test",
@@ -260,8 +273,47 @@ export default function ProblemPage() {
             })
 
             const data = await response.json()
+            const submissionResponse = data.submissionResponse
+            const results = data.results
+            
+            setSubmissionResultLabel(submissionResponse.status.description)
+            setTestcaseResults(results)
+        } catch (error) {
+            throw error
+        } finally {
+            setIsRunning(false)
+        }
+    }
 
-            setSubmissionResult(data.submissionResult.status.description)
+    const handleCodeSubmission = async () => {
+        setIsSubmitting(true) 
+        setActiveTab('result')
+        
+        // commit: wrapped in try catch now and now btn as loading state
+        try {
+            const body = {
+                "problem_title_slug": problem?.title_slug,
+                "language_id": userLang.id,
+                "source_code": usersCode,
+                "stdin": "test",
+            }
+
+            const response = await fetch('http://localhost:8080/api/problems/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            })
+
+            const data = await response.json()
+            const submissionResponse = data.submissionResponse
+            const results = data.results
+            
+            setSubmissionResultLabel(submissionResponse.status.description)
+            setTestcaseResults(results)
+
+            // Need to put additional code to actually save submission to supabase later
         } catch (error) {
             throw error
         } finally {
@@ -343,7 +395,7 @@ export default function ProblemPage() {
     }
 
     return (
-        <div className="caffeine-theme h-screen w-full bg-background p-2">
+        <div className="caffeine-theme h-screen w-full bg-background p-2 pt-0">
             <style jsx global>{tabScrollStyles}</style>
             <ResizablePanelGroup direction="horizontal" className="h-full">
                 
@@ -351,14 +403,17 @@ export default function ProblemPage() {
                 <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
                     <div className="h-full flex flex-col">
                         <Tabs defaultValue="description" className="flex-1 flex flex-col">
-                            <div className="border-b overflow-x-auto tab-scroll-container">
-                                {/* Tab Lists */}
-                                <TabsList className="inline-flex w-auto min-w-full justify-start h-12 px-2 bg-transparent">
-                                    <TabsTrigger value="description" className="flex-shrink-0">Description</TabsTrigger>
-                                    <TabsTrigger value="solution" className="flex-shrink-0">Solution</TabsTrigger>
-                                    <TabsTrigger value="discussion" className="flex-shrink-0">Discussion</TabsTrigger>
-                                    <TabsTrigger value="community" className="flex-shrink-0">Community</TabsTrigger>
-                                    <TabsTrigger value="submissions" className="flex-shrink-0">Submissions</TabsTrigger>
+                            <div className="border-b border-zinc-800/50">
+                                <TabsList className="inline-flex w-auto min-w-full justify-start h-auto px-6 bg-transparent gap-6">
+                                    {['Description', 'Solution', 'Discussion', 'Community', 'Submissions'].map(tab => (
+                                        <TabsTrigger 
+                                            key={tab.toLowerCase()}
+                                            value={tab.toLowerCase()} 
+                                            className="cursor-pointer relative flex-shrink-0 !bg-transparent data-[state=active]:!bg-transparent border-0 rounded-none px-3 pb-3 pt-4 !text-zinc-500 data-[state=active]:!text-white hover:!text-zinc-300 transition-all font-medium after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-gradient-to-r after:from-transparent after:via-white after:to-transparent after:opacity-0 data-[state=active]:after:opacity-80 after:transition-opacity after:shadow-[0_0_8px_rgba(255,255,255,0.5)]"
+                                        >
+                                            {tab}
+                                        </TabsTrigger>
+                                    ))}
                                 </TabsList>
                             </div>
 
@@ -367,7 +422,7 @@ export default function ProblemPage() {
                                 <TabsContent value="description" className="p-4 mt-0">
                                     <div className="space-y-4">
                                         <div>
-                                            <h1 className="text-2xl font-bold mb-2">
+                                            <h1 className="text-2xl font-bold mb-5">
                                                 {problem.leetcode_id}. {problem.title}
                                             </h1>
                                             <div className="flex items-center gap-2">
@@ -533,15 +588,31 @@ export default function ProblemPage() {
                                             </SelectContent>
                                         </Select>
 
-                                        <Button size="sm" className="cursor-pointer font-weight-300 text-sm text-zinc-300 bg-zinc-700 hover:bg-zinc-600">
-                                            <Play className="w-4 h-4" />
-                                            Run
-                                        </Button>
                                         <Button 
-                                        size="sm" 
-                                        className="cursor-pointer font-weight-300 text-sm bg-green-500 hover:bg-green-400" 
-                                        onClick={handleCodeSubmission}
-                                        disabled={isSubmitting}
+                                            size="sm" 
+                                            className="cursor-pointer font-weight-300 text-sm text-zinc-300 bg-zinc-700 hover:bg-zinc-600"
+                                            onClick={handleCodeRunning} 
+                                            disabled={isRunning}
+                                        >
+                                            {isRunning ? (
+                                                <>
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                    Running...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Play className="w-5 h-5" />
+                                                    Run
+                                                </>
+                                            )}
+                                                
+                                        </Button>
+
+                                        <Button 
+                                            size="sm" 
+                                            className="cursor-pointer font-weight-300 text-sm bg-green-500 hover:bg-green-400" 
+                                            onClick={handleCodeSubmission}
+                                            disabled={isSubmitting}
                                         >
                                             {isSubmitting ? (
                                                 <>
@@ -627,7 +698,7 @@ export default function ProblemPage() {
                         {/* Bottom Section - Test Cases */}
                         <ResizablePanel defaultSize={30} minSize={20}>
                             <div className="h-full border-t">
-                                <Tabs defaultValue="testcases" className="w-full h-full flex flex-col">
+                                <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="testcases" className="w-full h-full flex flex-col">
                                     <div className="border-b overflow-x-auto tab-scroll-container">
                                         <TabsList className="inline-flex w-auto justify-start h-10">
                                             <TabsTrigger value="testcases" className="px-4 flex-shrink-0 cursor-pointer !text-zinc-500 data-[state=active]:!text-white"><CopyCheck className="text-green-600"></CopyCheck>Testcases</TabsTrigger>
@@ -676,14 +747,146 @@ export default function ProblemPage() {
                                         )}
                                         </TabsContent>
 
-                                    <TabsContent value="result" className="p-4 flex-1 overflow-auto">
-                                        <div className="bg-muted p-3 rounded text-sm">
-                                            <p className="text-muted-foreground">Run your code to see results here</p>
-                                        </div>
-                                        <div>
-                                            <p>{submissionResult}</p>
-                                        </div>
-                                    </TabsContent>
+                                    <TabsContent value="result" className="flex-1 overflow-auto flex flex-col">
+                                        {!testcaseResults || testcaseResults.length === 0 ? (
+                                            <div className="p-4">
+                                            <div className="bg-muted p-3 rounded text-sm">
+                                                <p className="text-muted-foreground">Run your code to see results here</p>
+                                            </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                            {/* Overall Status Header */}
+                                            <div className="p-4 border-b">
+                                                {testcaseResults.every((r: any) => r.status === 'pass') ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    </div>
+                                                    <span className="text-green-500 font-semibold">Accepted</span>
+                                                </div>
+                                                ) : (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+                                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                    </div>
+                                                    <span className="text-red-500 font-semibold">Wrong Answer</span>
+                                                </div>
+                                                )}
+                                                <div className="mt-2 text-sm text-muted-foreground">
+                                                {testcaseResults.filter((r: any) => r.status === 'pass').length} / {testcaseResults.length} test cases passed
+                                                </div>
+                                            </div>
+
+                                            {/* Test Case Tabs */}
+                                            <Tabs defaultValue="case-0" className="flex-1 flex flex-col">
+                                                <TabsList className="justify-start rounded-none bg-transparent px-1 h-auto border-b">
+                                                {testcaseResults.map((result: any, index: number) => (
+                                                    <TabsTrigger
+                                                    key={index}
+                                                    value={`case-${index}`}
+                                                    className="cursor-pointer rounded-xl border-none border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2 relative"
+                                                    >
+                                                    <span className="flex items-center gap-2">
+                                                        Case {index + 1}
+                                                        {result.status === 'pass' ? (
+                                                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                                        ) : result.status === 'fail' ? (
+                                                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                                        ) : (
+                                                        <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                                        )}
+                                                    </span>
+                                                    </TabsTrigger>
+                                                ))}
+                                                </TabsList>
+
+                                                {/* Test Case Results */}
+                                                {testcaseResults.map((result: any, index: number) => (
+                                                <TabsContent 
+                                                    key={index} 
+                                                    value={`case-${index}`} 
+                                                    className="flex-1 overflow-auto p-4 space-y-3"
+                                                >
+                                                    {/* Status Badge */}
+                                                    <div className="mb-4">
+                                                    {result.status === 'pass' ? (
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 text-green-500 text-sm font-medium">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        Passed
+                                                        </span>
+                                                    ) : result.status === 'fail' ? (
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-sm font-medium">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                        Failed
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-500 text-sm font-medium">
+                                                        Error
+                                                        </span>
+                                                    )}
+                                                    </div>
+
+                                                    {/* Input Section */}
+                                                    {result.input && Object.entries(result.input).map(([key, value]: [string, any]) => (
+                                                    <div key={key} className="space-y-1">
+                                                        <div className="text-sm text-zinc-400">{key} =</div>
+                                                        <div className="bg-zinc-950 border border-zinc-800 rounded-md px-3 py-2.5 font-mono text-[15px] text-white">
+                                                        {JSON.stringify(value)}
+                                                        </div>
+                                                    </div>
+                                                    ))}
+
+                                                    {/* Output Section */}
+                                                    {result.status === 'fail' && (
+                                                    <>
+                                                        <div className="space-y-1">
+                                                        <div className="text-sm text-zinc-400">Output</div>
+                                                        <div className="bg-zinc-950 border border-red-500/50 rounded-md px-3 py-2.5 font-mono text-[15px] text-red-400">
+                                                            {JSON.stringify(result.actual)}
+                                                        </div>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                        <div className="text-sm text-zinc-400">Expected</div>
+                                                        <div className="bg-zinc-950 border border-green-500/50 rounded-md px-3 py-2.5 font-mono text-[15px] text-green-400">
+                                                            {JSON.stringify(result.expected)}
+                                                        </div>
+                                                        </div>
+                                                    </>
+                                                    )}
+
+                                                    {result.status === 'pass' && (
+                                                    <div className="space-y-1">
+                                                        <div className="text-sm text-zinc-400">Expected</div>
+                                                        <div className="bg-zinc-950 border border-green-500/50 rounded-md px-3 py-2.5 font-mono text-[15px] text-green-400">
+                                                        {JSON.stringify(result.expected)}
+                                                        </div>
+                                                    </div>
+                                                    )}
+
+                                                    {/* Error Message */}
+                                                    {result.status === 'error' && (
+                                                    <div className="space-y-1">
+                                                        <div className="text-sm text-zinc-400">Error</div>
+                                                        <div className="bg-zinc-950 border border-yellow-500/50 rounded-md px-3 py-2.5 font-mono text-[13px] text-yellow-400">
+                                                        {result.message}
+                                                        </div>
+                                                    </div>
+                                                    )}
+                                                </TabsContent>
+                                                ))}
+                                            </Tabs>
+                                            </>
+                                        )}
+                                        </TabsContent>
                                 </Tabs>
                             </div>
                         </ResizablePanel>
