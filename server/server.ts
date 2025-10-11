@@ -19,11 +19,17 @@ app.get('/', (req: any, res: any) => {
 });
 
 app.post('/api/problems/submit', async (req: any, res: any) => {
-   const { source_code, language_id, stdin } = req.body;
-   console.log(source_code, language_id, stdin)
+   const { problem_title_slug, source_code, language_id, stdin } = req.body;
+   console.log(problem_title_slug, source_code, language_id, stdin)
 
    try {
-    const body = { source_code, language_id, stdin }
+    const testcases = getTestCasesForProblem(problem_title_slug)
+    const wrappedCode = wrapCodeWithTestcases(source_code, testcases, problem_title_slug, language_id)
+    console.log('--------------------------------------------------------')
+    console.log(wrappedCode)
+    console.log('--------------------------------------------------------')
+
+    const body = { source_code: wrappedCode, language_id, stdin }
     const response = await fetch(`https://${process.env.RAPIDAPI_HOST}/submissions`, {
         method: 'POST',
         headers: {
@@ -37,9 +43,12 @@ app.post('/api/problems/submit', async (req: any, res: any) => {
     const data = await response.json()
     const token = data.token
 
-    const submissionResult = await pollSubmissionStatus(token)
+    const submissionResponse = await pollSubmissionStatus(token)
+    const results = parseTestResults(submissionResponse, testcases)
+
+    console.log('results =', results)
     
-    res.status(200).json( { submissionResult: submissionResult })
+    res.status(200).json( { submissionResponse, results })
   
    } catch (error) {
     res.status(500).json({ error: error })
@@ -96,6 +105,154 @@ async function pollSubmissionStatus(token: string) {
             return error
         }
     }
+}
+
+function getTestCasesForProblem(problemSlug: string) {
+    const testCaseMap: Record<string, any[]> = {
+        'two-sum': [
+            { input: { nums: [2, 7, 11, 15], target: 9 }, expected: [0, 1] },
+            { input: { nums: [3, 2, 4], target: 6 }, expected: [1, 2] },
+            { input: { nums: [3, 3], target: 6 }, expected: [0, 1] }
+        ],
+        // need to add more problems later for manual testing
+  };
+
+  return testCaseMap[problemSlug] || []
+}
+
+function wrapCodeWithTestcases(userCode: string, testcases: any[], problemSlug: string, languageId: number) {
+    if (languageId == 92) {
+        return wrapPythonCode(userCode, testcases, problemSlug)
+    }
+    // just handling python for now...
+}
+
+function wrapPythonCode(userCode: string, testCases: any[], problemSlug: string) {
+  if (problemSlug === 'two-sum') {
+    // Clean up the user code - remove extra whitespace and empty code blocks
+    const cleanedCode = userCode.trim();
+    
+    // Check if user already defined the class
+    const hasClass = cleanedCode.includes('class Solution');
+    
+    let finalCode;
+    
+    if (hasClass) {
+      // User provided the full class, just append test harness
+      finalCode = `${cleanedCode}
+        # Test harness
+        solution = Solution()
+        test_cases = ${JSON.stringify(testCases)}
+
+        for i, test in enumerate(test_cases):
+            try:
+                result = solution.twoSum(test['input']['nums'], test['input']['target'])
+                expected = test['expected']
+                
+                # Sort both arrays for comparison (since order might vary)
+                if sorted(result) == sorted(expected):
+                    print(f"Test {i + 1}: PASS")
+                else:
+                    print(f"Test {i + 1}: FAIL - Expected {expected}, got {result}")
+            except Exception as e:
+                print(f"Test {i + 1}: ERROR - {str(e)}")
+        `;
+    } else {
+      // user deleted the code stub and only provided the method, so wrap it in a class
+      finalCode = `
+                class Solution:
+                ${cleanedCode.split('\n').map(line => '    ' + line).join('\n')}
+
+                # Test harness
+                solution = Solution()
+                test_cases = ${JSON.stringify(testCases)}
+
+                for i, test in enumerate(test_cases):
+                    try:
+                        result = solution.twoSum(test['input']['nums'], test['input']['target'])
+                        expected = test['expected']
+                        
+                        if sorted(result) == sorted(expected):
+                            print(f"Test {i + 1}: PASS")
+                        else:
+                            print(f"Test {i + 1}: FAIL - Expected {expected}, got {result}")
+                    except Exception as e:
+                        print(f"Test {i + 1}: ERROR - {str(e)}")
+                `;
+    }
+    
+    return finalCode;
+  }
+  
+  throw new Error('Unsupported problem');
+}
+
+function parseTestResults(submissionResult: any, testCases: any[]) {
+  const output = submissionResult.stdout || '';
+  const lines = output.split('\n').filter((line: string) => line.trim());
+  
+  return lines.map((line: string, index: number) => {
+    const testCase = testCases[index] || {};
+    
+    if (line.includes('PASS')) {
+      // Extract test number from line like "Test 1: PASS"
+      const testNumMatch = line.match(/Test (\d+)/);
+      const testNumber = testNumMatch ? parseInt(testNumMatch[1]) : index + 1;
+      
+      return { 
+        testNumber,
+        status: 'pass',
+        input: testCase.input,
+        expected: testCase.expected,
+        actual: testCase.expected, // Since it passed, actual = expected
+        message: 'Test passed'
+      };
+    } else if (line.includes('FAIL')) {
+      // Extract test number and actual result from line like "Test 1: FAIL - Expected [0, 1], got [1, 0]"
+      const testNumMatch = line.match(/Test (\d+)/);
+      const testNumber = testNumMatch ? parseInt(testNumMatch[1]) : index + 1;
+      
+      const expectedMatch = line.match(/Expected (\[.*?\])/);
+      const gotMatch = line.match(/got (\[.*?\])/);
+      
+      const expected = expectedMatch ? JSON.parse(expectedMatch[1]) : testCase.expected;
+      const actual = gotMatch ? JSON.parse(gotMatch[1]) : null;
+      
+      return { 
+        testNumber,
+        status: 'fail',
+        input: testCase.input,
+        expected,
+        actual,
+        message: line
+      };
+    } else if (line.includes('ERROR')) {
+      // Extract test number and error from line like "Test 1: ERROR - division by zero"
+      const testNumMatch = line.match(/Test (\d+)/);
+      const testNumber = testNumMatch ? parseInt(testNumMatch[1]) : index + 1;
+      
+      const errorMatch = line.match(/ERROR - (.+)/);
+      const errorMessage = errorMatch ? errorMatch[1] : 'Unknown error';
+      
+      return { 
+        testNumber,
+        status: 'error',
+        input: testCase.input,
+        expected: testCase.expected,
+        actual: null,
+        message: errorMessage
+      };
+    }
+    
+    return { 
+      testNumber: index + 1,
+      status: 'unknown', 
+      input: testCase.input,
+      expected: testCase.expected,
+      actual: null,
+      message: line 
+    };
+  });
 }
 
 function sleep(ms: number): Promise<void> {
