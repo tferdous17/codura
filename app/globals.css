@@ -3,6 +3,25 @@
 
 @import "tw-animate-css";
 
+/* Theme transition utilities */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Prevent flash of unstyled content during theme changes */
+html {
+  color-scheme: light dark;
+}
+
+/* Ensure smooth theme transitions */
+.dark {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+}
+
 @theme inline {
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
@@ -247,51 +266,51 @@
 }
 
 .light {
-  /* Light mode colors */
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.15 0 0);
+  /* Light mode colors - Sophisticated blue-gray palette */
+  --background: oklch(0.98 0.005 240);
+  --foreground: oklch(0.12 0.01 240);
   --card: oklch(1.0 0 0);
-  --card-foreground: oklch(0.15 0 0);
+  --card-foreground: oklch(0.12 0.01 240);
   --popover: oklch(1.0 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.15 0 0);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0 0);
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.96 0 0);
-  --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.5 0.22 25);
+  --popover-foreground: oklch(0.12 0.01 240);
+  --primary: oklch(0.12 0.01 240);
+  --primary-foreground: oklch(0.98 0.005 240);
+  --secondary: oklch(0.96 0.01 240);
+  --secondary-foreground: oklch(0.12 0.01 240);
+  --muted: oklch(0.96 0.01 240);
+  --muted-foreground: oklch(0.45 0.01 240);
+  --accent: oklch(0.94 0.02 240);
+  --accent-foreground: oklch(0.12 0.01 240);
+  --destructive: oklch(0.55 0.18 25);
   --destructive-foreground: oklch(1.0 0 0);
-  --border: oklch(0.90 0 0);
-  --input: oklch(0.90 0 0);
-  --ring: oklch(0.7 0 0);
-  --chart-1: oklch(0.5 0.2 250);
-  --chart-2: oklch(0.7 0.15 150);
-  --chart-3: oklch(0.77 0.19 70);
-  --chart-4: oklch(0.6 0.25 300);
-  --chart-5: oklch(0.65 0.25 20);
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.15 0 0);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.96 0 0);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.90 0 0);
-  --sidebar-ring: oklch(0.7 0 0);
+  --border: oklch(0.88 0.01 240);
+  --input: oklch(0.88 0.01 240);
+  --ring: oklch(0.65 0.05 240);
+  --chart-1: oklch(0.55 0.12 240);
+  --chart-2: oklch(0.65 0.1 200);
+  --chart-3: oklch(0.7 0.08 160);
+  --chart-4: oklch(0.6 0.1 280);
+  --chart-5: oklch(0.5 0.12 300);
+  --sidebar: oklch(0.99 0.005 240);
+  --sidebar-foreground: oklch(0.12 0.01 240);
+  --sidebar-primary: oklch(0.12 0.01 240);
+  --sidebar-primary-foreground: oklch(0.99 0.005 240);
+  --sidebar-accent: oklch(0.96 0.01 240);
+  --sidebar-accent-foreground: oklch(0.12 0.01 240);
+  --sidebar-border: oklch(0.88 0.01 240);
+  --sidebar-ring: oklch(0.65 0.05 240);
 
-  /* Brand colors for light mode */
-  --brand: oklch(0.75 0.15 30);
+  /* Brand colors for light mode - Professional blue */
+  --brand: oklch(0.55 0.12 240);
   --brand-foreground: oklch(1.0 0 0);
 
   /* Illustrations colors */
   --light: var(--foreground);
   --light-foreground: var(--foreground);
 
-  /* Shadows for light mode */
-  --shadow: rgba(0, 0, 0, 0.08);
-  --shadow-strong: rgba(0, 0, 0, 0.15);
+  /* Shadows for light mode - Softer and more professional */
+  --shadow: rgba(0, 0, 0, 0.06);
+  --shadow-strong: rgba(0, 0, 0, 0.12);
 }
 
 .dark {
@@ -344,47 +363,47 @@
 
 /* Caffeine Theme for Auth & App Pages */
 .caffeine-theme {
-  /* Authentic Caffeine Theme - Light Mode */
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.15 0 0);
+  /* Professional Light Mode - Sophisticated blue-gray palette */
+  --background: oklch(0.98 0.005 240);
+  --foreground: oklch(0.12 0.01 240);
   --card: oklch(1.0 0 0);
-  --card-foreground: oklch(0.15 0 0);
+  --card-foreground: oklch(0.12 0.01 240);
   --popover: oklch(1.0 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.15 0 0);
-  --primary-foreground: oklch(1.0 0 0);
-  --secondary: oklch(0.96 0 0);
-  --secondary-foreground: oklch(0.15 0 0);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.96 0 0);
-  --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.5 0.22 25);
+  --popover-foreground: oklch(0.12 0.01 240);
+  --primary: oklch(0.12 0.01 240);
+  --primary-foreground: oklch(0.98 0.005 240);
+  --secondary: oklch(0.96 0.01 240);
+  --secondary-foreground: oklch(0.12 0.01 240);
+  --muted: oklch(0.96 0.01 240);
+  --muted-foreground: oklch(0.45 0.01 240);
+  --accent: oklch(0.94 0.02 240);
+  --accent-foreground: oklch(0.12 0.01 240);
+  --destructive: oklch(0.55 0.18 25);
   --destructive-foreground: oklch(1.0 0 0);
-  --border: oklch(0.90 0 0);
-  --input: oklch(0.90 0 0);
-  --ring: oklch(0.7 0 0);
-  --chart-1: oklch(0.5 0.2 250);
-  --chart-2: oklch(0.7 0.15 150);
-  --chart-3: oklch(0.77 0.19 70);
-  --chart-4: oklch(0.6 0.25 300);
-  --chart-5: oklch(0.65 0.25 20);
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.15 0 0);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.96 0 0);
-  --sidebar-accent-foreground: oklch(0.15 0 0);
-  --sidebar-border: oklch(0.90 0 0);
-  --sidebar-ring: oklch(0.7 0 0);
+  --border: oklch(0.88 0.01 240);
+  --input: oklch(0.88 0.01 240);
+  --ring: oklch(0.65 0.05 240);
+  --chart-1: oklch(0.55 0.12 240);
+  --chart-2: oklch(0.65 0.1 200);
+  --chart-3: oklch(0.7 0.08 160);
+  --chart-4: oklch(0.6 0.1 280);
+  --chart-5: oklch(0.5 0.12 300);
+  --sidebar: oklch(0.99 0.005 240);
+  --sidebar-foreground: oklch(0.12 0.01 240);
+  --sidebar-primary: oklch(0.12 0.01 240);
+  --sidebar-primary-foreground: oklch(0.99 0.005 240);
+  --sidebar-accent: oklch(0.96 0.01 240);
+  --sidebar-accent-foreground: oklch(0.12 0.01 240);
+  --sidebar-border: oklch(0.88 0.01 240);
+  --sidebar-ring: oklch(0.65 0.05 240);
 
-  /* Brand colors */
-  --brand: oklch(0.75 0.15 30);
+  /* Brand colors - Professional blue */
+  --brand: oklch(0.55 0.12 240);
   --brand-foreground: oklch(1.0 0 0);
 
-  /* Shadows for light mode */
-  --shadow: rgba(0, 0, 0, 0.08);
-  --shadow-strong: rgba(0, 0, 0, 0.15);
+  /* Shadows for light mode - Softer and more professional */
+  --shadow: rgba(0, 0, 0, 0.06);
+  --shadow-strong: rgba(0, 0, 0, 0.12);
 }
 
 /* Caffeine Dark Theme for Auth & App Pages */
@@ -423,7 +442,7 @@
   --sidebar-border: oklch(0.2739 0.0055 286.0326);
   --sidebar-ring: oklch(0.8711 0.0055 286.2860);
 
-  /* Brand colors */
+  /* Brand colors - Original orange/peach */
   --brand: oklch(0.9247 0.0524 66.1732);
   --brand-foreground: oklch(0.2029 0.0240 200.1962);
 }
@@ -434,6 +453,17 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Gradient text helper for headings */
+@layer utilities {
+  .text-gradient-brand {
+    background-image: linear-gradient(to right, var(--foreground), var(--brand), #a855f7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: var(--animate-gradient-x);
   }
 }
 

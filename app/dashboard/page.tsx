@@ -602,8 +602,8 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 hover:bg-accent">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative">
+                <Button variant="ghost" className="flex items-center gap-2 hover:bg-muted/50 rounded-lg">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand to-blue-600 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative ring-1 ring-border/50">
                     {user.avatar && user.avatar.startsWith('http') ? (
                       <img
                         src={user.avatar}
@@ -614,7 +614,7 @@ export default function DashboardPage() {
                       <span className="text-sm">{user.avatar}</span>
                     )}
                   </div>
-                  <span className="hidden sm:inline text-sm text-muted-foreground">
+                  <span className="hidden sm:inline text-sm text-foreground font-medium">
                     {user.name.split(' ')[0]}
                   </span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -622,13 +622,13 @@ export default function DashboardPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-[280px]"
+                className="w-[280px] border border-border/50 bg-card/95 backdrop-blur-sm shadow-lg rounded-xl"
               >
                 {/* Profile Header - Modern & Elegant */}
-                <div className="px-3 py-3.5 mb-1">
+                <div className="px-4 py-4 mb-1">
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-semibold overflow-hidden ring-1 ring-border/50">
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-brand to-blue-600 flex items-center justify-center text-white font-semibold overflow-hidden ring-1 ring-border/50">
                         {user.avatar && user.avatar.startsWith('http') ? (
                           <img
                             src={user.avatar}
@@ -639,61 +639,61 @@ export default function DashboardPage() {
                           <span className="text-sm">{user.avatar}</span>
                         )}
                       </div>
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full ring-2 ring-background dark:ring-card" />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full ring-2 ring-background" />
                     </div>
                     <UserNameText name={user.name} email={user.email} />
                   </div>
                 </div>
 
                 {/* Divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent my-1.5" />
+                <div className="h-px bg-border/30 my-2" />
 
                 {/* Menu Items - Balanced Design */}
                 <div className="py-1 space-y-0.5">
                   <DropdownMenuItem asChild>
                     <Link
                       href={`/profile/${user?.username || ''}`}
-                      className="flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm font-medium group"
+                      className="flex items-center gap-3 px-4 py-2.5 cursor-pointer text-sm font-medium group hover:bg-muted/50 rounded-lg mx-2"
                     >
-                      <div className="w-5 h-5 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 dark:from-brand dark:to-orange-400 flex items-center justify-center group-hover:from-blue-600 group-hover:to-blue-700 dark:group-hover:from-brand/90 dark:group-hover:to-orange-500 transition-all shadow-sm">
+                      <div className="w-5 h-5 rounded-md bg-gradient-to-br from-brand to-blue-600 dark:from-brand dark:to-orange-400 flex items-center justify-center group-hover:from-blue-600 group-hover:to-blue-700 dark:group-hover:from-orange-500 dark:group-hover:to-orange-600 transition-all shadow-sm">
                         <User className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
                       </div>
-                      <span>Profile</span>
+                      <span className="text-foreground">Profile</span>
                     </Link>
                   </DropdownMenuItem>
 
                   <DropdownMenuItem asChild>
                     <Link
                       href="/settings"
-                      className="flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm font-medium group"
+                      className="flex items-center gap-3 px-4 py-2.5 cursor-pointer text-sm font-medium group hover:bg-muted/50 rounded-lg mx-2"
                     >
-                      <div className="w-5 h-5 rounded-md bg-gradient-to-br from-slate-500 to-slate-600 dark:from-brand dark:to-orange-400 flex items-center justify-center group-hover:from-slate-600 group-hover:to-slate-700 dark:group-hover:from-brand/90 dark:group-hover:to-orange-500 transition-all shadow-sm">
+                      <div className="w-5 h-5 rounded-md bg-gradient-to-br from-slate-500 to-slate-600 dark:from-brand dark:to-orange-400 flex items-center justify-center group-hover:from-slate-600 group-hover:to-slate-700 dark:group-hover:from-orange-500 dark:group-hover:to-orange-600 transition-all shadow-sm">
                         <Settings className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
                       </div>
-                      <span>Settings</span>
+                      <span className="text-foreground">Settings</span>
                     </Link>
                   </DropdownMenuItem>
                 </div>
 
                 {/* Divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent my-1.5" />
+                <div className="h-px bg-border/30 my-2" />
 
                 {/* Sign Out - Professional Emphasis */}
                 <div className="py-1">
                   <DropdownMenuItem
                     variant="destructive"
-                    className="flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm font-medium group"
+                    className="flex items-center gap-3 px-4 py-2.5 cursor-pointer text-sm font-medium group hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg mx-2"
                     onClick={async () => {
                       await fetch('/auth/signout', { method: 'POST' });
                       window.location.href = '/';
                     }}
                   >
-                    <div className="w-5 h-5 rounded-md bg-gradient-to-br from-red-500 to-red-600 dark:from-red-500/80 dark:to-red-600/80 flex items-center justify-center group-hover:from-red-600 group-hover:to-red-700 dark:group-hover:from-red-500 dark:group-hover:to-red-600 transition-all shadow-sm">
+                    <div className="w-5 h-5 rounded-md bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center group-hover:from-red-600 group-hover:to-red-700 transition-all shadow-sm">
                       <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
                     </div>
-                    <span className="text-red-600 dark:text-red-400">Sign out</span>
+                    <span className="text-red-600">Sign out</span>
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
@@ -760,7 +760,7 @@ export default function DashboardPage() {
                   <div className="flex flex-wrap gap-2 mb-4">
                     {Array.isArray(dailyChallenge.topics) && dailyChallenge.topics.map((topic, i) => (
                       <Badge key={i} variant="outline" className="bg-muted/50 hover:bg-brand/10 transition-colors">
-                        {typeof topic === 'string' ? topic : topic.name || topic.slug}
+                        {typeof topic === 'string' ? topic : (topic as any).name || (topic as any).slug}
                       </Badge>
                     ))}
                   </div>
@@ -779,7 +779,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Quick Stats */}
-          <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-purple-500/30 transition-all duration-500 shadow-xl">
+          <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-purple-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
 
             <CardHeader>
@@ -964,7 +964,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Upcoming Events */}
-            <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-blue-500/30 transition-all duration-500 shadow-xl">
+            <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-blue-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
 
               <CardHeader>
@@ -991,7 +991,7 @@ export default function DashboardPage() {
                     {upcomingEvents.map((event) => (
                       <div
                         key={event.id}
-                        className="group/event flex items-center justify-between p-3 rounded-lg border border-border/40 hover:bg-muted/50 transition-colors"
+                        className="group/event flex items-center justify-between p-3 rounded-lg border border-border/30 hover:bg-muted/30 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <div className={cn(
@@ -1110,7 +1110,7 @@ export default function DashboardPage() {
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium hover:text-brand transition-colors">{plan.name}</span>
+                              <span className="text-sm font-medium text-foreground hover:text-brand transition-colors">{plan.name}</span>
                               {plan.is_default && (
                                 <Badge variant="outline" className="text-xs h-5 border-brand/30">
                                   Default

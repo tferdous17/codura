@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import dynamic from 'next/dynamic';
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 // @ts-ignore
 const Target: any = dynamic(() => import('lucide-react').then(mod => mod.Target), { ssr: false });
@@ -120,10 +121,11 @@ export function StudyPlanDetailDialog({
       await Promise.all(deletePromises);
       await fetchProblems();
       setSelectedProblems(new Set());
+      toast.success('Problems deleted successfully');
       onListUpdated();
     } catch (error) {
       console.error('Error deleting problems:', error);
-      alert('Failed to delete problems');
+      toast.error('Failed to delete problems');
     } finally {
       setLoading(false);
     }
@@ -214,10 +216,11 @@ export function StudyPlanDetailDialog({
       // Update local state immediately
       setCurrentListName(editedName.trim());
       setIsEditingName(false);
+      toast.success('List name updated successfully');
       onListUpdated();
     } catch (error) {
       console.error('Error updating list name:', error);
-      alert('Failed to update list name');
+      toast.error('Failed to update list name');
       setEditedName(currentListName);
     } finally {
       setLoading(false);
@@ -238,10 +241,11 @@ export function StudyPlanDetailDialog({
       }
 
       setIsListPublic(!isListPublic);
+      toast.success('List visibility updated successfully');
       onListUpdated();
     } catch (error) {
       console.error('Error updating list visibility:', error);
-      alert('Failed to update list visibility');
+      toast.error('Failed to update list visibility');
     } finally {
       setLoading(false);
     }
@@ -263,11 +267,12 @@ export function StudyPlanDetailDialog({
         throw new Error(data.error || 'Failed to delete list');
       }
 
+      toast.success('Study plan deleted successfully');
       onListUpdated();
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error deleting list:', error);
-      alert(error.message || 'Failed to delete list');
+      toast.error(error.message || 'Failed to delete list');
     } finally {
       setLoading(false);
     }
@@ -573,10 +578,11 @@ export function StudyPlanDetailDialog({
                                   method: 'DELETE',
                                 });
                                 await fetchProblems();
+                                toast.success('Problem removed successfully');
                                 onListUpdated();
                               } catch (error) {
                                 console.error('Error removing problem:', error);
-                                alert('Failed to remove problem');
+                                toast.error('Failed to remove problem');
                               }
                             }
                           }}

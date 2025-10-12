@@ -319,7 +319,7 @@ export default function SettingsPage() {
                   <div className="px-3 py-3.5 mb-1">
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-brand to-orange-300 flex items-center justify-center text-white font-semibold overflow-hidden ring-1 ring-border/50">
+                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-brand to-blue-600 dark:from-brand dark:to-orange-400 flex items-center justify-center text-white font-semibold overflow-hidden ring-1 ring-border/50">
                           {user.avatar && user.avatar.startsWith('http') ? (
                             <img
                               src={user.avatar}

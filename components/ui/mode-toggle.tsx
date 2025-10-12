@@ -11,9 +11,40 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 export function ModeToggle() {
-  const { setTheme } = useTheme()
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  // Ensure component is mounted before rendering to avoid hydration mismatch
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const handleThemeChange = (newTheme: string) => {
+    // Update localStorage immediately
+    localStorage.setItem('codura-theme', newTheme)
+    // Then update the theme
+    setTheme(newTheme)
+    // Force a re-render by updating the document class
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }
+
+  if (!mounted) {
+    return (
+      <Button variant="outline" size="icon" className="rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm shadow-sm">
+        <Sun className="h-[1.2rem] w-[1.2rem]" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    )
+  }
+
+  const currentTheme = resolvedTheme || theme
 
   return (
     <DropdownMenu>
@@ -25,14 +56,19 @@ export function ModeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="rounded-xl border border-border/50 bg-background/80 backdrop-blur-sm shadow-lg">
-        <DropdownMenuItem onClick={() => setTheme("light")} className="rounded-lg hover:bg-muted/50">
+        <DropdownMenuItem 
+          onClick={() => handleThemeChange("light")} 
+          className={`rounded-lg hover:bg-muted/50 flex items-center gap-2 ${currentTheme === "light" ? "bg-muted/30" : ""}`}
+        >
+          <Sun className="h-4 w-4" />
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")} className="rounded-lg hover:bg-muted/50">
+        <DropdownMenuItem 
+          onClick={() => handleThemeChange("dark")} 
+          className={`rounded-lg hover:bg-muted/50 flex items-center gap-2 ${currentTheme === "dark" ? "bg-muted/30" : ""}`}
+        >
+          <Moon className="h-4 w-4" />
           Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")} className="rounded-lg hover:bg-muted/50">
-          System
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

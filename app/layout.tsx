@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeWrapper } from "@/components/theme-wrapper";
 import { LoadingProvider } from "@/components/providers/loading-provider";
 import { LoadingBar } from "@/components/loading-bar";
 import { FaviconAnimation } from "@/components/favicon-animation";
@@ -42,18 +43,23 @@ export default function RootLayout({
         <body className={`${geistSans.variable} ${geistMono.variable}`}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"  // Default to dark but allow switching
-            enableSystem
-            disableTransitionOnChange
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange={true}
+            storageKey="codura-theme"
+            themes={["light", "dark"]}
+            enableColorScheme={true}
           >
-            <Suspense fallback={null}>
-              <LoadingProvider>
-                <LoadingBar />
-                <FaviconAnimation />
-                {children}
-                <Toaster position="top-right" richColors />
-              </LoadingProvider>
-            </Suspense>
+            <ThemeWrapper>
+              <Suspense fallback={null}>
+                <LoadingProvider>
+                  <LoadingBar />
+                  <FaviconAnimation />
+                  {children}
+                  <Toaster position="top-right" richColors />
+                </LoadingProvider>
+              </Suspense>
+            </ThemeWrapper>
           </ThemeProvider>
         </body>
       </html>

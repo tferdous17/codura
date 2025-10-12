@@ -13,7 +13,7 @@ export default function LoginPage() {
   return (
     <div className={`min-h-screen transition-colors duration-500 ${
       theme === "light" 
-        ? "bg-gradient-to-br from-gray-50 to-gray-100" 
+        ? "bg-gradient-to-br from-white via-gray-50 to-blue-50" 
         : "bg-zinc-950"
     }`}>
       {/* Background Effects - Matching Landing Page */}
