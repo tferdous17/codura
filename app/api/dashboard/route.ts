@@ -85,8 +85,8 @@ export async function GET() {
       .rpc('calculate_user_streak', { p_user_id: user.id })
       .single();
 
-    const currentStreak = streakData?.current_streak || 0;
-    const longestStreak = streakData?.longest_streak || 0;
+    const currentStreak = (streakData as any)?.current_streak || 0;
+    const longestStreak = (streakData as any)?.longest_streak || 0;
 
     // Update stats with calculated streaks
     if (stats) {
@@ -98,36 +98,39 @@ export async function GET() {
     const { data: studyPlansWithCounts } = await supabase
       .rpc('get_user_study_plans_with_counts', { p_user_id: user.id });
 
-    // Process recent activity from submissions
-    const recentActivity = submissions.slice(0, 10).map(sub => {
-      const submittedAt = new Date(sub.submitted_at);
-      const now = new Date();
-      const diffMs = now.getTime() - submittedAt.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
+    // Process recent activity from submissions (last 7 days only, max 5 items)
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    const recentActivity = submissions
+      .filter(sub => new Date(sub.submitted_at) >= sevenDaysAgo)
+      .slice(0, 5)
+      .map(sub => {
+        const submittedAt = new Date(sub.submitted_at);
+        const diffMs = now.getTime() - submittedAt.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
 
-      let timeAgo;
-      if (diffMins < 1) {
-        timeAgo = 'Just now';
-      } else if (diffMins < 60) {
-        timeAgo = `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
-      } else if (diffHours < 24) {
-        timeAgo = `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
-      } else if (diffDays < 7) {
-        timeAgo = `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
-      } else {
-        timeAgo = submittedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      }
+        let timeAgo;
+        if (diffMins < 1) {
+          timeAgo = 'Just now';
+        } else if (diffMins < 60) {
+          timeAgo = `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+        } else if (diffHours < 24) {
+          timeAgo = `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+        } else {
+          timeAgo = `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+        }
 
-      return {
-        id: sub.id,
-        type: 'problem', // Always 'problem' for submissions
-        title: sub.problem_title,
-        difficulty: sub.difficulty,
-        time: timeAgo,
-      };
-    });
+        return {
+          id: sub.id,
+          type: 'problem', // Always 'problem' for submissions
+          title: sub.problem_title,
+          difficulty: sub.difficulty,
+          time: timeAgo,
+        };
+      });
 
     // Process upcoming events
     const upcomingEvents = events.map(event => ({
@@ -161,6 +164,8 @@ export async function GET() {
       medium: stats?.medium_solved || 0,
       hard: stats?.hard_solved || 0,
       createdAt: profile?.created_at || null,
+      questionnaireCompleted: profile?.questionnaire_completed || false,
+      federalSchoolCode: profile?.federal_school_code || null,
     };
 
     // Return everything in ONE response

@@ -68,27 +68,16 @@ export async function middleware(req: NextRequest) {
       .single();
 
     if (!error && profile) {
-      const onQuestionnairePage = pathname === "/questionnaire";
-      const onOnboardingPage   = pathname === "/onboarding";
       const onDashboardPage    = pathname === "/dashboard";
-      const onProfilePage      = pathname === "/profile";
-      const onSignupPage       = pathname === "/signup"; // ← ADD THIS
-      const onLoginPage        = pathname === "/login";  // ← ADD THIS
+      const onSignupPage       = pathname === "/signup";
+      const onLoginPage        = pathname === "/login";
       const onAuth             = isAuthRoute || pathname === "/logout";
 
-      const code      = profile.federal_school_code;
-      const hasCode   = !!(code && String(code).trim() !== "");
       const completed = profile.questionnaire_completed;
 
-      // ✅ If already logged in, don't allow signup/login pages
+      // ✅ If already logged in, don't allow signup/login pages - always redirect to dashboard
       if (onSignupPage || onLoginPage) {
-        if (completed) {
-          return NextResponse.redirect(new URL("/dashboard", origin));
-        } else if (hasCode) {
-          return NextResponse.redirect(new URL("/questionnaire", origin));
-        } else {
-          return NextResponse.redirect(new URL("/onboarding", origin));
-        }
+        return NextResponse.redirect(new URL("/dashboard", origin));
       }
 
       if (completed) {
@@ -111,16 +100,9 @@ export async function middleware(req: NextRequest) {
         return response;
       }
 
-      if (!completed) {
-        if (!hasCode) {
-          if (!onOnboardingPage && !onQuestionnairePage && !onAuth) {
-            return NextResponse.redirect(new URL("/onboarding", origin));
-          }
-        } else {
-          if (!onQuestionnairePage && !onAuth) {
-            return NextResponse.redirect(new URL("/questionnaire", origin));
-          }
-        }
+      // User hasn't completed onboarding/questionnaire - redirect to dashboard where modals will show
+      if (!completed && !onDashboardPage && !onAuth) {
+        return NextResponse.redirect(new URL("/dashboard", origin));
       }
     }
   }

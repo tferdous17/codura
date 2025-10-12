@@ -47,6 +47,8 @@ import {
 import { EventDialog } from "@/components/calendar/event-dialog";
 import { PlanDialog } from "@/components/study-plans/plan-dialog";
 import { StudyPlanDetailDialog } from "@/components/study-plans/study-plan-detail-dialog";
+import QuestionnaireModal from "@/components/QuestionnaireModal";
+import OnboardingModal from "@/components/OnboardingModal";
 
 // Theme-aware user name component
 function UserNameText({ name, email }: { name: string; email: string }) {
@@ -396,6 +398,13 @@ export default function DashboardPage() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<string>('1M');
   const [selectedStudyPlan, setSelectedStudyPlan] = useState<{ id: string; name: string; color: string; is_public?: boolean } | null>(null);
   const [showStudyPlanDialog, setShowStudyPlanDialog] = useState(false);
+  
+  // Onboarding and Questionnaire modal state
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [hasSchoolCode, setHasSchoolCode] = useState(true);
+  const [showQuestionnaireModal, setShowQuestionnaireModal] = useState(false);
+  const [questionnaireData, setQuestionnaireData] = useState<any>(null);
+  const [questionnaireCompleted, setQuestionnaireCompleted] = useState(true);
 
   // OPTIMIZED: Fetch ALL dashboard data in ONE API call
   useEffect(() => {
@@ -420,6 +429,25 @@ export default function DashboardPage() {
         setUpcomingEvents(data.upcomingEvents || []);
         setDailyChallenge(data.dailyChallenge);
         setActivityChartData(data.activityChartData || []);
+        
+        // Check onboarding and questionnaire status
+        if (data.user) {
+          const code = data.user.federalSchoolCode;
+          const codeStr = code === null || code === undefined ? "" : String(code).trim();
+          const hasCode = codeStr.length > 0 && codeStr !== "no_school";
+          
+          setHasSchoolCode(hasCode || codeStr === "no_school");
+          
+          // Priority 1: Show onboarding if no school code at all
+          if (!hasCode && codeStr !== "no_school") {
+            setShowOnboardingModal(true);
+          } 
+          // Priority 2: Show questionnaire if has code but not completed
+          else if (data.user.questionnaireCompleted === false) {
+            setQuestionnaireCompleted(false);
+            fetchQuestionnaireData();
+          }
+        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
@@ -445,6 +473,36 @@ export default function DashboardPage() {
 
     fetchActivityChart();
   }, [selectedTimeframe]);
+
+  // Fetch questionnaire data
+  const fetchQuestionnaireData = async () => {
+    try {
+      const response = await fetch('/api/questionnaire');
+      if (!response.ok) throw new Error('Failed to fetch questionnaire');
+      const data = await response.json();
+      setQuestionnaireData(data);
+      setQuestionnaireCompleted(false);
+      setShowQuestionnaireModal(true);
+    } catch (error) {
+      console.error('Error fetching questionnaire:', error);
+    }
+  };
+
+  // Handle onboarding completion - show questionnaire next
+  const handleOnboardingComplete = () => {
+    setShowOnboardingModal(false);
+    setHasSchoolCode(true);
+    // Now show questionnaire modal
+    fetchQuestionnaireData();
+  };
+
+  // Handle questionnaire completion
+  const handleQuestionnaireComplete = () => {
+    setShowQuestionnaireModal(false);
+    setQuestionnaireCompleted(true);
+    // Refresh dashboard data
+    refetchDashboard();
+  };
 
   // Refetch function for when data needs to be refreshed
   const refetchDashboard = async () => {
@@ -765,12 +823,14 @@ export default function DashboardPage() {
               <span className="bg-gradient-to-r from-foreground via-brand to-purple-400 bg-clip-text text-transparent animate-gradient-x">
                 {(() => {
                   const firstName = user.name.split(' ')[0];
+                  // Capitalize first letter
+                  const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
                   const isNewUser = user.createdAt ?
                     new Date().getTime() - new Date(user.createdAt).getTime() < 24 * 60 * 60 * 1000 :
                     false;
                   return isNewUser
-                    ? `Welcome to Codura, ${firstName}`
-                    : `Welcome back, ${firstName}`;
+                    ? `Welcome to Codura, ${capitalizedName}`
+                    : `Welcome back, ${capitalizedName}`;
                 })()}
               </span>
             </h1>
@@ -1010,36 +1070,39 @@ export default function DashboardPage() {
                   <TrendingUp className="w-5 h-5 text-green-500" />
                   Recent Activity
                 </CardTitle>
+                <CardDescription className="text-xs">
+                  Last 7 days
+                </CardDescription>
               </CardHeader>
 
               <CardContent>
                 {recentActivity.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {recentActivity.map((activity) => (
                       <div
                         key={activity.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border border-border/40 hover:bg-muted/50 hover:border-brand/30 transition-all cursor-pointer hover:scale-[1.02] activity-card-hover"
+                        className="flex items-center gap-3 p-2.5 rounded-lg border border-border/40 hover:bg-muted/50 hover:border-brand/30 transition-all cursor-pointer hover:scale-[1.01] activity-card-hover"
                       >
                         <div className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center transition-transform hover:scale-110",
+                          "w-8 h-8 rounded-lg flex items-center justify-center transition-transform hover:scale-110 flex-shrink-0",
                           activity.type === 'problem' && "bg-green-500/10 text-green-600",
                           activity.type === 'interview' && "bg-purple-500/10 text-purple-600",
                           activity.type === 'study' && "bg-blue-500/10 text-blue-600"
                         )}>
                           {activity.type === 'problem' ? (
-                            <CheckCircle2 className="w-5 h-5" />
+                            <CheckCircle2 className="w-4 h-4" />
                           ) : activity.type === 'interview' ? (
-                            <Video className="w-5 h-5" />
+                            <Video className="w-4 h-4" />
                           ) : (
-                            <Users className="w-5 h-5" />
+                            <Users className="w-4 h-4" />
                           )}
                         </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{activity.title}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{activity.title}</p>
                           <p className="text-xs text-muted-foreground">{activity.time}</p>
                         </div>
                         {activity.difficulty && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs flex-shrink-0">
                             {activity.difficulty}
                           </Badge>
                         )}
@@ -1047,9 +1110,10 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p className="text-sm">No recent activity</p>
-                    <p className="text-xs mt-1">Start solving problems to see your activity here</p>
+                  <div className="text-center py-6 text-muted-foreground">
+                    <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm font-medium">No recent activity</p>
+                    <p className="text-xs mt-1">Solve problems in the last 7 days to see activity</p>
                   </div>
                 )}
               </CardContent>
@@ -1297,6 +1361,19 @@ export default function DashboardPage() {
                 listColor={selectedStudyPlan.color}
                 isPublic={selectedStudyPlan.is_public}
                 onListUpdated={refetchDashboard}
+              />
+            )}
+
+            {/* Onboarding Modal - Shows for users without school code */}
+            {showOnboardingModal && !hasSchoolCode && (
+              <OnboardingModal onComplete={handleOnboardingComplete} />
+            )}
+
+            {/* Questionnaire Modal - Shows after onboarding or for users with school code but incomplete questionnaire */}
+            {showQuestionnaireModal && questionnaireData && !questionnaireCompleted && !showOnboardingModal && (
+              <QuestionnaireModal
+                items={questionnaireData.items}
+                onComplete={handleQuestionnaireComplete}
               />
             )}
           </div>

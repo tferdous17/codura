@@ -48,17 +48,8 @@ export async function login(formData: FormData) {
     .eq('user_id', user.id)
     .single()
 
-  const fafsaCode = (profile?.federal_school_code ?? '').trim()
-  const hasValidCode = /^[0-9A-Za-z]{6}$/.test(fafsaCode)
-  const isCompleted = !!profile?.questionnaire_completed
-
-  if (isCompleted) {
-    redirect('/dashboard')
-  } else if (hasValidCode) {
-    redirect('/questionnaire')
-  } else {
-    redirect('/onboarding')
-  }
+  // Always redirect to dashboard - modals will handle onboarding/questionnaire
+  redirect('/dashboard')
 }
 
 /**
