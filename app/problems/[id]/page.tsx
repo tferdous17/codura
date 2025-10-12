@@ -108,7 +108,14 @@ export default function ProblemPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submissionResult, setSubmissionResult] = useState<SubmissionResult | undefined>()
-
+  // Mock submission for AIChatbot (temporary for testing)
+  const [aiSubmission, setAiSubmission] = useState<{
+    code: string
+    language: string
+    timestamp: Date
+    testsPassed: number
+    totalTests: number
+  } | null>(null)
   // ============================================
   // DATA FETCHING
   // ============================================
@@ -186,7 +193,17 @@ export default function ProblemPage() {
         runtime: data.runtime,
         testResults: data.testResults,
       })
+      
+      // Mock submission for AIChatbot only (not judge)
+      type AiSubmission = {
+        code: string
+        language: string
+        timestamp: Date
+        testsPassed: number
+        totalTests: number
+      } | null
 
+      const [aiSubmission, setAiSubmission] = useState<AiSubmission>(null)
       console.log('Submission successful:', data)
     } catch (error) {
       console.error('Submission error:', error)
@@ -307,11 +324,21 @@ export default function ProblemPage() {
             
             {/* Code Editor */}
             <ResizablePanel defaultSize={65} minSize={30}>
-              <CodeEditor 
-                problem={problem}
-                onSubmit={handleCodeSubmission}
-                onRun={handleCodeRun}
-              />
+            <CodeEditor 
+              problem={problem}
+              onAiChat={async (code, languageId) => {
+                // This sets up a fake submission so the AI chat can open after Submit
+                setAiSubmission({
+                  code,
+                  language: String(languageId),
+                  timestamp: new Date(),
+                  testsPassed: 0,
+                  totalTests: 0,
+                })
+              }}
+              onSubmit={handleCodeSubmission}  // keep for later Judge integration
+              onRun={handleCodeRun}
+            />
             </ResizablePanel>
 
             <ResizableHandle withHandle />
@@ -336,12 +363,9 @@ export default function ProblemPage() {
           problemTitle={problem.title}
           problemDescription={problem.description}
           problemDifficulty={problem.difficulty}
-          submission={null}
-          onMessageSent={(message) => {
-          console.log('User asked:', message)
-    // Log to analytics, database, etc.
-  }}
-/>
+          submission={aiSubmission}                 // ← now unlocks after Submit
+          onMessageSent={handleAIChatMessage}
+        />
         </ResizablePanel>
         
       </ResizablePanelGroup>

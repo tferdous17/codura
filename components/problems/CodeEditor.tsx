@@ -22,10 +22,11 @@ interface CodeEditorProps {
   problem: ProblemData | null
   onSubmit?: (code: string, languageId: number) => Promise<void>
   onRun?: (code: string, languageId: number) => Promise<void>
+  onAiChat?: (code: string, languageId: number) => Promise<void> // ← add this
 }
 
-export function CodeEditor({ problem, onSubmit, onRun }: CodeEditorProps) {
-  const monaco = useMonaco()
+export function CodeEditor({ problem, onSubmit, onRun, onAiChat }: CodeEditorProps) {
+    const monaco = useMonaco()
   
   const [userLang, setUserLang] = useState({
     id: 92,
@@ -91,11 +92,15 @@ export function CodeEditor({ problem, onSubmit, onRun }: CodeEditorProps) {
 
   const handleSubmit = async () => {
     if (!usersCode.trim()) return
-    
+  
     setIsSubmitting(true)
     try {
-      if (onSubmit) {
+      if (onAiChat) {
+        await onAiChat(usersCode, userLang.id)
+      } else if (onSubmit) {
         await onSubmit(usersCode, userLang.id)
+      } else {
+        alert('No submit handlers provided. Wire up onAiChat or onSubmit.')
       }
     } catch (error) {
       console.error('Submission error:', error)

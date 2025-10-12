@@ -23,8 +23,8 @@ interface PostSubmissionChatbotProps {
   problemTitle: string
   problemDescription: string
   problemDifficulty: string
-  submission?: Submission | null  // ✅ Make optional
-  onMessageSent?: (message: string) => void  // ✅ Add this
+  submission?: Submission | null  
+  onMessageSent?: (message: string) => void  
 }
 
 type AssistanceType = 'understanding' | 'debugging' | 'explanation' | 'optimization' | null
@@ -150,7 +150,7 @@ export default function AIChatbot({
   
     try {
       // TODO: Replace with actual API call
-      /*
+      
       const response = await fetch('/api/ai/analyze-submission', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -165,10 +165,7 @@ export default function AIChatbot({
             content: m.content
           }))
         })
-      })
-      const data = await response.json()
-      const aiResponse = data.message
-      */
+      })      
   
       await new Promise(resolve => setTimeout(resolve, 1200))
       
