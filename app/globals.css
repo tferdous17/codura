@@ -177,9 +177,25 @@
     }
   }
 
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
   --animate-pulse-slow: pulse-slow 6s ease-in-out infinite;
   --animate-float-slow: float-slow 8s ease-in-out infinite;
   --animate-gradient-x: gradient-x 8s ease infinite;
+  --animate-blob: blob 7s infinite;
 }
 
 :root {
@@ -228,6 +244,54 @@
   /* Shadows */
   --shadow: #00000020;
   --shadow-strong: #00000088;
+}
+
+.light {
+  /* Light mode colors */
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0 0);
+  --card: oklch(1.0 0 0);
+  --card-foreground: oklch(0.15 0 0);
+  --popover: oklch(1.0 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+  --primary: oklch(0.15 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0 0);
+  --secondary-foreground: oklch(0.15 0 0);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: oklch(0.96 0 0);
+  --accent-foreground: oklch(0.15 0 0);
+  --destructive: oklch(0.5 0.22 25);
+  --destructive-foreground: oklch(1.0 0 0);
+  --border: oklch(0.90 0 0);
+  --input: oklch(0.90 0 0);
+  --ring: oklch(0.7 0 0);
+  --chart-1: oklch(0.5 0.2 250);
+  --chart-2: oklch(0.7 0.15 150);
+  --chart-3: oklch(0.77 0.19 70);
+  --chart-4: oklch(0.6 0.25 300);
+  --chart-5: oklch(0.65 0.25 20);
+  --sidebar: oklch(0.98 0 0);
+  --sidebar-foreground: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.15 0 0);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.96 0 0);
+  --sidebar-accent-foreground: oklch(0.15 0 0);
+  --sidebar-border: oklch(0.90 0 0);
+  --sidebar-ring: oklch(0.7 0 0);
+
+  /* Brand colors for light mode */
+  --brand: oklch(0.75 0.15 30);
+  --brand-foreground: oklch(1.0 0 0);
+
+  /* Illustrations colors */
+  --light: var(--foreground);
+  --light-foreground: var(--foreground);
+
+  /* Shadows for light mode */
+  --shadow: rgba(0, 0, 0, 0.08);
+  --shadow-strong: rgba(0, 0, 0, 0.15);
 }
 
 .dark {
@@ -388,4 +452,12 @@
 
 .pause-animation:hover {
   animation-play-state: paused;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }
