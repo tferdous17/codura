@@ -37,7 +37,8 @@ export default function AIChatbot({
   submission = null,  // ✅ Add default value
   onMessageSent  // ✅ Add this
 }: PostSubmissionChatbotProps) {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>([]);
+  const messagesRef = useRef<Message[]>(messages);
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [hasAnalyzed, setHasAnalyzed] = useState(false)
@@ -52,155 +53,224 @@ export default function AIChatbot({
       if (scrollContainer) {
         scrollContainer.scrollTop = scrollContainer.scrollHeight
       }
-    }
-  }, [messages])
+    }messagesRef.current = messages;
+  }, [messages]);
 
   // Initialize chatbot when submission is available
-  useEffect(() => {
-    if (submission && !hasAnalyzed) {
-      initializeChatbot()
-    }
-  }, [submission])
+  // Use a stable key to detect a genuinely new submission
+const prevSubKeyRef = useRef<string>("");
 
-  // Reset when new submission
-  useEffect(() => {
-    if (submission) {
-      setMessages([])
-      setHasAnalyzed(false)
-      setSelectedAssistance(null)
-    }
-  }, [submission?.timestamp])
+useEffect(() => {
+  if (!submission) return;
 
+  // Build a key that changes only when the user's submission meaningfully changes
+  const subKey = `${problemId}|${submission.code}|${submission.testsPassed}/${submission.totalTests}`;
+
+  if (prevSubKeyRef.current !== subKey) {
+    prevSubKeyRef.current = subKey;
+
+    // Reset state for the new submission
+    setMessages([]);
+    setHasAnalyzed(false);
+    setSelectedAssistance(null);
+
+    // Kick off fresh initial analysis
+    initializeChatbot();
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [problemId, submission?.code, submission?.testsPassed, submission?.totalTests]);
   const initializeChatbot = async () => {
-    if (!submission) return
-    
-    setIsInitializing(true)
-    
-    try {
-      // Simulate API call to analyze code
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Initial analysis message
-      const analysisMessage: Message = {
-        role: 'ai',
-        content: `I've analyzed your submission for "${problemTitle}". Your code ${
-          submission.testsPassed === submission.totalTests 
-            ? 'passed all tests! 🎉' 
-            : `passed ${submission.testsPassed}/${submission.totalTests} tests.`
-        }\n\nI can help you with:\n\n• Understanding the problem better\n• Debugging failed test cases\n• Explaining your code approach\n• Optimizing your solution\n\nWhich would you like help with?`,
-        timestamp: new Date()
-      }
-      
-      setMessages([analysisMessage])
-      setHasAnalyzed(true)
-    } catch (error) {
-      console.error('Error analyzing submission:', error)
-    } finally {
-      setIsInitializing(false)
-    }
-  }
-
-  const handleAssistanceSelection = async (type: AssistanceType) => {
-    setSelectedAssistance(type)
-    setIsLoading(true)
-
-    const userMessage: Message = {
-      role: 'user',
-      content: getAssistanceTypeLabel(type),
-      timestamp: new Date()
-    }
-    setMessages(prev => [...prev, userMessage])
-
-    try {
-      // Simulate AI response based on assistance type
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const response = getInitialAssistanceResponse(type, submission!)
-      
-      const aiMessage: Message = {
-        role: 'ai',
-        content: response,
-        timestamp: new Date()
-      }
-      
-      setMessages(prev => [...prev, aiMessage])
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSendMessage = async () => {
-    if (!input.trim() || isLoading || !selectedAssistance) return
-  
-    const userMessage = input.trim()
-    const newUserMessage: Message = {
-      role: 'user',
-      content: userMessage,
-      timestamp: new Date()
-    }
-    
-    setMessages(prev => [...prev, newUserMessage])
-    setInput('')
-    setIsLoading(true)
-  
-    // ✅ Call the callback if provided (for analytics, logging, etc.)
-    onMessageSent?.(userMessage)
+    if (!submission) return;
+    setIsInitializing(true);
   
     try {
-      // TODO: Replace with actual API call
-      
-      const response = await fetch('/api/ai/analyze-submission', {
+      const res = await fetch('/api/ai/initial-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: userMessage,
+          problemId,
+          problemTitle,
+          problemDescription,
+          submissionCode: submission.code,
+          language: submission.language ?? 'plaintext',
+          testsPassed: submission.testsPassed,
+          totalTests: submission.totalTests,
+        }),
+      });
+  
+      const data = await res.json();
+      const firstMsg = data?.message ?? `I've analyzed your submission for "${problemTitle}".`;
+  
+      setMessages([
+        { role: 'ai', content: firstMsg, timestamp: new Date() },
+      ]);
+      setHasAnalyzed(true);
+    } catch (e) {
+      console.error('Error analyzing submission:', e);
+      // fallback message
+      setMessages([
+        {
+          role: 'ai',
+          content: `I've analyzed your submission for "${problemTitle}". I can help with Understanding, Debugging, Explanation, or Optimization. Which do you want?`,
+          timestamp: new Date(),
+        },
+      ]);
+      setHasAnalyzed(true);
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+
+  const handleAssistanceSelection = async (type: AssistanceType) => {
+    if (!type) return;
+    setSelectedAssistance(type);
+    setIsLoading(true);
+  
+    const picked = getAssistanceTypeLabel(type);
+    const pickedMsg: Message = {
+      role: 'user',
+      content: getAssistanceTypeLabel(type),
+      timestamp: new Date(),
+    };
+  
+    // UI update
+    setMessages(prev => [...prev, pickedMsg]);
+  
+    // Build history from the freshest state
+    const historyForServer = [...messagesRef.current, pickedMsg].map(m => ({
+      role: m.role,
+      content: m.content,
+    }));
+  
+    try {
+      const res = await fetch('/api/ai/submission-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           problemId,
           problemDescription,
-          submissionCode: submission?.code,
-          assistanceType: selectedAssistance,
-          conversationHistory: messages.map(m => ({
-            role: m.role,
-            content: m.content
-          }))
-        })
-      })      
+          submissionCode: submission?.code ?? '',
+          language: submission?.language ?? 'plaintext',
+          assistanceType: type,
+          userMessage: `Please start with ${picked.toLowerCase()}. Give me the first hint.`,
+          conversationHistory: historyForServer,
+          testsPassed: submission?.testsPassed ?? 0,
+          totalTests: submission?.totalTests ?? 0,
+          nudges: [
+            'hints only, no solutions',
+            'start with one concrete next step',
+            'suggest a single test to try',
+          ],
+        }),
+      });
   
-      await new Promise(resolve => setTimeout(resolve, 1200))
-      
-      const aiResponse = generateContextualResponse(
-        selectedAssistance,
-        userMessage,
-        submission!
-      )
-      
-      const aiMessage: Message = {
-        role: 'ai',
-        content: aiResponse,
-        timestamp: new Date()
-      }
-      
-      setMessages(prev => [...prev, aiMessage])
-    } catch (error) {
-      console.error('Error:', error)
-      const errorMessage: Message = {
-        role: 'ai',
-        content: 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, errorMessage])
+      const data = await res.json();
+      const text = data?.text ?? data?.message ?? 'Sorry, I could not generate a response.';
+      setMessages(prev => [...prev, { role: 'ai', content: text, timestamp: new Date() }]);
+    } catch (err) {
+      console.error('assist-select error', err);
+      setMessages(prev => [...prev, { role: 'ai', content: 'Sorry, something went wrong. Try again.', timestamp: new Date() }]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
+  };
+  
+  const handleSendMessage = async () => {
+    if (!input.trim() || isLoading) return;
+  
+    if (!selectedAssistance) {
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'ai',
+          content:
+            'Pick a mode (Understanding / Debugging / Explanation / Optimization) first.',
+          timestamp: new Date(),
+        },
+      ]);
+      return;
     }
+  
+    const userMessageText = input.trim();
+    const newUserMessage: Message = {
+      role: 'user',
+      content: userMessageText,
+      timestamp: new Date(),
+    };
+  
+    setInput('');
+    setIsLoading(true);
+    setMessages(prev => [...prev, newUserMessage]);
+  
+    // ✅ Use the freshest history from the ref + the new message
+    const historyForServer = [...messagesRef.current, newUserMessage].map(m => ({
+      role: m.role as 'user' | 'ai',
+      content: m.content,
+    }));
+  
+    try {
+      const res = await fetch('/api/ai/submission-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          problemId,
+          problemDescription,
+          submissionCode: submission?.code ?? '',
+          language: submission?.language ?? 'plaintext',
+          assistanceType: selectedAssistance, // 'understanding' | 'debugging' | 'explanation' | 'optimization'
+          userMessage: userMessageText,
+          conversationHistory: historyForServer, // server remaps 'ai' -> 'assistant'
+          testsPassed: submission?.testsPassed ?? 0,
+          totalTests: submission?.totalTests ?? 0,
+          nudges: [
+            'hints only, no solutions',
+            'start with one concrete next step',
+            'suggest one test to try next',
+          ],
+          // judge: { stdout, stderr, testResults, runtimeMs, memoryKb } // if you have it
+        }),
+      });
+  
+      let payload: any = null;
+      try { payload = await res.json(); } catch { /* ignore parse error */ }
+  
+      if (!res.ok) {
+        const msg =
+          payload?.error ??
+          payload?.message ??
+          `Server error (${res.status}).`;
+        throw new Error(msg);
+      }
+  
+      const text: string =
+        payload?.text ??
+        payload?.message ??
+        'Sorry, I could not generate a response.';
+  
+      setMessages(prev => [
+        ...prev,
+        { role: 'ai', content: text, timestamp: new Date() },
+      ]);
+    } catch (err: any) {
+      console.error('handleSendMessage error:', err);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'ai',
+          content: `Error: ${err?.message || 'Unknown error.'}`,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (!isLoading) handleSendMessage();
   }
+};
 
   // No submission yet - show locked state
   if (!submission) {
@@ -485,20 +555,6 @@ function getAssistanceTypeLabel(type: AssistanceType): string {
     optimization: 'Help me optimize my solution'
   }
   return type ? labels[type] : ''
-}
-
-function getInitialAssistanceResponse(type: AssistanceType, submission: Submission): string {
-  const responses = {
-    understanding: `Great! Let's break down the problem together.\n\n🤔 Key things to consider:\n\n• What are the inputs and expected outputs?\n• Are there any constraints we need to handle?\n• What edge cases should we think about?\n\nWhat specific part of the problem would you like me to clarify?`,
-    
-    debugging: `Let's debug your solution! I can see ${submission.testsPassed}/${submission.totalTests} tests passed.\n\n🐛 Debugging approach:\n\n• Have you checked edge cases (empty inputs, single elements)?\n• Are you handling all possible input ranges?\n• Have you traced through a failing test case manually?\n\nWhich test case is failing, or what specific behavior seems wrong?`,
-    
-    explanation: `I'll help you analyze your approach!\n\n💡 Let's examine:\n\n• Your overall strategy and data structures\n• The time and space complexity\n• How your code handles different scenarios\n\nWhat part of your solution would you like me to review first?`,
-    
-    optimization: `Let's look at making your solution more efficient!\n\n⚡ Consider these aspects:\n\n• Current time complexity - can we reduce iterations?\n• Space usage - can we optimize memory?\n• Alternative data structures that might be faster\n\nWhat's your current approach, and what do you think might be slow?`
-  }
-  
-  return type ? responses[type] : 'How can I help you?'
 }
 
 function generateContextualResponse(

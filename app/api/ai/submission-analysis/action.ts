@@ -15,6 +15,20 @@ interface AnalyzeSubmissionParams {
   conversationHistory: Array<{ role: string; content: string }>;
   testsPassed: number;
   totalTests: number;
+  judge?: {
+    stdout?: string;
+    stderr?: string;
+    testResults?: Array<{
+      name?: string;
+      input?: string;
+      expected?: string;
+      got?: string;
+      passed?: boolean;
+      error?: string;
+    }>;
+    runtimeMs?: number;
+    memoryKb?: number;
+  };
 }
 
 /**
@@ -23,64 +37,114 @@ interface AnalyzeSubmissionParams {
  */
 export async function analyzeSubmission(params: AnalyzeSubmissionParams) {
   const supabase = await createClient();
-  
-  // Verify user is authenticated
   const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    throw new Error("Not authenticated");
-  }
+  if (authError || !user) throw new Error("Not authenticated");
 
-  // Build the system prompt that enforces hint-only responses
   const systemPrompt = buildSystemPrompt(params.assistanceType, params.problemDescription);
-  
-  // Build the user prompt with context
-  const userPrompt = buildUserPrompt(params);
+
+  // Safely clamp large content so you don't blow token limits
+  const clamp = (s: string, max = 4000) =>
+    s.length > max ? s.slice(0, Math.floor(max * 0.6)) + "\n...\n" + s.slice(-Math.floor(max * 0.4)) : s;
+
+  const judgeSummary = (() => {
+    const jr = params.judge;
+    if (!jr) return "No judge results available.";
+    const failing = (jr.testResults || []).filter(t => t?.passed === false).slice(0, 5);
+    return [
+      `Tests Passed: ${params.testsPassed}/${params.totalTests}`,
+      `Runtime (ms): ${jr.runtimeMs ?? 'n/a'}, Memory (KB): ${jr.memoryKb ?? 'n/a'}`,
+      jr.stdout ? `STDOUT (clamped):\n${clamp(jr.stdout, 1500)}` : null,
+      jr.stderr ? `STDERR (clamped):\n${clamp(jr.stderr, 1500)}` : null,
+      failing.length
+        ? `Failing samples (up to 5):\n${failing.map((t, i) =>
+            `#${i+1} name:${t.name ?? 'n/a'}\ninput:${t.input ?? 'n/a'}\nexpected:${t.expected ?? 'n/a'}\ngot:${t.got ?? 'n/a'}\nerror:${t.error ?? 'n/a'}`
+          ).join("\n\n")}`
+        : "No explicit failing test details."
+    ].filter(Boolean).join("\n\n");
+  })();
+
+  const userPrompt = `
+  Student's Question:
+  ${params.userMessage}
+
+  Language: ${params.language}
+
+  IMPORTANT CONTEXT:
+  - Use the student's code as the primary source of truth.
+  - Judge output may be noisy or incomplete; only use it if it aligns with code logic.
+  - If judge output and code conflict, prefer reasoning from the code and known constraints.
+
+  Problem (abbrev):
+  ${clamp(params.problemDescription, 1800)}
+
+  Student's Code (${params.language}, clamped):
+  \`\`\`${params.language}
+  ${clamp(params.submissionCode, 4000)}
+  \`\`\`
+
+  Judge Summary:
+  ${judgeSummary}
+
+  Your task:
+  - Provide hints and guiding questions ONLY (no solutions, no full working code).
+  - Identify likely logic or edge-case issues from the code.
+  - If judge output seems wrong or inconsistent, say so and proceed from the code itself.
+  - Tailor guidance to assistance type: ${params.assistanceType}.
+  `;
 
   try {
-    // TODO: Replace with your actual AI API call (OpenAI, Claude, etc.)
-    // Example for OpenAI:
-    /*
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      // Include short history (clamped)
+      ...params.conversationHistory.slice(-6).map(m => ({
+        role: m.role === 'ai' ? 'assistant' : 'user',
+        content: clamp(m.content, 1500)
+      })),
+      { role: 'user', content: userPrompt }
+    ];
+
+    // --- Real LLM call (OpenAI) ---
+    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: "gpt-4o-mini", // or "gpt-4-turbo", whichever you have access to
+        temperature: 0.4,
         messages: [
-          { role: 'system', content: systemPrompt },
-          ...params.conversationHistory,
-          { role: 'user', content: userPrompt }
+          { role: "system", content: systemPrompt },
+          ...params.conversationHistory.slice(-6).map((m) => ({
+            role: m.role === "ai" ? "assistant" : "user",
+            content: m.content,
+          })),
+          { role: "user", content: userPrompt },
         ],
-        temperature: 0.7,
-        max_tokens: 500
-      })
+      }),
     });
 
-    const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
-    */
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error('Anthropic error:', text);
+      throw new Error('AI provider error');
+    }
 
-    // Simulated response for demonstration
-    const aiResponse = generateSimulatedResponse(params);
+    const data = await resp.json();
+const aiResponse =
+  data?.choices?.[0]?.message?.content ??
+  "I'm not sure—could you restate that with the specific case you're testing?";
 
-    // Log the interaction for analytics
     await logAIInteraction(user.id, params.problemId, params.assistanceType);
-
-    return {
-      success: true,
-      message: aiResponse
-    };
+    return { success: true, message: aiResponse };
   } catch (error) {
-    console.error("AI Analysis Error:", error);
+    console.error("Submission Analysis Error:", error);
     return {
       success: false,
-      message: "I'm having trouble analyzing your code right now. Please try again in a moment."
+      message: "I'm having trouble analyzing your submission. Please try again."
     };
   }
 }
-
 /**
  * Initial analysis when submission is first received
  */
@@ -285,4 +349,20 @@ async function logAIInteraction(
     // Log but don't throw - analytics failure shouldn't break the feature
     console.error("Failed to log AI interaction:", error);
   }
+}
+
+function toAnthropicMessages(
+  conversationHistory: { role: string; content: string }[],
+  userPrompt: string
+) {
+  // Anthropic expects array of {role: 'user'|'assistant', content: string}
+  // We'll take the last 6 messages from conversationHistory, convert roles, and add the userPrompt as the last user message.
+  const mappedHistory = conversationHistory.slice(-6).map(m => ({
+    role: m.role === 'ai' ? 'assistant' : 'user',
+    content: m.content
+  }));
+  return [
+    ...mappedHistory,
+    { role: 'user', content: userPrompt }
+  ];
 }
