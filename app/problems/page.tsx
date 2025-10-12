@@ -14,6 +14,8 @@ import Image from "next/image";
 import CoduraLogo from "@/components/logos/codura-logo.svg";
 import { cn } from "@/lib/utils";
 import dynamic from 'next/dynamic';
+import AIChatbot from '@/components/problems/AIChatbot'
+
 import { AddToListDialog } from "@/components/problems/add-to-list-dialog";
 
 // Dynamic imports to avoid TypeScript issues with lucide-react type definitions
@@ -567,5 +569,6 @@ export default function ProblemsPage() {
         />
       )}
     </div>
+    
   );
 }
