@@ -127,12 +127,11 @@ function wrapCodeWithTestcases(userCode: string, testcases: any[], problemSlug: 
     // just handling python for now...
 }
 
+// !! NOTE: DO NOT CHANGE THE INDENTATION FOR THE TEST HARNESS STRINGS BELOW --- PYTHON IS WHITESPACE-SENSITIVE
+// For clarification: indenting the test harness code will treat it as if it was inside the class definition and thereby not execute it at all
 function wrapPythonCode(userCode: string, testCases: any[], problemSlug: string) {
   if (problemSlug === 'two-sum') {
-    // Clean up the user code - remove extra whitespace and empty code blocks
     const cleanedCode = userCode.trim();
-    
-    // Check if user already defined the class
     const hasClass = cleanedCode.includes('class Solution');
     
     let finalCode;
@@ -140,46 +139,50 @@ function wrapPythonCode(userCode: string, testCases: any[], problemSlug: string)
     if (hasClass) {
       // User provided the full class, just append test harness
       finalCode = `${cleanedCode}
-        # Test harness
-        solution = Solution()
-        test_cases = ${JSON.stringify(testCases)}
 
-        for i, test in enumerate(test_cases):
-            try:
-                result = solution.twoSum(test['input']['nums'], test['input']['target'])
-                expected = test['expected']
-                
-                # Sort both arrays for comparison (since order might vary)
-                if sorted(result) == sorted(expected):
-                    print(f"Test {i + 1}: PASS")
-                else:
-                    print(f"Test {i + 1}: FAIL - Expected {expected}, got {result}")
-            except Exception as e:
-                print(f"Test {i + 1}: ERROR - {str(e)}")
-        `;
+# Test harness
+solution = Solution()
+test_cases = ${JSON.stringify(testCases)}
+
+for i, test in enumerate(test_cases):
+    try:
+        result = solution.twoSum(test['input']['nums'], test['input']['target'])
+        expected = test['expected']
+        
+        # Sort both arrays for comparison (since order might vary)
+        if sorted(result) == sorted(expected):
+            print(f"Test {i + 1}: PASS")
+        else:
+            print(f"Test {i + 1}: FAIL - Expected {expected}, got {result}")
+    except Exception as e:
+        print(f"Test {i + 1}: ERROR - {str(e)}")
+`;
     } else {
-      // user deleted the code stub and only provided the method, so wrap it in a class
-      finalCode = `
-                class Solution:
-                ${cleanedCode.split('\n').map(line => '    ' + line).join('\n')}
+      // User only provided the method, wrap it in a class
+      finalCode = `class Solution:
+${cleanedCode.split('\n').map(line => '    ' + line).join('\n')}
 
-                # Test harness
-                solution = Solution()
-                test_cases = ${JSON.stringify(testCases)}
+# Test harness
+solution = Solution()
+test_cases = ${JSON.stringify(testCases)}
 
-                for i, test in enumerate(test_cases):
-                    try:
-                        result = solution.twoSum(test['input']['nums'], test['input']['target'])
-                        expected = test['expected']
-                        
-                        if sorted(result) == sorted(expected):
-                            print(f"Test {i + 1}: PASS")
-                        else:
-                            print(f"Test {i + 1}: FAIL - Expected {expected}, got {result}")
-                    except Exception as e:
-                        print(f"Test {i + 1}: ERROR - {str(e)}")
-                `;
+for i, test in enumerate(test_cases):
+    try:
+        result = solution.twoSum(test['input']['nums'], test['input']['target'])
+        expected = test['expected']
+        
+        if sorted(result) == sorted(expected):
+            print(f"Test {i + 1}: PASS")
+        else:
+            print(f"Test {i + 1}: FAIL - Expected {expected}, got {result}")
+    except Exception as e:
+        print(f"Test {i + 1}: ERROR - {str(e)}")
+`;
     }
+    
+    console.log('=== GENERATED PYTHON CODE ===');
+    console.log(finalCode);
+    console.log('=== END PYTHON CODE ===');
     
     return finalCode;
   }
@@ -191,11 +194,10 @@ function parseTestResults(submissionResult: any, testCases: any[]) {
   const output = submissionResult.stdout || '';
   const lines = output.split('\n').filter((line: string) => line.trim());
   
-  return lines.map((line: string, index: number) => {
+  const results = lines.map((line: string, index: number) => {
     const testCase = testCases[index] || {};
     
     if (line.includes('PASS')) {
-      // Extract test number from line like "Test 1: PASS"
       const testNumMatch = line.match(/Test (\d+)/);
       const testNumber = testNumMatch ? parseInt(testNumMatch[1]) : index + 1;
       
@@ -204,11 +206,10 @@ function parseTestResults(submissionResult: any, testCases: any[]) {
         status: 'pass',
         input: testCase.input,
         expected: testCase.expected,
-        actual: testCase.expected, // Since it passed, actual = expected
+        actual: testCase.expected,
         message: 'Test passed'
       };
     } else if (line.includes('FAIL')) {
-      // Extract test number and actual result from line like "Test 1: FAIL - Expected [0, 1], got [1, 0]"
       const testNumMatch = line.match(/Test (\d+)/);
       const testNumber = testNumMatch ? parseInt(testNumMatch[1]) : index + 1;
       
@@ -227,7 +228,6 @@ function parseTestResults(submissionResult: any, testCases: any[]) {
         message: line
       };
     } else if (line.includes('ERROR')) {
-      // Extract test number and error from line like "Test 1: ERROR - division by zero"
       const testNumMatch = line.match(/Test (\d+)/);
       const testNumber = testNumMatch ? parseInt(testNumMatch[1]) : index + 1;
       
@@ -253,6 +253,8 @@ function parseTestResults(submissionResult: any, testCases: any[]) {
       message: line 
     };
   });
+  
+  return results;
 }
 
 function sleep(ms: number): Promise<void> {
