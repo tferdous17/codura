@@ -229,8 +229,18 @@ function Calendar({ streak }: { streak: number }) {
   };
 
   return (
-    <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-brand/30 transition-all duration-500 shadow-xl">
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+    <Card 
+      className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-brand/30 transition-all duration-500 shadow-xl hover:scale-[1.01] shine-effect"
+      style={{ '--glow-color': 'var(--brand)' } as React.CSSProperties}
+    >
+      {/* Animated glow borders */}
+      <div className="glow-border-top" />
+      <div className="glow-border-bottom" />
+      <div className="glow-border-left" />
+      <div className="glow-border-right" />
+      
+      {/* Enhanced background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-12 transition-opacity duration-700 pointer-events-none" />
 
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -730,13 +740,19 @@ export default function DashboardPage() {
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           {/* Daily Challenge - Featured */}
-          <Card className="lg:col-span-2 relative border-2 border-brand/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-brand/40 hover:shadow-2xl hover:shadow-brand/10 transition-all duration-500 shadow-xl hover:scale-[1.01]">
-            {/* Glow lines on all 4 sides */}
-            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/60 to-transparent" />
-            <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/60 to-transparent" />
-            <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/60 to-transparent" />
-            <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/60 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <Card 
+            className="lg:col-span-2 relative border-2 border-brand/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-brand/40 hover:shadow-2xl hover:shadow-brand/10 transition-all duration-500 shadow-xl hover:scale-[1.01] shine-effect"
+            style={{ '--glow-color': 'var(--brand)' } as React.CSSProperties}
+          >
+            {/* Animated glow borders - top visible, others on hover */}
+            <div className="glow-border-top" />
+            <div className="glow-border-bottom" />
+            <div className="glow-border-left" />
+            <div className="glow-border-right" />
+            
+            {/* Enhanced background gradient with animation */}
+            <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-brand/3 to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-tl from-orange-500/5 to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-700 delay-100 pointer-events-none" />
 
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -769,7 +785,7 @@ export default function DashboardPage() {
                     ))}
                   </div>
                   <Link href={dailyChallenge.slug ? `/problems/${dailyChallenge.slug}` : '/problems'}>
-                    <Button className="bg-gradient-to-r from-brand to-orange-300 hover:from-brand/90 hover:to-orange-300/90 text-brand-foreground hover:scale-105 transition-transform">
+                    <Button className="bg-gradient-to-r from-brand to-orange-300 hover:from-brand/90 hover:to-orange-300/90 text-brand-foreground hover:scale-105 transition-transform premium-button-hover">
                       Start Challenge
                     </Button>
                   </Link>
@@ -783,12 +799,18 @@ export default function DashboardPage() {
           </Card>
 
           {/* Quick Stats */}
-          <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-purple-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
-            {/* Glow lines on all 4 sides */}
-            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
-            <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
-            <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-purple-500/40 to-transparent" />
-            <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-purple-500/40 to-transparent" />
+          <Card 
+            className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-purple-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01] shine-effect"
+            style={{ '--glow-color': '#a855f7' } as React.CSSProperties}
+          >
+            {/* Animated glow borders */}
+            <div className="glow-border-top" />
+            <div className="glow-border-bottom" />
+            <div className="glow-border-left" />
+            <div className="glow-border-right" />
+            
+            {/* Enhanced background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
             <CardHeader>
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -833,12 +855,18 @@ export default function DashboardPage() {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Activity Chart */}
-            <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-cyan-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
-              {/* Glow lines on all 4 sides */}
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
-              <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
-              <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-cyan-500/40 to-transparent" />
-              <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-cyan-500/40 to-transparent" />
+            <Card 
+              className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-cyan-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01] shine-effect"
+              style={{ '--glow-color': '#06b6d4' } as React.CSSProperties}
+            >
+              {/* Animated glow borders */}
+              <div className="glow-border-top" />
+              <div className="glow-border-bottom" />
+              <div className="glow-border-left" />
+              <div className="glow-border-right" />
+              
+              {/* Enhanced background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -922,12 +950,18 @@ export default function DashboardPage() {
             </Card>
 
             {/* Recent Activity */}
-            <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-green-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
-              {/* Glow lines on all 4 sides */}
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
-              <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
-              <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
-              <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
+            <Card 
+              className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-green-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01] shine-effect"
+              style={{ '--glow-color': '#22c55e' } as React.CSSProperties}
+            >
+              {/* Animated glow borders */}
+              <div className="glow-border-top" />
+              <div className="glow-border-bottom" />
+              <div className="glow-border-left" />
+              <div className="glow-border-right" />
+              
+              {/* Enhanced background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
               <CardHeader>
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -942,7 +976,7 @@ export default function DashboardPage() {
                     {recentActivity.map((activity) => (
                       <div
                         key={activity.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border border-border/40 hover:bg-muted/50 hover:border-brand/30 transition-all cursor-pointer hover:scale-[1.02]"
+                        className="flex items-center gap-3 p-3 rounded-lg border border-border/40 hover:bg-muted/50 hover:border-brand/30 transition-all cursor-pointer hover:scale-[1.02] activity-card-hover"
                       >
                         <div className={cn(
                           "w-10 h-10 rounded-lg flex items-center justify-center transition-transform hover:scale-110",
@@ -980,12 +1014,18 @@ export default function DashboardPage() {
             </Card>
 
             {/* Upcoming Events */}
-            <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-blue-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
-              {/* Glow lines on all 4 sides */}
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
-              <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
-              <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-blue-500/40 to-transparent" />
-              <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-blue-500/40 to-transparent" />
+            <Card 
+              className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-blue-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01] shine-effect"
+              style={{ '--glow-color': '#3b82f6' } as React.CSSProperties}
+            >
+              {/* Animated glow borders */}
+              <div className="glow-border-top" />
+              <div className="glow-border-bottom" />
+              <div className="glow-border-left" />
+              <div className="glow-border-right" />
+              
+              {/* Enhanced background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -1076,12 +1116,18 @@ export default function DashboardPage() {
             <Calendar streak={user.streak} />
 
             {/* Study Plan Progress */}
-            <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-green-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
-              {/* Glow lines on all 4 sides */}
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
-              <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
-              <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
-              <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
+            <Card 
+              className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-green-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01] shine-effect"
+              style={{ '--glow-color': '#22c55e' } as React.CSSProperties}
+            >
+              {/* Animated glow borders */}
+              <div className="glow-border-top" />
+              <div className="glow-border-bottom" />
+              <div className="glow-border-left" />
+              <div className="glow-border-right" />
+              
+              {/* Enhanced background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
               <CardHeader>
                 <div className="flex items-center justify-between">

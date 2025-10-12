@@ -414,12 +414,18 @@ export default function ProblemsPage() {
           {/* Stats Cards */}
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-              <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-brand/30 transition-all duration-500 shadow-xl hover:scale-[1.02]">
-                {/* Glow lines on all 4 sides */}
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
-                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
-                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
+              <Card 
+                className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-brand/30 transition-all duration-500 shadow-xl hover:scale-[1.02] shine-effect"
+                style={{ '--glow-color': 'var(--brand)' } as React.CSSProperties}
+              >
+                {/* Animated glow borders */}
+                <div className="glow-border-top" />
+                <div className="glow-border-bottom" />
+                <div className="glow-border-left" />
+                <div className="glow-border-right" />
+                
+                {/* Enhanced background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     {/* @ts-ignore */}
@@ -432,12 +438,18 @@ export default function ProblemsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="relative border-2 border-green-500/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-green-500/40 transition-all duration-500 shadow-xl hover:scale-[1.02]">
-                {/* Glow lines on all 4 sides */}
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
-                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
-                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
+              <Card 
+                className="relative border-2 border-green-500/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-green-500/40 transition-all duration-500 shadow-xl hover:scale-[1.02] shine-effect"
+                style={{ '--glow-color': '#22c55e' } as React.CSSProperties}
+              >
+                {/* Animated glow borders */}
+                <div className="glow-border-top" />
+                <div className="glow-border-bottom" />
+                <div className="glow-border-left" />
+                <div className="glow-border-right" />
+                
+                {/* Enhanced background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -451,12 +463,18 @@ export default function ProblemsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="relative border-2 border-yellow-500/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-yellow-500/40 transition-all duration-500 shadow-xl hover:scale-[1.02]">
-                {/* Glow lines on all 4 sides */}
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent" />
-                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent" />
-                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent" />
+              <Card 
+                className="relative border-2 border-yellow-500/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-yellow-500/40 transition-all duration-500 shadow-xl hover:scale-[1.02] shine-effect"
+                style={{ '--glow-color': '#eab308' } as React.CSSProperties}
+              >
+                {/* Animated glow borders */}
+                <div className="glow-border-top" />
+                <div className="glow-border-bottom" />
+                <div className="glow-border-left" />
+                <div className="glow-border-right" />
+                
+                {/* Enhanced background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -470,12 +488,18 @@ export default function ProblemsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="relative border-2 border-red-500/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-red-500/40 transition-all duration-500 shadow-xl hover:scale-[1.02]">
-                {/* Glow lines on all 4 sides */}
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-red-500/40 to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-red-500/40 to-transparent" />
-                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-red-500/40 to-transparent" />
-                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-red-500/40 to-transparent" />
+              <Card 
+                className="relative border-2 border-red-500/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-red-500/40 transition-all duration-500 shadow-xl hover:scale-[1.02] shine-effect"
+                style={{ '--glow-color': '#ef4444' } as React.CSSProperties}
+              >
+                {/* Animated glow borders */}
+                <div className="glow-border-top" />
+                <div className="glow-border-bottom" />
+                <div className="glow-border-left" />
+                <div className="glow-border-right" />
+                
+                {/* Enhanced background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">

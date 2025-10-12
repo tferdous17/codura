@@ -329,8 +329,18 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
       {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-24 pb-16">
         {/* Profile Header */}
-        <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden mb-8 shadow-xl">
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+        <Card 
+          className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden mb-8 shadow-xl shine-effect group hover:border-brand/40 transition-all duration-500 hover:scale-[1.01]"
+          style={{ '--glow-color': 'var(--brand)' } as React.CSSProperties}
+        >
+          {/* Animated glow borders */}
+          <div className="glow-border-top" />
+          <div className="glow-border-bottom" />
+          <div className="glow-border-left" />
+          <div className="glow-border-right" />
+          
+          {/* Enhanced background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-12 transition-opacity duration-700 pointer-events-none" />
 
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row gap-8">
@@ -459,8 +469,18 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
         </Card>
 
         {/* GitHub-Style Contribution Grid */}
-        <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden mb-8 shadow-xl">
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
+        <Card 
+          className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden mb-8 shadow-xl shine-effect group hover:border-green-500/40 transition-all duration-500 hover:scale-[1.01]"
+          style={{ '--glow-color': '#22c55e' } as React.CSSProperties}
+        >
+          {/* Animated glow borders */}
+          <div className="glow-border-top" />
+          <div className="glow-border-bottom" />
+          <div className="glow-border-left" />
+          <div className="glow-border-right" />
+          
+          {/* Enhanced background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -518,8 +538,18 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Problem Solving Stats */}
-            <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+            <Card 
+              className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl shine-effect group hover:border-brand/40 transition-all duration-500 hover:scale-[1.01]"
+              style={{ '--glow-color': 'var(--brand)' } as React.CSSProperties}
+            >
+              {/* Animated glow borders */}
+              <div className="glow-border-top" />
+              <div className="glow-border-bottom" />
+              <div className="glow-border-left" />
+              <div className="glow-border-right" />
+              
+              {/* Enhanced background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
               <CardHeader>
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -581,8 +611,18 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
             </Card>
 
             {/* Tabbed Section: Recent Submissions & Lists */}
-            <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
+            <Card 
+              className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl shine-effect group hover:border-purple-500/40 transition-all duration-500 hover:scale-[1.01]"
+              style={{ '--glow-color': '#a855f7' } as React.CSSProperties}
+            >
+              {/* Animated glow borders */}
+              <div className="glow-border-top" />
+              <div className="glow-border-bottom" />
+              <div className="glow-border-left" />
+              <div className="glow-border-right" />
+              
+              {/* Enhanced background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
               <CardHeader>
                 <div className="flex items-center gap-4 border-b border-border/20 pb-3">
@@ -702,8 +742,18 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
 
           {/* Right Column - Achievements */}
           <div>
-            <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent" />
+            <Card 
+              className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl shine-effect group hover:border-yellow-500/40 transition-all duration-500 hover:scale-[1.01]"
+              style={{ '--glow-color': '#eab308' } as React.CSSProperties}
+            >
+              {/* Animated glow borders */}
+              <div className="glow-border-top" />
+              <div className="glow-border-bottom" />
+              <div className="glow-border-left" />
+              <div className="glow-border-right" />
+              
+              {/* Enhanced background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
               <CardHeader>
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">

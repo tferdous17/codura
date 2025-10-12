@@ -415,7 +415,19 @@ export default function SettingsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar Navigation */}
           <div className="lg:col-span-1">
-            <Card className="border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl sticky top-24">
+            <Card 
+              className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl sticky top-24 shine-effect group hover:border-brand/30 transition-all duration-500 hover:scale-[1.01]"
+              style={{ '--glow-color': 'var(--brand)' } as React.CSSProperties}
+            >
+              {/* Animated glow borders */}
+              <div className="glow-border-top" />
+              <div className="glow-border-bottom" />
+              <div className="glow-border-left" />
+              <div className="glow-border-right" />
+              
+              {/* Enhanced background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-12 transition-opacity duration-700 pointer-events-none" />
+              
               <CardContent className="p-2">
                 <nav className="space-y-1">
                   <button
@@ -460,12 +472,18 @@ export default function SettingsPage() {
           <div className="lg:col-span-3 space-y-6">
             {/* Appearance Tab */}
             {activeTab === 'appearance' && (
-              <Card className="border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
-                {/* Glow lines on all 4 sides */}
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
-                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
-                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
+              <Card 
+                className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl shine-effect group hover:border-purple-500/30 transition-all duration-500 hover:scale-[1.01]"
+                style={{ '--glow-color': '#a855f7' } as React.CSSProperties}
+              >
+                {/* Animated glow borders */}
+                <div className="glow-border-top" />
+                <div className="glow-border-bottom" />
+                <div className="glow-border-left" />
+                <div className="glow-border-right" />
+                
+                {/* Enhanced background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
                 <CardHeader>
                   <CardTitle className="text-2xl">Appearance</CardTitle>
                   <CardDescription>
@@ -543,12 +561,18 @@ export default function SettingsPage() {
 
             {/* Profile Tab */}
             {activeTab === 'profile' && (
-              <Card className="border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
-                {/* Glow lines on all 4 sides */}
-                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
-                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
-                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
-                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
+              <Card 
+                className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl shine-effect group hover:border-blue-500/30 transition-all duration-500 hover:scale-[1.01]"
+                style={{ '--glow-color': '#3b82f6' } as React.CSSProperties}
+              >
+                {/* Animated glow borders */}
+                <div className="glow-border-top" />
+                <div className="glow-border-bottom" />
+                <div className="glow-border-left" />
+                <div className="glow-border-right" />
+                
+                {/* Enhanced background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
                 <CardHeader>
                   <CardTitle className="text-2xl">Profile</CardTitle>
                   <CardDescription>
@@ -630,12 +654,18 @@ export default function SettingsPage() {
             {/* Account Tab */}
             {activeTab === 'account' && (
               <div className="space-y-6">
-                <Card className="border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
-                  {/* Glow lines on all 4 sides */}
-                  <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
-                  <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
-                  <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
-                  <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
+                <Card 
+                  className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl shine-effect group hover:border-cyan-500/30 transition-all duration-500 hover:scale-[1.01]"
+                  style={{ '--glow-color': '#06b6d4' } as React.CSSProperties}
+                >
+                  {/* Animated glow borders */}
+                  <div className="glow-border-top" />
+                  <div className="glow-border-bottom" />
+                  <div className="glow-border-left" />
+                  <div className="glow-border-right" />
+                  
+                  {/* Enhanced background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
                   <CardHeader>
                     <CardTitle className="text-2xl">Account</CardTitle>
                     <CardDescription>
@@ -659,12 +689,18 @@ export default function SettingsPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
-                  {/* Glow lines on all 4 sides */}
-                  <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
-                  <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
-                  <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
-                  <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
+                <Card 
+                  className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl shine-effect group hover:border-red-500/30 transition-all duration-500 hover:scale-[1.01]"
+                  style={{ '--glow-color': '#ef4444' } as React.CSSProperties}
+                >
+                  {/* Animated glow borders */}
+                  <div className="glow-border-top" />
+                  <div className="glow-border-bottom" />
+                  <div className="glow-border-left" />
+                  <div className="glow-border-right" />
+                  
+                  {/* Enhanced background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
                   <CardHeader>
                     <CardTitle className="text-xl">Change Password</CardTitle>
                     <CardDescription>
