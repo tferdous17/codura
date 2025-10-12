@@ -18,16 +18,46 @@ app.get('/', (req: any, res: any) => {
     res.send('backend server works');
 });
 
+app.post('/api/problems/run', async (req: any, res: any) => {
+   const { problem_title_slug, source_code, language_id, stdin } = req.body;
+   console.log(problem_title_slug, source_code, language_id, stdin)
+
+   try {
+    const testcases = getTestCasesForProblem(problem_title_slug, false)
+    const wrappedCode = wrapCodeWithTestcases(source_code, testcases, problem_title_slug, language_id)
+
+    const body = { source_code: wrappedCode, language_id, stdin }
+    const response = await fetch(`https://${process.env.RAPIDAPI_HOST}/submissions`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-rapidapi-host': process.env.RAPIDAPI_HOST,
+            'x-rapidapi-key': process.env.RAPIDAPI_KEY
+        },
+        body: JSON.stringify(body)
+    })
+     
+    const data = await response.json()
+    const token = data.token
+
+    const submissionResponse = await pollSubmissionStatus(token)
+    const results = parseTestResults(submissionResponse, testcases)
+    
+    res.status(200).json( { submissionResponse, results })
+  
+   } catch (error) {
+    res.status(500).json({ error: error })
+   }
+   
+});
+
 app.post('/api/problems/submit', async (req: any, res: any) => {
    const { problem_title_slug, source_code, language_id, stdin } = req.body;
    console.log(problem_title_slug, source_code, language_id, stdin)
 
    try {
-    const testcases = getTestCasesForProblem(problem_title_slug)
+    const testcases = getTestCasesForProblem(problem_title_slug, true)
     const wrappedCode = wrapCodeWithTestcases(source_code, testcases, problem_title_slug, language_id)
-    console.log('--------------------------------------------------------')
-    console.log(wrappedCode)
-    console.log('--------------------------------------------------------')
 
     const body = { source_code: wrappedCode, language_id, stdin }
     const response = await fetch(`https://${process.env.RAPIDAPI_HOST}/submissions`, {
@@ -107,17 +137,36 @@ async function pollSubmissionStatus(token: string) {
     }
 }
 
-function getTestCasesForProblem(problemSlug: string) {
-    const testCaseMap: Record<string, any[]> = {
-        'two-sum': [
-            { input: { nums: [2, 7, 11, 15], target: 9 }, expected: [0, 1] },
-            { input: { nums: [3, 2, 4], target: 6 }, expected: [1, 2] },
-            { input: { nums: [3, 3], target: 6 }, expected: [0, 1] }
-        ],
+function getTestCasesForProblem(problemSlug: string, includeHidden: boolean) {
+    const testCaseMap: Record<string, { visible: any[], hidden: any[] }> = {
+        'two-sum': {
+            visible: [
+                { input: { nums: [2, 7, 11, 15], target: 9 }, expected: [0, 1] },
+                { input: { nums: [3, 2, 4], target: 6 }, expected: [1, 2] },
+                { input: { nums: [3, 3], target: 6 }, expected: [0, 1] }
+            ],
+            hidden: [
+                { input: { nums: [1, 2, 3, 4, 5], target: 9 }, expected: [3, 4] },
+                { input: { nums: [-1, -2, -3, -4, -5], target: -8 }, expected: [2, 4] },
+                { input: { nums: [0, 4, 3, 0], target: 0 }, expected: [0, 3] },
+                { input: { nums: [1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 7, 1, 1, 1, 1, 1], target: 11 }, expected: [5, 11] },
+                { input: { nums: [-3, 4, 3, 90], target: 0 }, expected: [0, 2] },
+                { input: { nums: [5, -5, 10, -10, 3], target: 0 }, expected: [0, 1] },
+                { input: { nums: [1, 2, 3, 4, 5, 6, 7, 8, 9, 19], target: 28 }, expected: [8, 9] },
+                { input: { nums: [5, 5], target: 10 }, expected: [0, 1] },
+                { input: { nums: [7, 2, 7, 15], target: 14 }, expected: [0, 2] },
+            ]
+        },
         // need to add more problems later for manual testing
-  };
+    };
 
-  return testCaseMap[problemSlug] || []
+  const problemTests = testCaseMap[problemSlug];
+    if (!problemTests) return [];
+    
+    // If includeHidden is true, return both visible and hidden test cases
+    return includeHidden 
+        ? [...problemTests.visible, ...problemTests.hidden]
+        : problemTests.visible;
 }
 
 function wrapCodeWithTestcases(userCode: string, testcases: any[], problemSlug: string, languageId: number) {
@@ -127,7 +176,7 @@ function wrapCodeWithTestcases(userCode: string, testcases: any[], problemSlug: 
     // just handling python for now...
 }
 
-// !! NOTE: DO NOT CHANGE THE INDENTATION FOR THE TEST HARNESS STRINGS BELOW --- PYTHON IS WHITESPACE-SENSITIVE
+// !! WARNING: DO NOT CHANGE THE INDENTATION FOR THE TEST HARNESS STRINGS BELOW --- PYTHON IS WHITESPACE-SENSITIVE
 // For clarification: indenting the test harness code will treat it as if it was inside the class definition and thereby not execute it at all
 function wrapPythonCode(userCode: string, testCases: any[], problemSlug: string) {
   if (problemSlug === 'two-sum') {

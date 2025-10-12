@@ -264,7 +264,7 @@ export default function ProblemPage() {
                 "stdin": "test",
             }
 
-            const response = await fetch('http://localhost:8080/api/problems/submit', {
+            const response = await fetch('http://localhost:8080/api/problems/run', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
