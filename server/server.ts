@@ -46,10 +46,10 @@ app.post('/api/problems/run', async (req: any, res: any) => {
     const data = await response.json()
     const token = data.token
 
-    const submissionResponse = await pollSubmissionStatus(token)
-    const results = parseTestResults(submissionResponse, testcases)
+    const judge0Result = await pollSubmissionStatus(token)
+    const testcaseResults = parseTestResults(judge0Result, testcases) // returns an object
     
-    res.status(200).json( { submissionResponse, results })
+    res.status(200).json( { judge0Result, testcaseResults })
   
    } catch (error) {
     res.status(500).json({ error: error })
@@ -94,12 +94,11 @@ app.post('/api/problems/submit', async (req: any, res: any) => {
     const data = await response.json()
     const token = data.token
 
-    const submissionResponse = await pollSubmissionStatus(token)
-    const results = parseTestResults(submissionResponse, testcases)
-
-    storeSubmission(user_id, problem_id, problem_title, problem_difficulty, language, submissionResponse, source_code, submitted_at)
+    const judge0Result = await pollSubmissionStatus(token)
+    const testcaseResults = parseTestResults(judge0Result, testcases) // returns an object
+    const savedSubmission = await storeSubmission(user_id, problem_id, problem_title, problem_difficulty, language, judge0Result, testcaseResults.label, source_code, submitted_at)
     
-    res.status(200).json( { submissionResponse, results })
+    res.status(200).json( { judge0Result, testcaseResults, savedSubmission })
   
    } catch (error) {
     res.status(500).json({ error: error })
@@ -158,7 +157,7 @@ async function pollSubmissionStatus(token: string) {
     }
 }
 
-async function storeSubmission(userId: any, problemId: number, problemTitle: string, difficulty: string, language: string, submissionResponse: any, sourceCode: string, submitted_at: string) {    
+async function storeSubmission(userId: any, problemId: number, problemTitle: string, difficulty: string, language: string, judge0Result: any, status: string, sourceCode: string, submittedAt: any) {    
     const { data, error } = await supabase
     .from('submissions')
     .insert({ 
@@ -166,17 +165,20 @@ async function storeSubmission(userId: any, problemId: number, problemTitle: str
         problem_id: problemId,
         problem_title: problemTitle,
         difficulty,
-        status: submissionResponse.status.description,
+        status,
         language: language.charAt(0).toUpperCase() + language.slice(1),
         code: sourceCode,
-        runtime: submissionResponse.time,
-        memory: submissionResponse.memory,
-        submitted_at: submitted_at,
+        runtime: judge0Result.time,
+        memory: judge0Result.memory,
+        submitted_at: submittedAt,
     })
     .select()
 
-    console.log(data)
-    console.log(error)
+    if (error) {
+        throw error
+    }
+
+    return data[0]
 }
 
 function getTestCasesForProblem(problemSlug: string, includeHidden: boolean) {
@@ -284,11 +286,13 @@ for i, test in enumerate(test_cases):
 function parseTestResults(submissionResult: any, testCases: any[]) {
   const output = submissionResult.stdout || '';
   const lines = output.split('\n').filter((line: string) => line.trim());
+  let passedTestcases = 0;
   
   const results = lines.map((line: string, index: number) => {
     const testCase = testCases[index] || {};
     
     if (line.includes('PASS')) {
+      passedTestcases++
       const testNumMatch = line.match(/Test (\d+)/);
       const testNumber = testNumMatch ? parseInt(testNumMatch[1]) : index + 1;
       
@@ -345,7 +349,7 @@ function parseTestResults(submissionResult: any, testCases: any[]) {
     };
   });
   
-  return results;
+  return { results, label: passedTestcases === testCases.length ? 'Accepted' : 'Wrong Answer' };
 }
 
 function sleep(ms: number): Promise<void> {
