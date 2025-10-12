@@ -469,7 +469,7 @@ export default function ProblemsPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-12 h-14 text-base bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl border-2 border-border/20 hover:border-brand/30 focus:border-brand/50 transition-all duration-300 shadow-lg"
+                className="pl-12 h-14 text-base text-foreground bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl border-2 border-border/20 hover:border-brand/30 focus:border-brand/50 transition-all duration-300 shadow-lg"
               />
             </div>
           </div>
@@ -678,7 +678,7 @@ export default function ProblemsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="flex-shrink-0 opacity-0 group-hover/problem:opacity-100 transition-opacity"
+                        className="flex-shrink-0 opacity-50 group-hover/problem:opacity-100 transition-all hover:bg-brand/10 cursor-pointer"
                         onClick={(e) => {
                           e.preventDefault();
                           setSelectedProblem({ id: problem.id, title: problem.title });
@@ -686,7 +686,7 @@ export default function ProblemsPage() {
                         }}
                       >
                         {/* @ts-ignore */}
-                        <BookmarkPlus className="w-4 h-4" />
+                        <BookmarkPlus className="w-4 h-4 text-foreground/70 group-hover/problem:text-brand" />
                       </Button>
                     </div>
                   </div>
@@ -703,6 +703,7 @@ export default function ProblemsPage() {
               variant="outline"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              className="text-foreground cursor-pointer"
             >
               Previous
             </Button>
@@ -714,10 +715,15 @@ export default function ProblemsPage() {
                 return (
                   <Button
                     key={pageNum}
-                    variant={pageNum === currentPage ? 'default' : 'outline'}
+                    variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(pageNum)}
-                    className={pageNum === currentPage ? 'bg-brand' : ''}
+                    className={cn(
+                      'cursor-pointer',
+                      pageNum === currentPage
+                        ? 'bg-brand hover:bg-brand/90 text-white border-brand'
+                        : 'text-foreground hover:bg-muted'
+                    )}
                   >
                     {pageNum}
                   </Button>
@@ -729,6 +735,7 @@ export default function ProblemsPage() {
               variant="outline"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              className="text-foreground cursor-pointer"
             >
               Next
             </Button>

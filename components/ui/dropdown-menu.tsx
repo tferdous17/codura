@@ -43,8 +43,26 @@ function DropdownMenuContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+  const [container, setContainer] = React.useState<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    // Get or create the portal container with caffeine-theme class
+    let portalContainer = document.getElementById('dropdown-portal-container');
+
+    if (!portalContainer) {
+      portalContainer = document.createElement('div');
+      portalContainer.id = 'dropdown-portal-container';
+      portalContainer.className = 'caffeine-theme';
+      document.body.appendChild(portalContainer);
+    }
+
+    setContainer(portalContainer);
+
+    // Cleanup is not needed because we want to keep the container for all dropdowns
+  }, []);
+
   return (
-    <DropdownMenuPrimitive.Portal>
+    <DropdownMenuPrimitive.Portal container={container}>
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}

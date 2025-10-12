@@ -201,7 +201,7 @@ export function EditProfileDialog({ profile, onProfileUpdate }: EditProfileDialo
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="gap-2">
+        <Button size="sm" variant="outline" className="gap-2 cursor-pointer">
           <Settings className="w-4 h-4" />
           Edit Profile
         </Button>

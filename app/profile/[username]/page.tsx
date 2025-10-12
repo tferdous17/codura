@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import CoduraLogo from "@/components/logos/codura-logo.svg";
+import CoduraLogoDark from "@/components/logos/codura-logo-dark.svg";
 import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 import {
   Trophy,
   Calendar,
@@ -29,6 +31,12 @@ import { UserProfile, UserStats, Submission } from "@/types/database";
 import RecentSubmissions from "@/components/RecentSubmissions";
 import ActivityCalendar from "react-activity-calendar";
 import { StudyPlanDetailDialog } from "@/components/study-plans/study-plan-detail-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Achievement {
   achievement_id: string;
@@ -112,6 +120,7 @@ const iconMap: Record<string, string> = {
 export default function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const resolvedParams = React.use(params);
   const username = resolvedParams.username;
+  const { theme } = useTheme();
 
   const [showBorder, setShowBorder] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -211,7 +220,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
 
   if (loading) {
     return (
-      <div className="caffeine-theme min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="caffeine-theme min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading profile...</p>
@@ -222,7 +231,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
 
   if (error || !profileData) {
     return (
-      <div className="caffeine-theme min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="caffeine-theme min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md">
           <Trophy className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Failed to load profile</h2>
@@ -248,13 +257,14 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
   };
 
   return (
-    <div className="caffeine-theme min-h-screen bg-zinc-950 relative">
+    <TooltipProvider>
+    <div className="caffeine-theme min-h-screen bg-background relative">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-zinc-950" />
-        <div className="absolute top-[-10%] right-[20%] w-[500px] h-[500px] bg-brand/8 rounded-full blur-[100px] animate-pulse-slow" />
-        <div className="absolute bottom-[10%] left-[15%] w-[400px] h-[400px] bg-purple-500/6 rounded-full blur-[80px] animate-float-slow" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-[40%] right-[60%] w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[70px] animate-float" style={{ animationDelay: '4s' }} />
+        <div className="absolute inset-0 bg-background" />
+        <div className="absolute top-[-10%] right-[20%] w-[500px] h-[500px] bg-brand/5 dark:bg-brand/8 rounded-full blur-[100px] animate-pulse-slow" />
+        <div className="absolute bottom-[10%] left-[15%] w-[400px] h-[400px] bg-purple-500/3 dark:bg-purple-500/6 rounded-full blur-[80px] animate-float-slow" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[40%] right-[60%] w-[300px] h-[300px] bg-blue-500/3 dark:bg-blue-500/5 rounded-full blur-[70px] animate-float" style={{ animationDelay: '4s' }} />
 
         <div className="absolute inset-0 opacity-5">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -277,14 +287,14 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
         className={cn(
           "fixed inset-x-0 top-0 z-50 border-b border-b-transparent bg-gradient-to-b shadow-none backdrop-blur-none transition-all duration-500",
           showBorder
-            ? "border-b-white/10 shadow-[0_4px_60px_0_rgba(0,0,0,0.90)] backdrop-blur-md from-neutral-950/80 to-neutral-950/50"
+            ? "border-b-border/50 shadow-xl backdrop-blur-md from-background/80 to-background/50"
             : ""
         )}
       >
         <div className="flex items-center justify-between py-4 max-w-7xl mx-auto px-6">
           <Link href="/" aria-label="Codura homepage" className="flex items-center group">
             <Image
-              src={CoduraLogo}
+              src={theme === 'light' ? CoduraLogoDark : CoduraLogo}
               alt="Codura logo"
               width={90}
               height={40}
@@ -293,23 +303,23 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
             />
           </Link>
 
-          <nav className="hidden items-center gap-6 text-base leading-7 font-light text-neutral-400 lg:flex">
-            <Link className="hover:text-neutral-200 transition-colors" href="/dashboard">
+          <nav className="hidden items-center gap-6 text-base leading-7 font-light text-muted-foreground lg:flex">
+            <Link className="hover:text-foreground transition-colors" href="/dashboard">
               Dashboard
             </Link>
-            <Link className="hover:text-neutral-200 transition-colors" href="/problems">
+            <Link className="hover:text-foreground transition-colors" href="/problems">
               Problems
             </Link>
-            <Link className="hover:text-neutral-200 transition-colors" href="/mock-interview">
+            <Link className="hover:text-foreground transition-colors" href="/mock-interview">
               Interview
             </Link>
-            <Link className="hover:text-neutral-200 transition-colors" href="/leaderboards">
+            <Link className="hover:text-foreground transition-colors" href="/leaderboards">
               Leaderboards
             </Link>
           </nav>
 
           <Link href="/dashboard">
-            <Button variant="ghost" className="text-sm text-neutral-400 hover:text-neutral-200 hover:bg-white/5">
+            <Button variant="ghost" className="text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50">
               Back to Dashboard
             </Button>
           </Link>
@@ -343,10 +353,17 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
                   <p className="text-muted-foreground">@{profile?.username || 'user'}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="gap-2" onClick={handleCopyProfileLink}>
-                    <Share2 className="w-4 h-4" />
-                    {copied ? 'Copied!' : 'Share'}
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="sm" variant="outline" className="gap-2 cursor-pointer" onClick={handleCopyProfileLink}>
+                        <Share2 className="w-4 h-4" />
+                        {copied ? 'Copied!' : 'Share'}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copy profile link to clipboard</p>
+                    </TooltipContent>
+                  </Tooltip>
                   {isOwnProfile && <EditProfileDialog profile={profile} onProfileUpdate={handleProfileUpdate} />}
                 </div>
               </div>
@@ -386,20 +403,34 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
 
                 <div className="flex gap-3">
                   {profile?.github_username && (
-                    <a href={`https://github.com/${profile.github_username}`} target="_blank" rel="noopener noreferrer">
-                      <Button size="sm" variant="ghost" className="gap-2 hover:bg-white/5">
-                        <Github className="w-4 h-4" />
-                        GitHub
-                      </Button>
-                    </a>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a href={`https://github.com/${profile.github_username}`} target="_blank" rel="noopener noreferrer">
+                          <Button size="sm" variant="ghost" className="gap-2 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-muted cursor-pointer">
+                            <Github className="w-4 h-4" />
+                            GitHub
+                          </Button>
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>View GitHub profile</p>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                   {profile?.linkedin_username && (
-                    <a href={`https://linkedin.com/in/${profile.linkedin_username}`} target="_blank" rel="noopener noreferrer">
-                      <Button size="sm" variant="ghost" className="gap-2 hover:bg-white/5">
-                        <Linkedin className="w-4 h-4" />
-                        LinkedIn
-                      </Button>
-                    </a>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a href={`https://linkedin.com/in/${profile.linkedin_username}`} target="_blank" rel="noopener noreferrer">
+                          <Button size="sm" variant="ghost" className="gap-2 hover:bg-white/5 dark:hover:bg-white/5 hover:bg-muted cursor-pointer">
+                            <Linkedin className="w-4 h-4" />
+                            LinkedIn
+                          </Button>
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>View LinkedIn profile</p>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
               </div>
@@ -449,9 +480,10 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
             <ActivityCalendar
               data={contributionData}
               theme={{
-                light: ['#161618', '#0e4429', '#006d32', '#26a641', '#39d353'],
+                light: ['#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127'],
                 dark: ['#161618', '#0e4429', '#006d32', '#26a641', '#39d353'],
               }}
+              colorScheme={theme === 'dark' ? 'dark' : 'light'}
               blockSize={12}
               blockMargin={4}
               fontSize={14}
@@ -557,7 +589,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
                   <button
                     onClick={() => setActiveTab('submissions')}
                     className={cn(
-                      "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer",
                       activeTab === 'submissions'
                         ? "bg-brand/10 text-brand border border-brand/30"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
@@ -571,7 +603,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
                   <button
                     onClick={() => setActiveTab('lists')}
                     className={cn(
-                      "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer",
                       activeTab === 'lists'
                         ? "bg-brand/10 text-brand border border-brand/30"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
@@ -751,5 +783,6 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
         />
       )}
     </div>
+    </TooltipProvider>
   );
 }
