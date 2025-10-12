@@ -23,6 +23,29 @@ import dynamic from 'next/dynamic';
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 
+// Theme-aware user name component
+function UserNameText({ name, email }: { name: string; email: string }) {
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted ? (resolvedTheme === 'dark' || theme === 'dark') : false;
+
+  return (
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-semibold truncate" style={{ color: isDark ? '#F4F4F5' : '#18181B' }}>
+        {name}
+      </p>
+      <p className="text-xs truncate" style={{ color: isDark ? '#A1A1AA' : '#71717A' }}>
+        {email}
+      </p>
+    </div>
+  );
+}
+
 // Dynamic imports for icons
 // @ts-ignore
 const User: any = dynamic(() => import('lucide-react').then(mod => mod.User), { ssr: false });
@@ -291,7 +314,7 @@ export default function SettingsPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-[280px] p-2 bg-gradient-to-b from-card/95 to-card/98 backdrop-blur-xl border border-border/50 shadow-2xl rounded-lg"
+                  className="w-[280px]"
                 >
                   <div className="px-3 py-3.5 mb-1">
                     <div className="flex items-center gap-3">
@@ -309,10 +332,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full ring-2 ring-card" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                      </div>
+                      <UserNameText name={user.name} email={user.email} />
                     </div>
                   </div>
 
@@ -322,11 +342,11 @@ export default function SettingsPage() {
                     <DropdownMenuItem asChild>
                       <Link
                         href={`/profile/${user?.username || ''}`}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-md cursor-pointer text-sm font-medium transition-all hover:bg-brand/8 focus:bg-brand/8 group"
+                        className="flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm font-medium group"
                       >
-                        <div className="w-5 h-5 rounded-md bg-brand/10 flex items-center justify-center group-hover:bg-brand/20 transition-colors">
+                        <div className="w-5 h-5 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 dark:from-brand dark:to-orange-400 flex items-center justify-center group-hover:from-blue-600 group-hover:to-blue-700 dark:group-hover:from-brand/90 dark:group-hover:to-orange-500 transition-all shadow-sm">
                           {/* @ts-ignore */}
-                          <User className="w-3.5 h-3.5 text-brand" />
+                          <User className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
                         </div>
                         <span>Profile</span>
                       </Link>
@@ -335,11 +355,11 @@ export default function SettingsPage() {
                     <DropdownMenuItem asChild>
                       <Link
                         href="/settings"
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-md cursor-pointer text-sm font-medium transition-all hover:bg-muted focus:bg-muted group"
+                        className="flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm font-medium group"
                       >
-                        <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center group-hover:bg-muted-foreground/20 transition-colors">
+                        <div className="w-5 h-5 rounded-md bg-gradient-to-br from-slate-500 to-slate-600 dark:from-brand dark:to-orange-400 flex items-center justify-center group-hover:from-slate-600 group-hover:to-slate-700 dark:group-hover:from-brand/90 dark:group-hover:to-orange-500 transition-all shadow-sm">
                           {/* @ts-ignore */}
-                          <Settings className="w-3.5 h-3.5 text-muted-foreground" />
+                          <Settings className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
                         </div>
                         <span>Settings</span>
                       </Link>
@@ -350,18 +370,19 @@ export default function SettingsPage() {
 
                   <div className="py-1">
                     <DropdownMenuItem
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-md cursor-pointer text-sm font-medium text-red-600 dark:text-red-400 transition-all hover:bg-red-500/10 focus:bg-red-500/10 group"
+                      variant="destructive"
+                      className="flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm font-medium group"
                       onClick={async () => {
                         await fetch('/auth/signout', { method: 'POST' });
                         window.location.href = '/';
                       }}
                     >
-                      <div className="w-5 h-5 rounded-md bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      <div className="w-5 h-5 rounded-md bg-gradient-to-br from-red-500 to-red-600 dark:from-red-500/80 dark:to-red-600/80 flex items-center justify-center group-hover:from-red-600 group-hover:to-red-700 dark:group-hover:from-red-500 dark:group-hover:to-red-600 transition-all shadow-sm">
+                        <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
                       </div>
-                      <span>Sign out</span>
+                      <span className="text-red-600 dark:text-red-400">Sign out</span>
                     </DropdownMenuItem>
                   </div>
                 </DropdownMenuContent>
