@@ -288,14 +288,21 @@ export default function ProblemPage() {
     const handleCodeSubmission = async () => {
         setIsSubmitting(true) 
         setActiveTab('result')
+
+        const { data: { session } } = await supabase.auth.getSession()
         
-        // commit: wrapped in try catch now and now btn as loading state
         try {
             const body = {
+                "problem_title": problem?.title,
                 "problem_title_slug": problem?.title_slug,
+                "problem_id": problem?.id,
+                "problem_difficulty": problem?.difficulty,
+                "language": userLang.value,
                 "language_id": userLang.id,
                 "source_code": usersCode,
                 "stdin": "test",
+                "user_id": session?.user.id,
+                "submitted_at": new Date().toISOString()
             }
 
             const response = await fetch('http://localhost:8080/api/problems/submit', {
@@ -312,8 +319,6 @@ export default function ProblemPage() {
             
             setSubmissionResultLabel(submissionResponse.status.description)
             setTestcaseResults(results)
-
-            // Need to put additional code to actually save submission to supabase later
         } catch (error) {
             throw error
         } finally {

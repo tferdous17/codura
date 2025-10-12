@@ -1,11 +1,17 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 8080;
+
+const supabase = createClient(
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+)
 
 // Middleware
 app.use(cors({
@@ -52,14 +58,29 @@ app.post('/api/problems/run', async (req: any, res: any) => {
 });
 
 app.post('/api/problems/submit', async (req: any, res: any) => {
-   const { problem_title_slug, source_code, language_id, stdin } = req.body;
-   console.log(problem_title_slug, source_code, language_id, stdin)
+   const { 
+        problem_title,
+        problem_title_slug,
+        problem_id,
+        problem_difficulty,
+        language,
+        source_code, 
+        language_id, 
+        stdin, 
+        user_id, 
+        submitted_at 
+    } = req.body;
 
    try {
     const testcases = getTestCasesForProblem(problem_title_slug, true)
     const wrappedCode = wrapCodeWithTestcases(source_code, testcases, problem_title_slug, language_id)
 
-    const body = { source_code: wrappedCode, language_id, stdin }
+    const body = { 
+        source_code: wrappedCode, 
+        language_id, 
+        stdin 
+    }
+
     const response = await fetch(`https://${process.env.RAPIDAPI_HOST}/submissions`, {
         method: 'POST',
         headers: {
@@ -76,7 +97,7 @@ app.post('/api/problems/submit', async (req: any, res: any) => {
     const submissionResponse = await pollSubmissionStatus(token)
     const results = parseTestResults(submissionResponse, testcases)
 
-    console.log('results =', results)
+    storeSubmission(user_id, problem_id, problem_title, problem_difficulty, language, submissionResponse, source_code, submitted_at)
     
     res.status(200).json( { submissionResponse, results })
   
@@ -135,6 +156,27 @@ async function pollSubmissionStatus(token: string) {
             return error
         }
     }
+}
+
+async function storeSubmission(userId: any, problemId: number, problemTitle: string, difficulty: string, language: string, submissionResponse: any, sourceCode: string, submitted_at: string) {    
+    const { data, error } = await supabase
+    .from('submissions')
+    .insert({ 
+        user_id: userId,
+        problem_id: problemId,
+        problem_title: problemTitle,
+        difficulty,
+        status: submissionResponse.status.description,
+        language: language.charAt(0).toUpperCase() + language.slice(1),
+        code: sourceCode,
+        runtime: submissionResponse.time,
+        memory: submissionResponse.memory,
+        submitted_at: submitted_at,
+    })
+    .select()
+
+    console.log(data)
+    console.log(error)
 }
 
 function getTestCasesForProblem(problemSlug: string, includeHidden: boolean) {
