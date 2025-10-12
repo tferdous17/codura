@@ -383,6 +383,7 @@ export default function DashboardPage() {
   const { theme: currentTheme } = useTheme();
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showBorder, setShowBorder] = useState(false);
   const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([]);
   const [showPlanDialog, setShowPlanDialog] = useState(false);
@@ -401,10 +402,14 @@ export default function DashboardPage() {
     async function fetchAllDashboardData() {
       try {
         setIsLoading(true);
+        setError(null);
 
         // Single unified API call instead of 6 separate calls!
         const response = await fetch('/api/dashboard');
-        if (!response.ok) throw new Error('Failed to fetch dashboard data');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to fetch dashboard data');
+        }
 
         const data = await response.json();
 
@@ -417,6 +422,7 @@ export default function DashboardPage() {
         setActivityChartData(data.activityChartData || []);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
       } finally {
         setIsLoading(false);
       }
@@ -443,8 +449,12 @@ export default function DashboardPage() {
   // Refetch function for when data needs to be refreshed
   const refetchDashboard = async () => {
     try {
+      setError(null);
       const response = await fetch('/api/dashboard');
-      if (!response.ok) throw new Error('Failed to fetch dashboard data');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch dashboard data');
+      }
       const data = await response.json();
       setUser(data.user);
       setStudyPlans(data.studyPlans || []);
@@ -454,6 +464,7 @@ export default function DashboardPage() {
       setActivityChartData(data.activityChartData || []);
     } catch (error) {
       console.error('Error refetching dashboard:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
     }
   };
 
@@ -520,17 +531,48 @@ export default function DashboardPage() {
     );
   }
 
-  // Show error state if user data failed to load
-  if (!user) {
+  // Show error state if data failed to load
+  if (error || !user) {
     return (
-      <div className="caffeine-theme min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">Failed to load user data</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+      <div className="caffeine-theme min-h-screen bg-background relative flex items-center justify-center p-6">
+        {/* Background effects */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute inset-0 bg-background" />
+          <div className="absolute top-[-10%] right-[20%] w-[500px] h-[500px] bg-brand/5 rounded-full blur-[100px] animate-pulse-slow" />
         </div>
+
+        <Card className="relative z-10 max-w-lg w-full border-2 border-destructive/30 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl shadow-2xl">
+          <CardHeader className="text-center pb-4">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
+              <X className="w-8 h-8 text-destructive" />
+            </div>
+            <CardTitle className="text-2xl text-destructive">Unable to Load Dashboard</CardTitle>
+            <CardDescription className="text-base mt-2">
+              {error || 'Failed to load user data. Please try again.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 pt-0">
+            <Button 
+              onClick={refetchDashboard} 
+              className="w-full"
+              size="lg"
+            >
+              Try Again
+            </Button>
+            <Button 
+              onClick={() => window.location.href = '/'} 
+              variant="outline"
+              className="w-full"
+            >
+              Go to Home
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
+  
+  // TypeScript: After this point, user is guaranteed to be non-null
 
   return (
     <div className="caffeine-theme min-h-screen bg-background relative">

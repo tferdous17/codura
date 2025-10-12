@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 
-// GET - Fetch user's problem lists
+// GET - Fetch user's problem lists (OPTIMIZED - No N+1 queries!)
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
@@ -13,44 +13,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user's lists
+    // Use the optimized RPC function that gets counts in a single query!
+    // This eliminates N+1 query problem (was making 2 queries per list)
     const { data: userLists, error: listsError } = await supabase
-      .from('user_problem_lists')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true });
+      .rpc('get_user_study_plans_with_counts', { p_user_id: user.id });
 
     if (listsError) {
       console.error('Error fetching user problem lists:', listsError);
       return NextResponse.json({ error: listsError.message }, { status: 500 });
     }
-
-    // Get problem counts and solved counts for each list
-    const listsWithCounts = await Promise.all(
-      (userLists || []).map(async (list) => {
-        // Get total problem count
-        const { count: problemCount } = await supabase
-          .from('user_list_problems')
-          .select('*', { count: 'exact', head: true })
-          .eq('list_id', list.id);
-
-        // Get solved count
-        const { data: solvedProblems } = await supabase
-          .from('user_list_problems')
-          .select('problem_id, user_problem_progress!inner(is_solved)')
-          .eq('list_id', list.id)
-          .eq('user_problem_progress.user_id', user.id)
-          .eq('user_problem_progress.is_solved', true);
-
-        return {
-          ...list,
-          problem_count: problemCount || 0,
-          solved_count: solvedProblems?.length || 0
-        };
-      })
-    );
-
-    const lists = listsWithCounts;
 
     // Also get official problem lists for reference
     const { data: officialLists, error: officialError } = await supabase
@@ -64,7 +35,7 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({
-      userLists: lists || [],
+      userLists: userLists || [],
       officialLists: officialLists || []
     });
   } catch (error) {

@@ -30,20 +30,35 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify current password by attempting to sign in
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    if (currentPassword === newPassword) {
+      return NextResponse.json(
+        { error: 'New password must be different from current password' },
+        { status: 400 }
+      );
+    }
+
+    // CRITICAL SECURITY: Verify current password before allowing change
+    // Using a fresh Supabase instance to verify credentials without affecting main session
+    const { createClient: createFreshClient } = await import('@supabase/supabase-js');
+    const verificationClient = createFreshClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+    );
+
+    // Verify current password - this creates a temporary session we won't use
+    const { error: verifyError } = await verificationClient.auth.signInWithPassword({
       email: user.email!,
       password: currentPassword,
     });
 
-    if (signInError) {
+    if (verifyError) {
       return NextResponse.json(
         { error: 'Current password is incorrect' },
         { status: 401 }
       );
     }
 
-    // Update password
+    // Current password verified! Now update with the main client session
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
     });

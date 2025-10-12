@@ -2,13 +2,28 @@
 
 import { useTheme } from "next-themes";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ModeToggle } from "@/components/ui/mode-toggle"
 import { SignUpForm } from "@/components/signup-form"
 import CoduraLogo from "@/components/logos/codura-logo.svg";
 import CoduraLogoDark from "@/components/logos/codura-logo-dark.svg";
+import { Card, CardContent } from "@/components/ui/card";
+import { X } from "lucide-react";
 
 export default function SignUpPage() {
   const { theme } = useTheme();
+  const searchParams = useSearchParams();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+      // Clear the error from URL after showing it
+      window.history.replaceState({}, '', '/signup');
+    }
+  }, [searchParams]);
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${
@@ -62,7 +77,28 @@ export default function SignUpPage() {
 
       {/* Main Content Area */}
       <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-120px)] px-6">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md space-y-4">
+          {/* Error Message */}
+          {error && (
+            <Card className="border-2 border-destructive/30 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl shadow-xl">
+              <CardContent className="flex items-start gap-3 p-4">
+                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                  <X className="w-5 h-5 text-destructive" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-destructive mb-1">Signup Failed</h3>
+                  <p className="text-sm text-muted-foreground">{error}</p>
+                </div>
+                <button
+                  onClick={() => setError(null)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </CardContent>
+            </Card>
+          )}
+          
           <SignUpForm />
         </div>
       </div>

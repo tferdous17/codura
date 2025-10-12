@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   ChevronDown,
+  X,
 } from "lucide-react";
 
 // Theme-aware user name component
@@ -105,6 +106,7 @@ export default function ProblemsPage() {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [stats, setStats] = useState<ProblemStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -157,6 +159,7 @@ export default function ProblemsPage() {
 
   const fetchProblems = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -176,12 +179,18 @@ export default function ProblemsPage() {
       }
 
       const response = await fetch(`/api/problems?${params}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to load problems');
+      }
+
       const data = await response.json();
 
       setProblems(data.problems || []);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching problems:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load problems');
     } finally {
       setLoading(false);
     }
@@ -402,6 +411,24 @@ export default function ProblemsPage() {
 
       {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-24 pb-16">
+        {/* Error State */}
+        {error && !loading && (
+          <Card className="mb-6 border-2 border-destructive/30 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl shadow-xl">
+            <CardContent className="flex items-center gap-4 p-6">
+              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                <X className="w-6 h-6 text-destructive" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-destructive mb-1">Failed to Load Problems</h3>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+              <Button onClick={fetchProblems} variant="outline" size="sm">
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header with Stats */}
         <div className="mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground via-foreground to-brand bg-clip-text text-transparent">

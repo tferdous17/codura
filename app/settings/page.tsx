@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
@@ -70,6 +70,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('appearance');
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Profile form state
   const [fullName, setFullName] = useState("");
@@ -97,8 +98,13 @@ export default function SettingsPage() {
 
   const fetchUserData = async () => {
     try {
+      setError(null);
       const response = await fetch('/api/profile');
-      if (!response.ok) return;
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to load profile data');
+      }
 
       const data = await response.json();
       const fullName = data.profile?.full_name || data.user?.email?.split('@')[0] || 'User';
@@ -124,6 +130,7 @@ export default function SettingsPage() {
       setIsPublic(data.profile?.is_public ?? true);
     } catch (error) {
       console.error('Error fetching user data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load settings data');
     } finally {
       setLoading(false);
     }
@@ -230,12 +237,12 @@ export default function SettingsPage() {
         return;
       }
 
+      toast.success('Password changed successfully');
+
       // Clear password fields
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-
-      toast.success('Password changed successfully');
     } catch (error) {
       console.error('Error changing password:', error);
       toast.error('An unexpected error occurred');
@@ -394,6 +401,24 @@ export default function SettingsPage() {
 
       {/* Main Content */}
       <main className="relative z-10 max-w-5xl mx-auto px-6 pt-24 pb-16">
+        {/* Error State */}
+        {error && !loading && (
+          <Card className="mb-6 border-2 border-destructive/30 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl shadow-xl">
+            <CardContent className="flex items-center gap-4 p-6">
+              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                <X className="w-6 h-6 text-destructive" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-destructive mb-1">Failed to Load Settings</h3>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+              <Button onClick={fetchUserData} variant="outline" size="sm">
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <Link
@@ -727,7 +752,7 @@ export default function SettingsPage() {
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Enter new password"
+                        placeholder="Enter new password (min. 8 characters)"
                         className="bg-background/50 border-border/50"
                       />
                     </div>
