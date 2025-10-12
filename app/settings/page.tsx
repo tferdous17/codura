@@ -461,7 +461,11 @@ export default function SettingsPage() {
             {/* Appearance Tab */}
             {activeTab === 'appearance' && (
               <Card className="border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
+                {/* Glow lines on all 4 sides */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
+                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
                 <CardHeader>
                   <CardTitle className="text-2xl">Appearance</CardTitle>
                   <CardDescription>
@@ -540,7 +544,11 @@ export default function SettingsPage() {
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <Card className="border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
+                {/* Glow lines on all 4 sides */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
+                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
                 <CardHeader>
                   <CardTitle className="text-2xl">Profile</CardTitle>
                   <CardDescription>
@@ -623,7 +631,11 @@ export default function SettingsPage() {
             {activeTab === 'account' && (
               <div className="space-y-6">
                 <Card className="border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
+                  {/* Glow lines on all 4 sides */}
                   <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+                  <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+                  <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
+                  <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
                   <CardHeader>
                     <CardTitle className="text-2xl">Account</CardTitle>
                     <CardDescription>
@@ -648,7 +660,11 @@ export default function SettingsPage() {
                 </Card>
 
                 <Card className="border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
+                  {/* Glow lines on all 4 sides */}
                   <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+                  <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+                  <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
+                  <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
                   <CardHeader>
                     <CardTitle className="text-xl">Change Password</CardTitle>
                     <CardDescription>
@@ -703,7 +719,11 @@ export default function SettingsPage() {
                 </Card>
 
                 <Card className="border-2 border-red-500/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl">
+                  {/* Glow lines on all 4 sides */}
                   <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-red-500/40 to-transparent" />
+                  <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-red-500/40 to-transparent" />
+                  <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-red-500/40 to-transparent" />
+                  <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-red-500/40 to-transparent" />
                   <CardHeader>
                     <CardTitle className="text-xl text-red-600 dark:text-red-400">Danger Zone</CardTitle>
                     <CardDescription>

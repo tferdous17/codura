@@ -415,7 +415,11 @@ export default function ProblemsPage() {
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
               <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-brand/30 transition-all duration-500 shadow-xl hover:scale-[1.02]">
+                {/* Glow lines on all 4 sides */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/40 to-transparent" />
+                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
+                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/40 to-transparent" />
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     {/* @ts-ignore */}
@@ -429,7 +433,11 @@ export default function ProblemsPage() {
               </Card>
 
               <Card className="relative border-2 border-green-500/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-green-500/40 transition-all duration-500 shadow-xl hover:scale-[1.02]">
+                {/* Glow lines on all 4 sides */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
+                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
+                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -444,7 +452,11 @@ export default function ProblemsPage() {
               </Card>
 
               <Card className="relative border-2 border-yellow-500/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-yellow-500/40 transition-all duration-500 shadow-xl hover:scale-[1.02]">
+                {/* Glow lines on all 4 sides */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent" />
+                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent" />
+                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-yellow-500/40 to-transparent" />
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -459,7 +471,11 @@ export default function ProblemsPage() {
               </Card>
 
               <Card className="relative border-2 border-red-500/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-red-500/40 transition-all duration-500 shadow-xl hover:scale-[1.02]">
+                {/* Glow lines on all 4 sides */}
                 <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-red-500/40 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-red-500/40 to-transparent" />
+                <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-red-500/40 to-transparent" />
+                <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-red-500/40 to-transparent" />
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">

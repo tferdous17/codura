@@ -731,7 +731,11 @@ export default function DashboardPage() {
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           {/* Daily Challenge - Featured */}
           <Card className="lg:col-span-2 relative border-2 border-brand/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-brand/40 hover:shadow-2xl hover:shadow-brand/10 transition-all duration-500 shadow-xl hover:scale-[1.01]">
+            {/* Glow lines on all 4 sides */}
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/60 to-transparent" />
+            <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand/60 to-transparent" />
+            <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/60 to-transparent" />
+            <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-brand/60 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
             <CardHeader>
@@ -780,7 +784,11 @@ export default function DashboardPage() {
 
           {/* Quick Stats */}
           <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-purple-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
+            {/* Glow lines on all 4 sides */}
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
+            <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
+            <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-purple-500/40 to-transparent" />
+            <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-purple-500/40 to-transparent" />
 
             <CardHeader>
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -826,7 +834,11 @@ export default function DashboardPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Activity Chart */}
             <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-cyan-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
+              {/* Glow lines on all 4 sides */}
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+              <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+              <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-cyan-500/40 to-transparent" />
+              <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-cyan-500/40 to-transparent" />
 
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -911,7 +923,11 @@ export default function DashboardPage() {
 
             {/* Recent Activity */}
             <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-green-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
+              {/* Glow lines on all 4 sides */}
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
+              <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
+              <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
+              <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
 
               <CardHeader>
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -965,7 +981,11 @@ export default function DashboardPage() {
 
             {/* Upcoming Events */}
             <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-blue-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
+              {/* Glow lines on all 4 sides */}
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+              <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+              <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-blue-500/40 to-transparent" />
+              <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-blue-500/40 to-transparent" />
 
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -1057,7 +1077,11 @@ export default function DashboardPage() {
 
             {/* Study Plan Progress */}
             <Card className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-green-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01]">
+              {/* Glow lines on all 4 sides */}
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
+              <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
+              <div className="absolute left-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
+              <div className="absolute right-0 inset-y-0 w-px bg-gradient-to-b from-transparent via-green-500/40 to-transparent" />
 
               <CardHeader>
                 <div className="flex items-center justify-between">

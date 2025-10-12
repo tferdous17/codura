@@ -3,14 +3,45 @@
 
 @import "tw-animate-css";
 
-/* Theme transition utilities */
-* {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+/* Theme transition utilities - only for theme-related properties */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+  color-scheme: light dark;
 }
 
-/* Prevent flash of unstyled content during theme changes */
-html {
-  color-scheme: light dark;
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Force hover effects to work - override any conflicting styles */
+.hover\:scale-\[1\.01\]:hover {
+  transform: scale(1.01) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.hover\:scale-\[1\.02\]:hover {
+  transform: scale(1.02) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.hover\:scale-110:hover {
+  transform: scale(1.1) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.group:hover .group-hover\:scale-110 {
+  transform: scale(1.1) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.group:hover .group-hover\:text-brand {
+  color: var(--brand) !important;
+  transition: color 0.3s ease !important;
 }
 
 /* Ensure smooth theme transitions */
