@@ -53,9 +53,11 @@ export async function middleware(req: NextRequest) {
 
   const isPublic = PUBLIC_PATHS.has(pathname);
   const isAuthRoute = pathname.startsWith("/auth");
+  const isPublicProfile = pathname.startsWith("/profile/"); // Allow public profile viewing
+  const isProblemsPage = pathname.startsWith("/problems"); // Allow browsing problems
 
-  // Not logged in → only allow public routes
-  if (!user && !isPublic && !isAuthRoute) {
+  // Not logged in → only allow public routes, auth routes, public profiles, and problems browsing
+  if (!user && !isPublic && !isAuthRoute && !isPublicProfile && !isProblemsPage) {
     return NextResponse.redirect(new URL("/login", origin));
   }
 

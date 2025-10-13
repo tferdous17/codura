@@ -10,10 +10,10 @@ export async function GET(
     const supabase = await createClient();
     const { username } = await params;
 
-    // Get user by username
+    // Get user by username - include is_public field
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('user_id, username, full_name, avatar_url, bio, location, job_title, university, graduation_year, github_username, linkedin_username, website')
+      .select('user_id, username, full_name, avatar_url, bio, location, job_title, university, graduation_year, github_username, linkedin_username, website, is_public, created_at')
       .eq('username', username)
       .single();
 
@@ -22,6 +22,7 @@ export async function GET(
     }
 
     const userId = userData.user_id;
+    const isPublic = userData.is_public ?? true; // Default to public if not set
 
     // Fetch user stats
     const { data: stats, error: statsError } = await supabase
@@ -134,6 +135,11 @@ export async function GET(
       requirement_value: ua.achievements.requirement_value,
     }));
 
+    // For private profiles, only return top 3 achievements
+    const achievementsToReturn = isPublic 
+      ? formattedAchievements 
+      : formattedAchievements.slice(0, 3);
+
     // Calculate achievement summary
     const achievementSummary = {
       total_achievements: formattedAchievements.length,
@@ -142,26 +148,40 @@ export async function GET(
       achievement_progress: formattedAchievements,
     };
 
+    // Prepare stats object (always visible with aggregate data)
+    const statsData = stats ? {
+      ...stats,
+      current_streak: actualCurrentStreak,
+      longest_streak: actualLongestStreak,
+    } : {
+      user_id: userId,
+      total_solved: 0,
+      easy_solved: 0,
+      medium_solved: 0,
+      hard_solved: 0,
+      current_streak: actualCurrentStreak,
+      longest_streak: actualLongestStreak,
+      total_submissions: 0,
+    };
+
+    // For private profiles, return limited data but with indicators
     return NextResponse.json({
-      profile: userData,
-      stats: stats ? {
-        ...stats,
-        current_streak: actualCurrentStreak,
-        longest_streak: actualLongestStreak,
-      } : {
-        user_id: userId,
-        total_solved: 0,
-        easy_solved: 0,
-        medium_solved: 0,
-        hard_solved: 0,
-        current_streak: actualCurrentStreak,
-        longest_streak: actualLongestStreak,
-        total_submissions: 0,
+      profile: {
+        ...userData,
+        is_public: isPublic,
       },
+      stats: statsData,
+      // Submissions: return all for contribution graph, but frontend will handle display
       submissions: submissions || [],
-      achievements: formattedAchievements,
-      achievementSummary,
+      // Achievements: full for public, top 3 for private
+      achievements: achievementsToReturn,
+      achievementSummary: {
+        ...achievementSummary,
+        // Total count is always visible
+        total_achievements: formattedAchievements.length,
+      },
       publicLists: publicListsWithCounts,
+      isPrivate: !isPublic, // Helper flag for frontend
     });
   } catch (error) {
     console.error('Error in public profile GET:', error);

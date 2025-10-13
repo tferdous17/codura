@@ -81,6 +81,7 @@ body {
   --animate-shimmer: shimmer 2s linear infinite;
   --animate-shine: shine 2s ease-in-out;
   --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.5s ease-out forwards;
 
   @keyframes accordion-down {
     from {
@@ -166,6 +167,15 @@ body {
     }
     100% {
       background-position: 200% 0;
+    }
+  }
+
+  @keyframes shimmer-slide {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
     }
   }
 
