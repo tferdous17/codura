@@ -1,5 +1,9 @@
 "use client";
-
+/**
+ * This is the problems page where users can browse, search, and filter coding problems.
+ * It includes a navbar, problem statistics, search and filter options, and a paginated list of problems.
+ * Users can also add problems to their custom lists via a dialog.
+ */
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -710,7 +714,7 @@ export default function ProblemsPage() {
 
                       {/* Problem Number & Title */}
                       <Link
-                        href={`/problems/${problem.title_slug}`}
+                        href={`/problems/${problem.id}`}
                         className="flex-1 min-w-0"
                       >
                         <div className="flex items-center gap-2">

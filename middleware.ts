@@ -69,8 +69,10 @@ export async function middleware(req: NextRequest) {
 
     if (!error && profile) {
       const onDashboardPage    = pathname === "/dashboard";
-      const onSignupPage       = pathname === "/signup";
-      const onLoginPage        = pathname === "/login";
+      const onProblemPage      = pathname === "/problem-page";
+      const onProfilePage      = pathname === "/profile";
+      const onSignupPage       = pathname === "/signup"; // ← ADD THIS
+      const onLoginPage        = pathname === "/login";  // ← ADD THIS
       const onAuth             = isAuthRoute || pathname === "/logout";
 
       const completed = profile.questionnaire_completed;
@@ -78,6 +80,11 @@ export async function middleware(req: NextRequest) {
       // ✅ If already logged in, don't allow signup/login pages - always redirect to dashboard
       if (onSignupPage || onLoginPage) {
         return NextResponse.redirect(new URL("/dashboard", origin));
+      }
+
+      // ✅ Allow problem page for authenticated users
+      if (onProblemPage) {
+        return response;
       }
 
       if (completed) {
