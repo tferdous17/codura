@@ -207,7 +207,7 @@ export function AddToListDialog({ open, onOpenChange, problemId, problemTitle }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-card/95 backdrop-blur-xl border-border/40">
+      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-zinc-900 text-foreground backdrop-blur-xl border-border/40">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bookmark className="w-5 h-5 text-brand" />
@@ -256,7 +256,7 @@ export function AddToListDialog({ open, onOpenChange, problemId, problemTitle }:
               <span className="w-full border-t border-border/40" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or choose a list</span>
+              <span className="bg-white dark:bg-zinc-900 px-2 text-muted-foreground">Or choose a list</span>
             </div>
           </div>
 
