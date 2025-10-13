@@ -129,7 +129,8 @@ export default function ProblemPage() {
     const [error, setError] = useState<string | null>(null)
     const [showTags, setShowTags] = useState(false)
     const [showAcceptanceRate, setShowAcceptanceRate] = useState(false)
-    const [activeTab, setActiveTab] = useState('testcases')
+    const [activeLeftPanelTab, setActiveLeftPanelTab] = useState('description')
+    const [activeBottomTab, setActiveBottomTab] = useState('testcases')
 
     const [userLang, setUserLang] = useState({
         "id": 92,
@@ -286,7 +287,7 @@ export default function ProblemPage() {
 
     const handleCodeRunning = async () => {
         setIsRunning(true)
-        setActiveTab('result')
+        setActiveBottomTab('result')
 
         try {
             const body = {
@@ -320,7 +321,8 @@ export default function ProblemPage() {
 
     const handleCodeSubmission = async () => {
         setIsSubmitting(true) 
-        setActiveTab('result')
+        setActiveBottomTab('result')
+        setActiveLeftPanelTab('submissions')
 
         const { data: { session } } = await supabase.auth.getSession()
         
@@ -442,7 +444,7 @@ export default function ProblemPage() {
                 {/* Left Panel - Problem Description with Tabs */}
                 <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
                     <div className="h-full flex flex-col">
-                        <Tabs defaultValue="description" className="flex-1 flex flex-col">
+                        <Tabs value={activeLeftPanelTab} onValueChange={setActiveLeftPanelTab} defaultValue="description" className="flex-1 flex flex-col">
                             <div className="border-b border-zinc-800/50">
                                 <TabsList className="inline-flex w-auto min-w-full justify-start h-auto px-6 bg-transparent gap-6">
                                     {['Description', 'Solution', 'Discussion', 'Community', 'Submissions'].map(tab => (
@@ -783,7 +785,7 @@ export default function ProblemPage() {
                         {/* Bottom Section - Test Cases */}
                         <ResizablePanel defaultSize={30} minSize={20}>
                             <div className="h-full border-t">
-                                <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="testcases" className="w-full h-full flex flex-col">
+                                <Tabs value={activeBottomTab} onValueChange={setActiveBottomTab} defaultValue="testcases" className="w-full h-full flex flex-col">
                                     <div className="border-b overflow-x-auto tab-scroll-container">
                                         <TabsList className="inline-flex w-auto justify-start h-10">
                                             <TabsTrigger value="testcases" className="px-4 flex-shrink-0 cursor-pointer !text-zinc-500 data-[state=active]:!text-white"><CopyCheck className="text-green-600"></CopyCheck>Testcases</TabsTrigger>
