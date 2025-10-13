@@ -31,6 +31,7 @@ import { UserProfile, UserStats, Submission } from "@/types/database";
 import RecentSubmissions from "@/components/RecentSubmissions";
 import ActivityCalendar from "react-activity-calendar";
 import { StudyPlanDetailDialog } from "@/components/study-plans/study-plan-detail-dialog";
+import { PrivacyBlurOverlay, PrivacyBadge } from "@/components/privacy-blur-overlay";
 import {
   Tooltip,
   TooltipContent,
@@ -67,6 +68,7 @@ interface ProfileData {
   achievements: Achievement[];
   achievementSummary: AchievementSummary;
   publicLists?: any[];
+  isPrivate?: boolean;
 }
 
 const generateContributionData = (submissions: Submission[]) => {
@@ -360,7 +362,17 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
                 </div>
                 <div className="text-center md:text-left">
                   <h1 className="text-3xl font-bold mb-1">{profile?.full_name || 'Anonymous User'}</h1>
-                  <p className="text-muted-foreground">@{profile?.username || 'user'}</p>
+                  <div className="flex items-center gap-2 justify-center md:justify-start">
+                    <p className="text-muted-foreground">@{profile?.username || 'user'}</p>
+                    {!isOwnProfile && profile && (
+                      <PrivacyBadge isPublic={profile.is_public ?? true} />
+                    )}
+                  </div>
+                  {profile?.created_at && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Member since {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Tooltip>
@@ -468,7 +480,8 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
           </CardContent>
         </Card>
 
-        {/* GitHub-Style Contribution Grid */}
+        {/* GitHub-Style Contribution Grid - Only show for public profiles or own profile */}
+        {(isOwnProfile || !(profileData?.isPrivate ?? false)) && (
         <Card 
           className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden mb-8 shadow-xl shine-effect group hover:border-green-500/40 transition-all duration-500 hover:scale-[1.01]"
           style={{ '--glow-color': '#22c55e' } as React.CSSProperties}
@@ -533,6 +546,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
             />
           </CardContent>
         </Card>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column */}
@@ -659,7 +673,14 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
 
               <CardContent>
                 {activeTab === 'submissions' ? (
-                  <RecentSubmissions submissions={submissions} isOwnProfile={isOwnProfile} />
+                  <PrivacyBlurOverlay
+                    isPrivate={!isOwnProfile && (profileData?.isPrivate ?? false)}
+                    title="Submissions are Private"
+                    description={`Connect with ${profile?.full_name || profile?.username || 'this user'} to view their detailed submission activity and progress`}
+                    showConnectButton={true}
+                  >
+                    <RecentSubmissions submissions={submissions} isOwnProfile={isOwnProfile} />
+                  </PrivacyBlurOverlay>
                 ) : (
                   <div className="space-y-3">
                     {userLists.length === 0 ? (
@@ -756,43 +777,57 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
               <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
               <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Award className="w-5 h-5 text-yellow-500" />
-                  Achievements ({achievementSummary.total_achievements})
-                </CardTitle>
-                {achievementSummary.latest_achievement_name && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Latest: {achievementSummary.latest_achievement_name}
-                  </p>
-                )}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <Award className="w-5 h-5 text-yellow-500" />
+                      Achievements
+                      <span className="ml-1 text-sm font-normal text-muted-foreground">
+                        ({achievementSummary.total_achievements})
+                      </span>
+                    </CardTitle>
+                    {achievementSummary.latest_achievement_name && (
+                      <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+                        <span className="text-yellow-500">⭐</span>
+                        Latest: {achievementSummary.latest_achievement_name}
+                      </p>
+                    )}
+                  </div>
+                  {!isOwnProfile && (profileData?.isPrivate ?? false) && achievementSummary.total_achievements > 3 && (
+                    <div className="px-2.5 py-1 rounded-full bg-muted/50 border border-border/30 text-[11px] font-medium text-muted-foreground">
+                      {achievementSummary.total_achievements - 3} locked
+                    </div>
+                  )}
+                </div>
               </CardHeader>
 
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2.5">
                 {achievements.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Trophy className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No achievements yet</p>
-                    <p className="text-xs mt-1">Solve problems to unlock achievements!</p>
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Trophy className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm font-medium">No achievements yet</p>
+                    <p className="text-xs mt-1.5">Solve problems to unlock achievements!</p>
                   </div>
                 ) : (
                   <>
-                    {achievements.slice(0, 6).map((achievement) => (
+                    {/* Always show top 3 achievements for private profiles, or all for public */}
+                    {achievements.map((achievement) => (
                       <div
                         key={achievement.achievement_id}
-                        className="p-3 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/30 transition-all"
+                        className="group p-3.5 rounded-lg border border-border/40 bg-gradient-to-br from-muted/10 to-muted/20 hover:from-muted/20 hover:to-muted/30 transition-all duration-200 hover:border-brand/30 hover:shadow-sm"
                       >
                         <div className="flex items-start gap-3">
-                          <div className="text-2xl flex-shrink-0">
+                          <div className="text-2xl flex-shrink-0 transition-transform group-hover:scale-110">
                             {iconMap[achievement.icon] || '🏅'}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className={cn("font-semibold text-sm mb-0.5", achievement.color)}>
+                            <h4 className={cn("font-semibold text-sm mb-0.5 group-hover:text-brand transition-colors", achievement.color)}>
                               {achievement.name}
                             </h4>
-                            <p className="text-xs text-muted-foreground mb-1">
+                            <p className="text-xs text-muted-foreground leading-relaxed mb-1.5">
                               {achievement.description}
                             </p>
-                            <p className="text-xs text-muted-foreground/60">
+                            <p className="text-[11px] text-muted-foreground/70 font-medium">
                               {new Date(achievement.earned_at).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
@@ -800,14 +835,43 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
                               })}
                             </p>
                           </div>
-                          <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                          <CheckCircle2 className="w-4.5 h-4.5 text-green-500 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" />
                         </div>
                       </div>
                     ))}
-                    {achievements.length > 6 && (
-                      <div className="text-center pt-2">
-                        <p className="text-xs text-muted-foreground">
-                          +{achievements.length - 6} more achievements
+                    
+                    {/* Show blur overlay for remaining achievements on private profiles */}
+                    {!isOwnProfile && (profileData?.isPrivate ?? false) && achievementSummary.total_achievements > 3 && (
+                      <PrivacyBlurOverlay
+                        isPrivate={true}
+                        title={`${achievementSummary.total_achievements - 3} More Achievement${achievementSummary.total_achievements - 3 > 1 ? 's' : ''} Locked`}
+                        description={`Connect with ${profile?.full_name?.split(' ')[0] || profile?.username || 'this user'} to view all ${achievementSummary.total_achievements} achievements`}
+                        showConnectButton={true}
+                        className="min-h-[200px] mt-3"
+                      >
+                        <div className="space-y-2.5 pt-1">
+                          {Array.from({ length: Math.min(2, achievementSummary.total_achievements - 3) }).map((_, i) => (
+                            <div key={i} className="p-3 rounded-lg border border-border/30 bg-muted/10 backdrop-blur-sm">
+                              <div className="flex items-start gap-3">
+                                <div className="text-2xl flex-shrink-0 opacity-60">🏆</div>
+                                <div className="flex-1 space-y-1.5">
+                                  <div className="h-3.5 bg-muted/60 rounded w-2/3 animate-pulse"></div>
+                                  <div className="h-2.5 bg-muted/40 rounded w-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                                  <div className="h-2 bg-muted/30 rounded w-1/2 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                </div>
+                                <div className="w-5 h-5 rounded-full bg-muted/50 flex-shrink-0"></div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </PrivacyBlurOverlay>
+                    )}
+                    
+                    {/* For public profiles, show count if more than shown */}
+                    {(isOwnProfile || !(profileData?.isPrivate ?? false)) && achievementSummary.total_achievements > achievements.length && (
+                      <div className="text-center pt-1 pb-0.5">
+                        <p className="text-xs text-muted-foreground/80 font-medium">
+                          +{achievementSummary.total_achievements - achievements.length} more {achievementSummary.total_achievements - achievements.length === 1 ? 'achievement' : 'achievements'}
                         </p>
                       </div>
                     )}
