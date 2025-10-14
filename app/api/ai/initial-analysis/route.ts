@@ -109,24 +109,34 @@ Provide initial encouraging analysis and suggest next steps.`;
 }
 
 async function callOpenAI(messages: Array<{ role: string; content: string }>) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not set');
+  }
+
+  // Keep models consistent across routes
+  const model = process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini';
+
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4',
-      messages: messages,
+      model,
+      messages,
       temperature: 0.7,
-      max_tokens: 300
-    })
+      max_tokens: 300,
+    }),
   });
 
   if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.status}`);
+    const errBody = await response.text().catch(() => '');
+    // surface the real cause (e.g., "model_not_found")
+    throw new Error(`OpenAI API error: ${response.status} ${errBody}`);
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+  return data?.choices?.[0]?.message?.content ?? '';
 }
