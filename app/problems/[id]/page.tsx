@@ -116,11 +116,18 @@ export default function ProblemPage() {
             try {
                 setLoading(true)
 
+                // Validate that params.id is a valid number
+                const problemId = parseInt(params.id as string);
+                if (isNaN(problemId)) {
+                    setError('Invalid problem ID');
+                    return;
+                }
+
                 // fetch problem data from Supabase using the problem ID from URL params
                 const { data, error } = await supabase
                     .from('problems')
                     .select('*')
-                    .eq('id', params.id)
+                    .eq('id', problemId)
                     .single()
 
                 if (error) throw error
