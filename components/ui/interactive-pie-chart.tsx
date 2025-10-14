@@ -84,46 +84,52 @@ export function InteractivePieChart({
 
   // Don't render if no data
   if (currentData.length === 0) {
-    return (
-      <Card className="relative border border-white/10 bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl overflow-hidden shadow-2xl">
-        <CardContent className="p-6 text-center">
-          <div className="text-white/60">
-            <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No {activeTab === "languages" ? "language" : "difficulty"} data available</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+  return (
+    <Card 
+      className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden shadow-xl shine-effect"
+      style={{ '--glow-color': '#3b82f6' } as React.CSSProperties}
+    >
+      <CardContent className="p-6 text-center">
+        <div className="text-white/60">
+          <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">No {activeTab === "languages" ? "language" : "difficulty"} data available</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
   }
 
   return (
-    <Card className="relative border border-white/10 bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl overflow-hidden shadow-2xl group hover:shadow-blue-500/20 transition-all duration-500 hover:scale-[1.02] hover:border-white/20">
-      {/* Glassmorphic overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none" />
+    <Card 
+      className="relative border-2 border-border/20 bg-gradient-to-br from-card/50 via-card/30 to-transparent backdrop-blur-xl overflow-hidden group hover:border-blue-500/30 transition-all duration-500 shadow-xl hover:scale-[1.01] shine-effect"
+      style={{ '--glow-color': '#3b82f6' } as React.CSSProperties}
+    >
+      {/* Animated glow borders */}
+      <div className="glow-border-top" />
+      <div className="glow-border-bottom" />
+      <div className="glow-border-left" />
+      <div className="glow-border-right" />
       
-      {/* Animated border glow */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm -z-10" />
-      
-      {/* Subtle inner glow */}
-      <div className="absolute inset-[1px] rounded-lg bg-gradient-to-br from-background/80 via-background/90 to-background/80 backdrop-blur-xl" />
+      {/* Enhanced background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-15 transition-opacity duration-700 pointer-events-none" />
 
       <CardHeader className="relative z-10">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold flex items-center gap-2 text-white/90">
-            <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm border border-white/10">
+            <div className="p-1.5 rounded-lg bg-blue-500/20 border border-blue-500/30">
               <TrendingUp className="w-4 h-4 text-blue-400" />
             </div>
             Coding Analytics
           </CardTitle>
-          <div className="flex gap-1 p-1 bg-white/5 rounded-lg backdrop-blur-sm border border-white/10">
+          <div className="flex gap-1 p-1 bg-white/10 rounded-lg border border-white/20">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setActiveTab("languages")}
               className={cn(
                 "h-7 px-3 text-xs font-medium transition-all duration-200",
-                activeTab === "languages" 
-                  ? "bg-white/20 text-white shadow-lg border border-white/20 backdrop-blur-sm" 
+                activeTab === "languages"
+                  ? "bg-white/20 text-white border border-white/30"
                   : "text-white/70 hover:text-white hover:bg-white/10"
               )}
             >
@@ -135,8 +141,8 @@ export function InteractivePieChart({
               onClick={() => setActiveTab("difficulty")}
               className={cn(
                 "h-7 px-3 text-xs font-medium transition-all duration-200",
-                activeTab === "difficulty" 
-                  ? "bg-white/20 text-white shadow-lg border border-white/20 backdrop-blur-sm" 
+                activeTab === "difficulty"
+                  ? "bg-white/20 text-white border border-white/30"
                   : "text-white/70 hover:text-white hover:bg-white/10"
               )}
             >
@@ -150,8 +156,6 @@ export function InteractivePieChart({
         <div className="space-y-6">
           {/* Chart */}
           <div className="h-64 w-full relative">
-            {/* Chart background glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-lg blur-xl" />
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -197,17 +201,17 @@ export function InteractivePieChart({
             
             <div className="grid grid-cols-2 gap-2">
               {currentData.map((item, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "flex items-center gap-2 p-2 rounded-lg transition-all duration-200 cursor-pointer backdrop-blur-sm border",
-                    hoveredSlice === item.name 
-                      ? "bg-white/20 scale-105 border-white/30 shadow-lg" 
-                      : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
-                  )}
-                  onMouseEnter={() => setHoveredSlice(item.name)}
-                  onMouseLeave={() => setHoveredSlice(null)}
-                >
+                        <div
+                          key={index}
+                          className={cn(
+                            "flex items-center gap-2 p-2 rounded-lg transition-all duration-200 cursor-pointer border",
+                            hoveredSlice === item.name
+                              ? "bg-white/20 border-white/30"
+                              : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                          )}
+                          onMouseEnter={() => setHoveredSlice(item.name)}
+                          onMouseLeave={() => setHoveredSlice(null)}
+                        >
                   <div 
                     className="w-3 h-3 rounded-full flex-shrink-0 shadow-sm"
                     style={{ backgroundColor: item.color }}
@@ -226,7 +230,7 @@ export function InteractivePieChart({
           {/* Summary Stats */}
           <div className="pt-4 border-t border-white/10">
             <div className="grid grid-cols-2 gap-4 text-center">
-              <div className="p-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
                 <div className="text-2xl font-bold text-blue-400">
                   {activeTab === "languages" ? safeLanguageData.length : safeDifficultyData.length}
                 </div>
@@ -234,10 +238,10 @@ export function InteractivePieChart({
                   {activeTab === "languages" ? "Languages" : "Difficulty Levels"}
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
                 <div className="text-2xl font-bold text-emerald-400">
                   {activeTab === "languages" 
-                    ? Math.round((safeLanguageData[0]?.percentage || 0)) 
+                    ? Math.round((safeLanguageData[0]?.percentage || 0))
                     : Math.round((safeDifficultyData[0]?.percentage || 0))
                   }%
                 </div>
