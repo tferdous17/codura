@@ -882,22 +882,15 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
               </CardContent>
             </Card>
 
-            {/* Interactive Pie Chart - Show for all profiles, but blur for private profiles */}
+            {/* Interactive Pie Chart - Always public */}
             {submissions.length > 0 && (
               <div className="mt-6">
-                <PrivacyBlurOverlay
-                  isPrivate={!isOwnProfile && (profileData?.isPrivate ?? false)}
-                  title="Analytics are Private"
-                  description={`Connect with ${profile?.full_name || profile?.username || 'this user'} to view their coding analytics and language distribution`}
-                  showConnectButton={true}
-                >
-                  <InteractivePieChart
-                    languageData={processLanguageData(submissions)}
-                    difficultyData={processDifficultyData(submissions)}
-                    totalSolved={stats?.total_solved || 0}
-                    totalSubmissions={submissions.length}
-                  />
-                </PrivacyBlurOverlay>
+                <InteractivePieChart
+                  languageData={processLanguageData(submissions)}
+                  difficultyData={processDifficultyData(submissions)}
+                  totalSolved={stats?.total_solved || 0}
+                  totalSubmissions={submissions.length}
+                />
               </div>
             )}
           </div>
