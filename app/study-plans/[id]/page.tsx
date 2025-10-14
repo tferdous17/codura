@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,20 +11,21 @@ import Link from "next/link";
 import Image from "next/image";
 import CoduraLogo from "@/components/logos/codura-logo.svg";
 import { cn } from "@/lib/utils";
-import {
-  ArrowLeft,
-  X,
-  Check,
-} from "lucide-react";
 import dynamic from 'next/dynamic';
 
 // Dynamic imports to avoid TypeScript issues with lucide-react type definitions
-// @ts-ignore - lucide-react has incomplete type definitions
-const Search = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Search as any })), { ssr: false });
 // @ts-ignore
-const Trash2 = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Trash2 as any })), { ssr: false });
+const ArrowLeft: any = dynamic(() => import('lucide-react').then(mod => mod.ArrowLeft), { ssr: false });
 // @ts-ignore
-const Edit2 = dynamic(() => import('lucide-react').then(mod => ({ default: mod.Edit2 as any })), { ssr: false });
+const X: any = dynamic(() => import('lucide-react').then(mod => mod.X), { ssr: false });
+// @ts-ignore
+const Check: any = dynamic(() => import('lucide-react').then(mod => mod.Check), { ssr: false });
+// @ts-ignore
+const Search: any = dynamic(() => import('lucide-react').then(mod => mod.Search), { ssr: false });
+// @ts-ignore
+const Trash2: any = dynamic(() => import('lucide-react').then(mod => mod.Trash2), { ssr: false });
+// @ts-ignore
+const Edit2: any = dynamic(() => import('lucide-react').then(mod => mod.Edit2), { ssr: false });
 
 interface ListProblem {
   id: string;
@@ -50,6 +52,7 @@ interface StudyPlan {
 }
 
 export default function StudyPlanDetailPage() {
+  const { theme } = useTheme();
   const params = useParams();
   const router = useRouter();
   const listId = params.id as string;
@@ -187,22 +190,22 @@ export default function StudyPlanDetailPage() {
 
   if (!plan) {
     return (
-      <div className="caffeine-theme min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="caffeine-theme min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand"></div>
       </div>
     );
   }
 
   return (
-    <div className="caffeine-theme min-h-screen bg-zinc-950 relative">
+    <div className="caffeine-theme min-h-screen bg-background relative">
       {/* Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-zinc-950" />
+        <div className="absolute inset-0 bg-background" />
         <div className="absolute top-[-10%] right-[20%] w-[500px] h-[500px] bg-brand/8 rounded-full blur-[100px] animate-pulse-slow" />
       </div>
 
       {/* Navbar */}
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-b-white/10 bg-neutral-950/80 backdrop-blur-md">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-b-border/50 bg-background/80 backdrop-blur-md">
         <div className="flex items-center justify-between py-4 max-w-7xl mx-auto px-6">
           <Link href="/" className="flex items-center group">
             <Image src={CoduraLogo} alt="Codura logo" width={90} height={40} priority />

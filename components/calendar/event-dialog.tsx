@@ -19,7 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Code, Video, Users, RadioTower } from "lucide-react";
+import { toast } from "sonner";
+import dynamic from 'next/dynamic';
+
+// @ts-ignore
+const Code: any = dynamic(() => import('lucide-react').then(mod => mod.Code), { ssr: false });
+// @ts-ignore
+const Video: any = dynamic(() => import('lucide-react').then(mod => mod.Video), { ssr: false });
+// @ts-ignore
+const Users: any = dynamic(() => import('lucide-react').then(mod => mod.Users), { ssr: false });
+// @ts-ignore
+const RadioTower: any = dynamic(() => import('lucide-react').then(mod => mod.RadioTower), { ssr: false });
 
 interface EventDialogProps {
   open: boolean;
@@ -91,7 +101,9 @@ export function EventDialog({ open, onOpenChange, selectedDate, onEventCreated, 
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${isEditing ? 'update' : 'create'} event`);
+        const data = await response.json();
+        toast.error(data.error || `Failed to ${isEditing ? 'update' : 'create'} event`);
+        return;
       }
 
       // Reset form
@@ -103,11 +115,12 @@ export function EventDialog({ open, onOpenChange, selectedDate, onEventCreated, 
         end_time: '',
       });
 
+      toast.success(`Event ${isEditing ? 'updated' : 'created'} successfully`);
       onEventCreated();
       onOpenChange(false);
     } catch (error) {
       console.error(`Error ${existingEvent ? 'updating' : 'creating'} event:`, error);
-      alert(`Failed to ${existingEvent ? 'update' : 'create'} event. Please try again.`);
+      toast.error(`Failed to ${existingEvent ? 'update' : 'create'} event. Please try again.`);
     } finally {
       setLoading(false);
     }

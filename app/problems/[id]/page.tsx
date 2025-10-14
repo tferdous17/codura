@@ -57,11 +57,36 @@ interface ProblemData {
 
 interface Example { id: number; content: string }
 
-interface TestCase {
-  input: string
-  expectedOutput: string
-  explanation?: string
-}
+                // Validate that params.id is a valid number
+                const problemId = parseInt(params.id as string);
+                if (isNaN(problemId)) {
+                    setError('Invalid problem ID');
+                    return;
+                }
+
+                // fetch problem data from Supabase using the problem ID from URL params
+                const { data, error } = await supabase
+                    .from('problems')
+                    .select('*')
+                    .eq('id', problemId)
+                    .single()
+
+                if (error) throw error
+
+                if (!data) {
+                    setError('Problem not found')
+                    return
+                }
+
+                // After fetching the problem data, this line sets the problem state
+                setProblem(data as ProblemData)
+            } catch (err) {
+                console.error('Error fetching problem:', err)
+                setError('Failed to load problem')
+            } finally {
+                setLoading(false)
+            }
+        }
 
 interface Submission {
   code: string

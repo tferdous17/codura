@@ -3,7 +3,20 @@
 import { useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Clock, Code2, CheckCircle, XCircle } from "lucide-react";
+import dynamic from 'next/dynamic';
+
+// @ts-ignore
+const ChevronDown: any = dynamic(() => import('lucide-react').then(mod => mod.ChevronDown), { ssr: false });
+// @ts-ignore
+const ChevronRight: any = dynamic(() => import('lucide-react').then(mod => mod.ChevronRight), { ssr: false });
+// @ts-ignore
+const Clock: any = dynamic(() => import('lucide-react').then(mod => mod.Clock), { ssr: false });
+// @ts-ignore
+const Code2: any = dynamic(() => import('lucide-react').then(mod => mod.Code2), { ssr: false });
+// @ts-ignore
+const CheckCircle: any = dynamic(() => import('lucide-react').then(mod => mod.CheckCircle2), { ssr: false });
+// @ts-ignore
+const XCircle: any = dynamic(() => import('lucide-react').then(mod => mod.XCircle), { ssr: false });
 
 interface Submission {
   id: string;
@@ -13,16 +26,17 @@ interface Submission {
   status: string;
   language: string;
   submitted_at: string;
-  runtime?: number;
-  memory?: number;
+  runtime?: number | null;
+  memory?: number | null;
 }
 
 interface RecentSubmissionsProps {
   submissions: Submission[];
   compact?: boolean;
+  isOwnProfile?: boolean;
 }
 
-export default function RecentSubmissions({ submissions, compact = true }: RecentSubmissionsProps) {
+export default function RecentSubmissions({ submissions, compact = true, isOwnProfile = true }: RecentSubmissionsProps) {
   const [expanded, setExpanded] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<string | null>(null);
 
@@ -61,7 +75,11 @@ export default function RecentSubmissions({ submissions, compact = true }: Recen
       <div className="text-center py-12 text-muted-foreground">
         <Code2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
         <p className="text-sm">No submissions yet</p>
-        <p className="text-xs mt-1">Start solving problems to see your history</p>
+        <p className="text-xs mt-1">
+          {isOwnProfile
+            ? "Start solving problems to see your history"
+            : "This user hasn't submitted any solutions yet"}
+        </p>
       </div>
     );
   }
