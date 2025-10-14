@@ -268,9 +268,9 @@ export default function ProblemPage() {
 
   // Render
   return (
-    <div className="caffeine-theme h-screen w-full bg-background p-2 pt-0">
+    <div className="caffeine-theme min-h-screen w-full bg-background p-2 pt-0 overflow-y-auto">
       <style jsx global>{tabScrollStyles}</style>
-      <ResizablePanelGroup direction="horizontal" className="h-full">
+      <ResizablePanelGroup direction="horizontal" className="min-h-[700px]">
         {/* LEFT: Problem Description & history */}
         <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
           <ProblemDescriptionPanel
