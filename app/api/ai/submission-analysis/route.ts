@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
+const DEV_ALLOW_NO_SUBMISSION = process.env.ALLOW_NO_SUBMISSION === "true";
+
 // ---- Guardrails: keep responses as hints-only (no runnable code)
 function sanitizeToHintsOnly(text: string) {
   let out = text.replace(/```[\s\S]*?```/g, "[code block replaced with conceptual hint]");
@@ -88,13 +90,20 @@ export async function POST(req: NextRequest) {
       nudges = [],
     } = body;
 
-    // VALIDATION
+    // VALIDATION (dev-bypass aware)
+    let usedDevBypass = false;
     if (!problemId || !submissionCode || !userMessage) {
-      console.error('❌ Missing required fields');
-      return NextResponse.json(
-        { ok: false, error: "Missing required fields" },
-        { status: 400 }
-      );
+      if (DEV_ALLOW_NO_SUBMISSION && submissionCode && userMessage) {
+        // allow missing problemId/problemDescription in dev
+        usedDevBypass = true;
+        console.warn('⚠️ DEV BYPASS: proceeding without full required fields');
+      } else {
+        console.error('❌ Missing required fields');
+        return NextResponse.json(
+          { ok: false, error: "Missing required fields" },
+          { status: 400 }
+        );
+      }
     }
 
     console.log('✅ Processing analysis:', { 
@@ -104,6 +113,12 @@ export async function POST(req: NextRequest) {
       testsPassed,
       totalTests 
     });
+
+    // Normalize values for dev-bypass
+    const safeProblemId = problemId ?? -1;
+    const safeProblemDescription = typeof problemDescription === 'string' ? problemDescription.slice(0, 500) : '';
+    const safeSubmissionCode = String(submissionCode ?? '');
+    const safeLanguage = language || 'plaintext';
 
     // Build reliability summary (if judge data exists)
     const reliability = judgeReliabilitySignal({ testsPassed, totalTests, judge });
@@ -117,11 +132,11 @@ export async function POST(req: NextRequest) {
     ].filter(Boolean).join("\n") : `Tests Passed: ${testsPassed}/${totalTests}\nStatus: ${status || 'Unknown'}`;
 
     const context = [
-      `Problem ID: ${problemId}`,
-      `Language: ${language}`,
+      `Problem ID: ${safeProblemId}`,
+      `Language: ${safeLanguage}`,
       `Assistance type: ${assistanceType}`,
-      `Problem (trunc 500): ${problemDescription?.slice(0, 500)}`,
-      `Submission (trunc 800): ${submissionCode?.slice(0, 800)}`,
+      `Problem (trunc 500): ${safeProblemDescription}`,
+      `Submission (trunc 800): ${safeSubmissionCode.slice(0, 800)}`,
       judgeSummary,
       nudges.length ? `User nudges: ${nudges.join(", ")}` : "",
     ].join("\n\n");
@@ -186,11 +201,12 @@ export async function POST(req: NextRequest) {
     try {
       await supabase.from('ai_interactions').insert({
         user_id: user.id,
-        problem_id: problemId,
+        problem_id: safeProblemId,
         assistance_type: assistanceType,
         user_message: userMessage,
         ai_response: text,
-        timestamp: new Date().toISOString()
+        dev_bypass: usedDevBypass ? true : null,
+        created_at: new Date().toISOString()
       });
       console.log('✅ Interaction logged to database');
     } catch (dbError) {
@@ -200,7 +216,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       ok: true, 
       text, 
-      judgeReliability: judge ? reliability.score : null 
+      judgeReliability: judge ? reliability.score : null,
+      devBypass: usedDevBypass || undefined
     });
 
   } catch (err: any) {
