@@ -54,6 +54,12 @@ export default function ProblemDescriptionPanel({
                     <TabsContent value="description" className="p-4 mt-0">
                         <div className="space-y-4">
                             <div>
+                                <button
+                                  onClick={() => window.location.href = '/problems'}
+                                  className="mb-4 text-sm text-green-400 hover:text-green-300 flex items-center gap-2 transition-colors"
+                                >
+                                  ← Back to Problems
+                                </button>
                                 <h1 className="text-2xl font-bold mb-5">
                                     {problem.leetcode_id}. {problem.title}
                                 </h1>
